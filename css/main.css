@@ -1,3 +1,47 @@
-body { margin: 0; overflow: hidden; font-family: sans-serif; }
-#shoe-viewer { width: 100vw; height: 100vh; }
-/* Aquí conectaremos tus bocetos de la interfaz más adelante */
+/* js/main.css */
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+#interface-layer {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 10;
+    pointer-events: none; /* Deja que el usuario siga moviendo el 3D */
+}
+
+.controls-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 15px 25px;
+    border-radius: 30px;
+    display: flex;
+    gap: 15px;
+    pointer-events: auto; /* Activa los clics solo aquí */
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.btn-action {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid white;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-action:active {
+    transform: scale(0.9);
+}
+
+/* Colores de prueba */
+.red { background-color: #ff4d4d; }
+.blue { background-color: #4d94ff; }
+.black { background-color: #2b2b2b; }
