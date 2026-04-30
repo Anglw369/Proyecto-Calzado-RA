@@ -1,4 +1,5 @@
 /* css/main.css */
+/* Importamos la fuente para que se vea moderna */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
 body, html {
@@ -8,12 +9,12 @@ body, html {
     width: 100%;
     display: flex;
     flex-direction: column;
-    background-color: #1a1a1a;
+    background-color: #000;
     overflow: hidden;
     font-family: 'Poppins', sans-serif;
 }
 
-/* Área de la cámara */
+/* Área de la cámara: 60% superior */
 #camera-container {
     position: relative;
     width: 100%;
@@ -27,6 +28,7 @@ video {
     object-fit: cover;
 }
 
+/* Etiqueta de estado moderna */
 #status-tag {
     position: absolute;
     top: 15px;
@@ -38,43 +40,46 @@ video {
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    box-shadow: 0 4px 10px rgba(0, 255, 136, 0.3);
 }
 
-/* Panel inferior con diseño moderno */
+/* Panel inferior: 40% inferior en blanco puro */
 #controls-panel {
     width: 100%;
     height: 40vh;
-    background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+    background-color: #ffffff; /* Blanco puro */
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    border-top-left-radius: 30px;
-    border-top-right-radius: 30px;
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.15);
+    flex-direction: row; /* Importante: alineación horizontal */
+    justify-content: center; /* Centra el grupo de botones */
+    align-items: center; /* Centra verticalmente */
+    gap: 10px; /* Espacio entre botones */
+    border-top: 2px solid #ddd; /* Una orilla sutil para separar de la cámara */
 }
 
-/* Botones estilizados */
+/* Estilo de los botones pequeños y uno al lado del otro */
 .action-btn {
-    width: 85%;
-    padding: 16px;
-    font-size: 0.95rem;
+    /* Ajustamos el tamaño para que quepan 3 */
+    width: 30%; 
+    max-width: 110px; /* Para que no se hagan muy grandes en PC */
+    height: 50px; /* Altura fija para que sean pequeños */
+    
+    padding: 5px;
+    font-size: 0.8rem; /* Texto más pequeño */
     font-weight: 600;
+    text-align: center;
     color: #ffffff;
+    
     background-color: #2d2d2d;
     border: none;
-    border-radius: 15px;
+    border-radius: 12px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.2s ease;
 }
 
-/* Colores específicos para cada acción */
-.action-btn:nth-child(1) { background: #3498db; } /* Azul para Modelo */
-.action-btn:nth-child(2) { background: #9b59b6; } /* Morado para Color */
-.action-btn:nth-child(3) { background: #2ecc71; } /* Verde para Guardar */
+/* Colores modernos para identificar acciones */
+.action-btn:nth-child(1) { background: #3498db; } /* Azul */
+.action-btn:nth-child(2) { background: #9b59b6; } /* Morado */
+.action-btn:nth-child(3) { background: #2ecc71; } /* Verde */
 
 .action-btn:active {
     transform: scale(0.95);
