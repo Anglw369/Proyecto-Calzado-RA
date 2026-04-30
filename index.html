@@ -3,34 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pasarela Virtual - UTL</title>
-    
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    
+    <title>Pasarela Virtual - Cámara Activa</title>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
 
-    <model-viewer id="shoe-viewer" 
-    src="https://modelviewer.dev/shared-assets/models/MaterialsVariantsShoe.glb" 
-    ar 
-    ar-modes="webxr scene-viewer quick-look" 
-    camera-controls 
-    ar-placement="floor"
-    shadow-intensity="1">
-    
-        
-        <div id="interface-layer">
-            <div class="controls-card">
-                <button class="btn-action red" onclick="cambiarColor('#ff4d4d')"></button>
-                <button class="btn-action blue" onclick="cambiarColor('#4d94ff')"></button>
-                <button class="btn-action black" onclick="cambiarColor('#2b2b2b')"></button>
-            </div>
-        </div>
+    <div id="camera-container">
+        <video id="webcam" autoplay playsinline></video>
+        <div id="status-tag">Cámara Activa</div>
+    </div>
 
-    </model-viewer>
+    <div id="controls-panel">
+        <button class="action-btn" onclick="console.log('Cambiando modelo...')">Cambio de modelo</button>
+        <button class="action-btn" onclick="console.log('Abriendo colores...')">Cambio de color</button>
+        <button class="action-btn" onclick="console.log('Guardando captura...')">Guardar</button>
+    </div>
 
-    <script src="js/controllers.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
