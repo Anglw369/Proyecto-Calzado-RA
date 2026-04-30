@@ -1,3 +1,6 @@
+/* css/main.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
 body, html {
     margin: 0;
     padding: 0;
@@ -5,12 +8,12 @@ body, html {
     width: 100%;
     display: flex;
     flex-direction: column;
-    background-color: #000;
+    background-color: #1a1a1a;
     overflow: hidden;
-    font-family: sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
-/* Área de la cámara: 60% de la pantalla */
+/* Área de la cámara */
 #camera-container {
     position: relative;
     width: 100%;
@@ -21,41 +24,59 @@ body, html {
 video {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Para que no se deforme la imagen */
+    object-fit: cover;
 }
 
 #status-tag {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(0,255,0,0.7);
-    color: black;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    font-weight: bold;
+    top: 15px;
+    left: 15px;
+    background: #00ff88;
+    color: #000;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(0, 255, 136, 0.3);
 }
 
-/* Panel inferior: 40% de la pantalla */
+/* Panel inferior con diseño moderno */
 #controls-panel {
     width: 100%;
     height: 40vh;
-    background-color: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 15px;
-    border-top: 3px solid #333;
+    gap: 12px;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.15);
 }
 
+/* Botones estilizados */
 .action-btn {
     width: 85%;
-    padding: 15px;
-    font-size: 1rem;
-    font-weight: bold;
-    border: 2px solid #333;
-    background: white;
-    border-radius: 10px;
+    padding: 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #2d2d2d;
+    border: none;
+    border-radius: 15px;
     cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Colores específicos para cada acción */
+.action-btn:nth-child(1) { background: #3498db; } /* Azul para Modelo */
+.action-btn:nth-child(2) { background: #9b59b6; } /* Morado para Color */
+.action-btn:nth-child(3) { background: #2ecc71; } /* Verde para Guardar */
+
+.action-btn:active {
+    transform: scale(0.95);
+    filter: brightness(0.9);
 }
