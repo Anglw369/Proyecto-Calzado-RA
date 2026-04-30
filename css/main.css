@@ -1,3 +1,28 @@
+/* css/main.css */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#shoe-viewer {
+    width: 100%;
+    height: 100vh; /* Esto obliga al visor a medir toda la pantalla */
+    display: block;
+}
+
+#interface-layer {
+    position: absolute;
+    bottom: 40px; /* Lo mueve hacia arriba del borde inferior */
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+}
+/* ... el resto de tus estilos de .controls-card y .btn-action están bien ... */
 /* js/main.css */
 body {
     margin: 0;
