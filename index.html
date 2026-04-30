@@ -1,59 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <title>Semana 1: Detección de Cámara Trasera</title>
-    <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; background: #000; }
-        #canvas-container { position: relative; width: 100vw; height: 100vh; }
-        /* Quitamos el mirror (reflejo) de la cámara frontal para que se vea normal */
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .status { 
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; 
-            z-index: 10; border-radius: 30px; font-weight: bold; border: 1px solid #444;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pasarela Virtual - UTL</title>
+    
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <div class="status" id="status">Solicitando Cámara Trasera...</div>
-    <div id="canvas-container">
-        <video id="input_video" autoplay playsinline></video>
-    </div>
 
-    <script>
-        const videoElement = document.getElementById('input_video');
-        const statusDiv = document.getElementById('status');
+    <model-viewer id="shoe-viewer" 
+        src="assets/models/placeholder.glb" 
+        ar 
+        ar-modes="webxr scene-viewer quick-look" 
+        camera-controls 
+        shadow-intensity="1"
+        ar-placement="floor">
+        
+        <div id="interface-layer"></div>
 
-        async function iniciarCamara() {
-            try {
-                // Forzamos el uso de la cámara trasera (environment)
-                const constraints = {
-                    video: { facingMode: { exact: "environment" } }
-                };
-                
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                videoElement.srcObject = stream;
-                statusDiv.innerText = "Cámara Trasera Activa - Semana 1";
-                statusDiv.style.color = "#00ff00";
-                
-            } catch (error) {
-                console.error("Error al acceder a la cámara trasera:", error);
-                // Si falla el modo 'exact', intentamos el modo preferido
-                try {
-                    const flexibleConstraints = { video: { facingMode: "environment" } };
-                    const flexibleStream = await navigator.mediaDevices.getUserMedia(flexibleConstraints);
-                    videoElement.srcObject = flexibleStream;
-                    statusDiv.innerText = "Cámara Activa (Modo Flexible)";
-                } catch (err) {
-                    statusDiv.innerText = "Error: Asegúrate de dar permisos de cámara.";
-                    statusDiv.style.color = "#ff0000";
-                }
-            }
-        }
+    </model-viewer>
 
-        // Iniciar el proceso
-        iniciarCamara();
-    </script>
+    <script src="js/controllers.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
