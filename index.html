@@ -1,39 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Pasarela Virtual UTL</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
 <body>
-    <div id="view-home" class="screen active">
-        <div class="hero">
-            <h1>Pasarela Virtual UTL</h1>
-            <p>Mide tu pie y prueba calzado en RA</p>
-            <button onclick="showScreen('view-auth')">Comenzar</button>
-        </div>
-    </div>
+    <nav class="navbar">
+        <div class="logo">PasarelaVirtual<span>UTL</span></div>
+        <a href="login.html" class="btn-login-nav">Iniciar Sesión</a>
+    </nav>
 
-    <div id="view-auth" class="screen">
-        <div class="auth-box">
-            <h2>Ingresa al Sistema</h2>
-            <input type="email" id="email" placeholder="Correo">
-            <input type="password" id="pass" placeholder="Contraseña">
-            <button onclick="showScreen('view-scanner')">Entrar</button>
-        </div>
-    </div>
+    <header class="hero">
+        <h1>Visualiza el futuro de tu calzado</h1>
+        <p>Proyecto de estadías enfocado en la implementación de Realidad Aumentada para el sector calzado.</p>
+        <a href="login.html" class="btn-main">Comenzar ahora</a>
+    </header>
 
-    <div id="view-scanner" class="screen">
-        <div id="camera-wrap">
-            <video id="webcam" autoplay playsinline></video>
-            <canvas id="output-canvas"></canvas> 
+    <section class="info-section">
+        <h2>¿De qué trata este proyecto?</h2>
+        <p>Esta aplicación permite a los usuarios probarse modelos de calzado en tiempo real utilizando la cámara de su dispositivo, facilitando la decisión de compra y personalización.</p>
+        <div class="features">
+            <div class="feature-card"><h3>Detección</h3><p>Identificación de extremidades mediante IA.</p></div>
+            <div class="feature-card"><h3>Modelado 3D</h3><p>Visualización de calzado con alta fidelidad.</p></div>
         </div>
-        <div id="measurement-panel">
-            <p>Largo: <span id="val-largo">0</span> cm</p>
-            <p>Ancho: <span id="val-ancho">0</span> cm</p>
-            <button onclick="showScreen('view-probador')">Ir al Probador</button>
-        </div>
-    </div>
-
-    <div id="view-probador" class="screen">
-        <div id="ar-viewer"></div>
-        <div class="controls-row">
-            <button class="btn">Modelo</button>
-            <button class="btn">Color</button>
-            <button class="btn" onclick="saveResult()">Guardar</button>
-        </div>
-    </div>
+    </section>
 </body>
+</html>
