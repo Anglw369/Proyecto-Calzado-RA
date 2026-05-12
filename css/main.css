@@ -1,52 +1,34 @@
-/* css/main.css */
 .view {
-    display: none; /* Todas ocultas por defecto */
-    width: 100vw;
+    display: none;
+    width: 100%;
     height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
 }
 
 .view.active {
-    display: flex; /* Solo la activa se muestra */
+    display: flex;
     flex-direction: column;
-}
-
-/* Diseño del Home */
-#view-home {
-    background: url('https://images.unsplash.com/photo-1542291026-7eec264c27ff') center/cover;
     justify-content: center;
     align-items: center;
-    text-align: center;
+}
+
+/* Estilo de Botones tipo App */
+.btn-main {
+    background-color: #0056b3; /* Azul institucional */
     color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
 }
 
-.overlay {
-    background: rgba(0,0,0,0.7);
-    width: 100%; height: 100%;
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    padding: 20px;
-}
-
-.accent { color: #00FF88; }
-
-/* Estilo Login */
-.login-container {
-    background: white;
-    margin: auto;
-    padding: 40px 20px;
-    width: 85%;
-    border-radius: 30px;
-    text-align: center;
-}
-
-input {
+#ui-controls {
+    height: 40vh;
     width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    box-sizing: border-box;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #ccc;
 }

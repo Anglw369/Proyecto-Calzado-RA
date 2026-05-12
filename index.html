@@ -1,37 +1,35 @@
 <body>
     <section id="view-home" class="view active">
-        <div class="overlay">
-            <div id="brand-logo">OBIPARKER <span class="accent">RA</span></div>
-            <h1>Pasarela Virtual de Calzado</h1>
-            <p>Prueba, personaliza y camina hacia el futuro.</p>
-            <div class="home-actions">
-                <button class="primary-btn" onclick="navigateTo('view-login')">Comenzar</button>
+        <div class="content-wrapper">
+            <h1 class="uni-title">Sistema de Pasarela Virtual</h1>
+            <p class="uni-subtitle">Tecnológica de León - División de Entornos Virtuales</p>
+            <div class="actions">
+                <button class="btn-main" onclick="navigateTo('view-login')">Ingresar al Sistema</button>
             </div>
         </div>
     </section>
 
     <section id="view-login" class="view">
-        <div class="login-container">
-            <h2>Bienvenidos</h2>
-            <p>Inicia sesión para guardar tus diseños</p>
-            <input type="email" placeholder="Correo electrónico" id="email">
-            <input type="password" placeholder="Contraseña" id="password">
-            <button class="primary-btn" onclick="navigateTo('view-app')">Entrar</button>
-            <span class="link-text">¿No tienes cuenta? Regístrate</span>
+        <div class="form-container">
+            <h2>Inicio de Sesión</h2>
+            <form id="login-form">
+                <input type="email" placeholder="Correo institucional" required>
+                <input type="password" placeholder="Contraseña" required>
+                <button type="button" class="btn-main" onclick="navigateTo('view-app')">Entrar</button>
+            </form>
         </div>
     </section>
 
     <section id="view-app" class="view">
-        <div id="camera-container">
+        <div id="camera-viewport">
             <video id="webcam" autoplay playsinline></video>
         </div>
-        <div id="controls-panel">
-            <button class="action-btn">Modelo</button>
-            <button class="action-btn">Color</button>
-            <button class="action-btn" onclick="guardarCaptura()">Guardar</button>
+        <div id="ui-controls">
+            <button class="nav-btn">Modelos</button>
+            <button class="nav-btn">Personalizar</button>
+            <button class="nav-btn">Guardar</button>
         </div>
     </section>
 
     <script src="js/navigation.js"></script>
-    <script src="js/main.js"></script>
 </body>
