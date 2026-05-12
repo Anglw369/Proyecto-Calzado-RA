@@ -1,57 +1,52 @@
-/* Importar fuente moderna */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
-
-:root {
-    --primary: #00FF88;
-    --dark: #1A1A1A;
-    --light: #FFFFFF;
-    --gray: #F5F5F5;
+/* css/main.css */
+.view {
+    display: none; /* Todas ocultas por defecto */
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-body, html {
-    margin: 0; padding: 0;
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--dark);
-}
-
-/* Panel de Cámara */
-#camera-container {
-    height: 60vh;
-    border-bottom: 2px solid var(--primary);
-}
-
-/* Panel de Control Estilizado */
-#controls-panel {
-    height: 40vh;
-    background-color: var(--light);
-    display: flex;
+.view.active {
+    display: flex; /* Solo la activa se muestra */
     flex-direction: column;
+}
+
+/* Diseño del Home */
+#view-home {
+    background: url('https://images.unsplash.com/photo-1542291026-7eec264c27ff') center/cover;
+    justify-content: center;
     align-items: center;
-    justify-content: space-evenly;
-    padding: 20px 0;
-    border-top-left-radius: 40px; /* Bordes redondeados modernos */
-    border-top-right-radius: 40px;
+    text-align: center;
+    color: white;
 }
 
-/* Botones con estilo "Parker" */
-.action-btn {
+.overlay {
+    background: rgba(0,0,0,0.7);
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 20px;
+}
+
+.accent { color: #00FF88; }
+
+/* Estilo Login */
+.login-container {
+    background: white;
+    margin: auto;
+    padding: 40px 20px;
     width: 85%;
-    height: 55px;
-    background-color: var(--dark);
-    color: var(--light);
-    border: none;
-    border-radius: 15px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    border-radius: 30px;
+    text-align: center;
 }
 
-.action-btn:hover {
-    background-color: var(--primary);
-    color: var(--dark);
-    transform: translateY(-2px);
+input {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
 }
