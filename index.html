@@ -1,35 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Pasarela Virtual UTL</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
 <body>
-    <section id="view-home" class="view active">
-        <div class="content-wrapper">
-            <h1 class="uni-title">Sistema de Pasarela Virtual</h1>
-            <p class="uni-subtitle">Tecnológica de León - División de Entornos Virtuales</p>
-            <div class="actions">
-                <button class="btn-main" onclick="navigateTo('view-login')">Ingresar al Sistema</button>
-            </div>
+    <nav class="navbar">
+        <div class="logo">PasarelaVirtual<span>UTL</span></div>
+        <a href="login.html" class="btn-login-nav">Iniciar Sesión</a>
+    </nav>
+
+    <header class="hero">
+        <h1>Visualiza el futuro de tu calzado</h1>
+        <p>Proyecto de estadías enfocado en la implementación de Realidad Aumentada para el sector calzado.</p>
+        <a href="login.html" class="btn-main">Comenzar ahora</a>
+    </header>
+
+    <section class="info-section">
+        <h2>¿De qué trata este proyecto?</h2>
+        <p>Esta aplicación permite a los usuarios probarse modelos de calzado en tiempo real utilizando la cámara de su dispositivo, facilitando la decisión de compra y personalización.</p>
+        <div class="features">
+            <div class="feature-card"><h3>Detección</h3><p>Identificación de extremidades mediante IA.</p></div>
+            <div class="feature-card"><h3>Modelado 3D</h3><p>Visualización de calzado con alta fidelidad.</p></div>
         </div>
     </section>
-
-    <section id="view-login" class="view">
-        <div class="form-container">
-            <h2>Inicio de Sesión</h2>
-            <form id="login-form">
-                <input type="email" placeholder="Correo institucional" required>
-                <input type="password" placeholder="Contraseña" required>
-                <button type="button" class="btn-main" onclick="navigateTo('view-app')">Entrar</button>
-            </form>
-        </div>
-    </section>
-
-    <section id="view-app" class="view">
-        <div id="camera-viewport">
-            <video id="webcam" autoplay playsinline></video>
-        </div>
-        <div id="ui-controls">
-            <button class="nav-btn">Modelos</button>
-            <button class="nav-btn">Personalizar</button>
-            <button class="nav-btn">Guardar</button>
-        </div>
-    </section>
-
-    <script src="js/navigation.js"></script>
 </body>
+</html>
