@@ -1,87 +1,57 @@
-/* css/main.css */
-/* Importamos la fuente para que se vea moderna */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+/* Importar fuente moderna */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+:root {
+    --primary: #00FF88;
+    --dark: #1A1A1A;
+    --light: #FFFFFF;
+    --gray: #F5F5F5;
+}
 
 body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
+    margin: 0; padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--dark);
+}
+
+/* Panel de Cámara */
+#camera-container {
+    height: 60vh;
+    border-bottom: 2px solid var(--primary);
+}
+
+/* Panel de Control Estilizado */
+#controls-panel {
+    height: 40vh;
+    background-color: var(--light);
     display: flex;
     flex-direction: column;
-    background-color: #000;
-    overflow: hidden;
-    font-family: 'Poppins', sans-serif;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 20px 0;
+    border-top-left-radius: 40px; /* Bordes redondeados modernos */
+    border-top-right-radius: 40px;
 }
 
-/* Área de la cámara: 60% superior */
-#camera-container {
-    position: relative;
-    width: 100%;
-    height: 60vh;
-    background-color: #000;
-}
-
-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Etiqueta de estado moderna */
-#status-tag {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background: #00ff88;
-    color: #000;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-/* Panel inferior: 40% inferior en blanco puro */
-#controls-panel {
-    width: 100%;
-    height: 40vh;
-    background-color: #ffffff; /* Blanco puro */
-    display: flex;
-    flex-direction: row; /* Importante: alineación horizontal */
-    justify-content: center; /* Centra el grupo de botones */
-    align-items: center; /* Centra verticalmente */
-    gap: 10px; /* Espacio entre botones */
-    border-top: 2px solid #ddd; /* Una orilla sutil para separar de la cámara */
-}
-
-/* Estilo de los botones pequeños y uno al lado del otro */
+/* Botones con estilo "Parker" */
 .action-btn {
-    /* Ajustamos el tamaño para que quepan 3 */
-    width: 30%; 
-    max-width: 110px; /* Para que no se hagan muy grandes en PC */
-    height: 50px; /* Altura fija para que sean pequeños */
-    
-    padding: 5px;
-    font-size: 0.8rem; /* Texto más pequeño */
-    font-weight: 600;
-    text-align: center;
-    color: #ffffff;
-    
-    background-color: #2d2d2d;
+    width: 85%;
+    height: 55px;
+    background-color: var(--dark);
+    color: var(--light);
     border: none;
-    border-radius: 12px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
-/* Colores modernos para identificar acciones */
-.action-btn:nth-child(1) { background: #3498db; } /* Azul */
-.action-btn:nth-child(2) { background: #9b59b6; } /* Morado */
-.action-btn:nth-child(3) { background: #2ecc71; } /* Verde */
-
-.action-btn:active {
-    transform: scale(0.95);
-    filter: brightness(0.9);
+.action-btn:hover {
+    background-color: var(--primary);
+    color: var(--dark);
+    transform: translateY(-2px);
 }
