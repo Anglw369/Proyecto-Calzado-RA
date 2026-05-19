@@ -5,17 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso - Pasarela Virtual</title>
     <link rel="stylesheet" href="css/main.css">
+    <style>
+        /* Un pequeño estilo rápido para ocultar/mostrar secciones */
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body class="center-content">
-    <div class="auth-container">
+
+    <div id="container-login" class="auth-container">
         <h2>Bienvenido al Sistema</h2>
         <p>Ingresa tus datos para continuar</p>
-        <form id="auth-form">
-            <input type="email" placeholder="Correo electrónico" required>
-            <input type="password" placeholder="Contraseña" required>
-            <button type="button" class="btn-main" onclick="window.location.href='app.html'">Iniciar Sesión</button>
+        <form id="login-form">
+            <input type="email" id="login-correo" placeholder="Correo electrónico" required>
+            <input type="password" id="login-password" placeholder="Contraseña" required>
+            
+            <button type="button" class="btn-main" onclick="loginUsuario(
+                document.getElementById('login-correo').value,
+                document.getElementById('login-password').value
+            )">Iniciar Sesión</button>
         </form>
-        <p class="switch-text">¿No tienes cuenta? <a href="#">Regístrate aquí</a></p>
+        <p class="switch-text">¿No tienes cuenta? <a href="#" onclick="toggleAuthForm()">Regístrate aquí</a></p>
     </div>
+
+    <div id="container-registro" class="auth-container hidden">
+        <h2>Crear Cuenta</h2>
+        <p>Regístrate para guardar tus medidas de calzado</p>
+        <form id="register-form">
+            <input type="text" id="reg-nombre" placeholder="Nombre completo" required>
+            <input type="email" id="reg-correo" placeholder="Correo electrónico" required>
+            <input type="password" id="reg-password" placeholder="Contraseña" required>
+            
+            <button type="button" class="btn-main" onclick="registrarUsuario(
+                document.getElementById('reg-nombre').value,
+                document.getElementById('reg-correo').value,
+                document.getElementById('reg-password').value
+            )">Registrarse</button>
+        </form>
+        <p class="switch-text">¿Ya tienes cuenta? <a href="#" onclick="toggleAuthForm()">Inicia sesión aquí</a></p>
+    </div>
+
+    <script>
+        function toggleAuthForm() {
+            document.getElementById('container-login').classList.toggle('hidden');
+            document.getElementById('container-registro').classList.toggle('hidden');
+        }
+    </script>
+
+    <script type="module" src="js/auth.js"></script>
 </body>
 </html>
