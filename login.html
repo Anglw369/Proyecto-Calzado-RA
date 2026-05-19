@@ -28,22 +28,34 @@
     </div>
 
     <div id="container-registro" class="auth-container hidden">
-        <h2>Crear Cuenta</h2>
-        <p>Regístrate para guardar tus medidas de calzado</p>
+        <h2>Crear Cuenta Profesional</h2>
+        <p>Regístrate para personalizar tu experiencia de calzado en RA</p>
         <form id="register-form">
             <input type="text" id="reg-nombre" placeholder="Nombre completo" required>
             <input type="email" id="reg-correo" placeholder="Correo electrónico" required>
-            <input type="password" id="reg-password" placeholder="Contraseña" required>
+            <input type="password" id="reg-password" placeholder="Contraseña segura" required>
+            <input type="tel" id="reg-telefono" placeholder="Teléfono (10 dígitos)" required>
+            
+            <select id="reg-genero" required style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; background-color: white; font-family: inherit;">
+                <option value="" disabled selected>Selecciona tu género</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Unisex">Prefiero no decirlo / Unisex</option>
+            </select>
+
+            <input type="number" id="reg-talla" step="0.5" min="22" max="32" placeholder="Tu talla habitual (ej. 26.5)" required>
             
             <button type="button" class="btn-main" onclick="registrarUsuario(
                 document.getElementById('reg-nombre').value,
                 document.getElementById('reg-correo').value,
-                document.getElementById('reg-password').value
-            )">Registrarse</button>
+                document.getElementById('reg-password').value,
+                document.getElementById('reg-telefono').value,
+                document.getElementById('reg-genero').value,
+                document.getElementById('reg-talla').value
+            )">Crear Cuenta</button>
         </form>
         <p class="switch-text">¿Ya tienes cuenta? <a href="#" onclick="toggleAuthForm()">Inicia sesión aquí</a></p>
     </div>
-
     <script>
         function toggleAuthForm() {
             document.getElementById('container-login').classList.toggle('hidden');
