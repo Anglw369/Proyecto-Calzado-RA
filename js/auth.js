@@ -45,7 +45,8 @@ async function loginUsuario(correo, password) {
         sessionStorage.setItem('userId', data[0].id); 
         
         // Te manda directo al probador de cámara (app.html)
-        window.location.href = 'app.html'; 
+        // Te manda directo al probador de cámara (saliendo de la carpeta js)
+        window.location.href = './app.html';
     }
 }
 
