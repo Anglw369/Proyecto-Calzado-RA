@@ -6,31 +6,96 @@
     <title>Cámara - Pasarela Virtual</title>
     <link rel="stylesheet" href="css/main.css">
     
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-
     <style>
-        /* Ajuste rápido para superponer el zapato sobre la cámara */
         #camera-container {
             position: relative;
             width: 100%;
             max-width: 640px;
             height: 480px;
             margin: 0 auto;
-            background: #000;
+            background: #222;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
         #webcam {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        #shoe-viewer {
+
+        /* --- PANEL DE SIMULACIÓN VISUAL --- */
+        #simulation-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            --poster-color: transparent; /* Quita el fondo por defecto */
-            background-color: transparent;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: sans-serif;
+            min-width: 220px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            pointer-events: none; /* No estorba los clics */
+        }
+        #simulation-overlay h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #00d2ff;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+        .sim-data {
+            font-size: 13px;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .sim-data span {
+            font-weight: bold;
+            color: #fff;
+        }
+        #color-preview {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid #fff;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        /* --- PANEL DE BOTONES --- */
+        #controls-panel {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .action-btn {
+            background: #111;
+            color: white;
+            border: 1px solid #444;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            background: #00d2ff;
+            color: #000;
+            border-color: #00d2ff;
+        }
+        .btn-save {
+            background: #00b300 !important;
+            border-color: #00b300 !important;
+        }
+        .btn-save:hover {
+            background: #00ff00 !important;
+            color: #000 !important;
         }
     </style>
 </head>
@@ -39,19 +104,19 @@
     <div id="camera-container">
         <video id="webcam" autoplay playsinline></video>
 
-        <model-viewer id="shoe-viewer" 
-            src="models/zapato_base.glb" 
-            alt="Modelo 3D de Calzado"
-            camera-controls
-            interaction-prompt="none"
-            shadow-intensity="1">
-        </model-viewer>
+        <div id="simulation-overlay">
+            <h3>RA Calzado (Simulación)</h3>
+            <div class="sim-data">Modelo: <span id="view-modelo">Deportivo Alpha</span></div>
+            <div class="sim-data">Color: <span><span id="view-color-name">Blanco</span> <div id="color-preview" style="background-color: #FFFFFF;"></div></span></div>
+            <div class="sim-data">Talla Estimada: <span id="view-talla">Por medir...</span></div>
+        </div>
     </div>
 
     <div id="controls-panel">
         <button class="action-btn" onclick="intercambiarModelo()">Cambio de modelo</button>
         <button class="action-btn" onclick="intercambiarColor()">Cambio de color</button>
-        <button class="action-btn" onclick="guardarConfiguracionActual()">Guardar</button>
+        <button class="action-btn" onclick="simularMedicionIA()">Medir Pie (Simulación API)</button>
+        <button class="action-btn btn-save" onclick="guardarConfiguracionActual()">Guardar Configuración</button>
     </div>
 
     <script type="module" src="js/auth.js"></script>
