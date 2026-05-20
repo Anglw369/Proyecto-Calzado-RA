@@ -153,12 +153,12 @@ body {
     vertical-align: middle;
 }
 
-/* Panel de Botones Inferior */
+/* Panel de Botones Inferior (Corregido a 2 Columnas) */
 #controls-panel {
     background: var(--surface);
     padding: 16px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columnas iguales para los botones pequeños */
+    grid-template-columns: repeat(2, 1fr); /* Ajustado para que Modelo y Color ocupen mitad y mitad */
     gap: 10px;
     border-top: 1px solid var(--border-color);
 }
@@ -182,9 +182,9 @@ body {
     transform: translateY(-1px);
 }
 
-/* El botón Guardar abarca toda la parte inferior del grid */
+/* El botón Guardar abarca las 2 columnas del panel */
 .btn-save {
-    grid-column: span 3;        /* Se estira a lo ancho cubriendo las 3 columnas */
+    grid-column: span 2;        /* Se estira perfectamente cubriendo ambos botones */
     background: var(--primary-warm) !important;
     color: var(--surface) !important;
     border: none !important;
@@ -201,7 +201,6 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(231, 111, 81, 0.3);
 }
-
 /* --- CLASE GENERAL PARA OCULTAR ELEMENTOS --- */
 .hidden {
     display: none !important;
