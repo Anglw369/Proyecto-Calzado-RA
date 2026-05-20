@@ -1,8 +1,10 @@
 :root {
-    --primary: #0056b3;
-    --dark: #222;
-    --light: #fff;
-    --bg: #f4f4f9;
+    --bg-dark: #121214;       /* Fondo general profundo */
+    --surface: #1E1E24;       /* Tarjetas, contenedores y login */
+    --accent-tech: #00D2FF;   /* Azul Cian para escaneo, logos y bordes activos */
+    --accent-success: #00b300;/* Verde para confirmaciones y guardado */
+    --text-main: #FFFFFF;     /* Texto principal */
+    --text-muted: #A0A0A5;    /* Texto secundario o leyendas */
 }
 
 body { 
