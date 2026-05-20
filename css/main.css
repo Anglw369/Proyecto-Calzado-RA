@@ -26,6 +26,9 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: -webkit-fill-available; /* Ajuste para navegadores móviles */
+    overflow: hidden;
+    position: relative;
 }
 
 /* ==========================================================================
