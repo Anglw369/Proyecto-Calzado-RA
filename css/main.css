@@ -11,7 +11,7 @@
     --border-color: #EAE0D5;      /* Líneas de división cálidas */
 }
 
-/* Reset y Base */
+/* Reset y Base General */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -22,59 +22,27 @@ body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
     background: var(--bg-warm); 
     color: var(--dark-calzado);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
-    min-height: -webkit-fill-available; /* Ajuste para navegadores móviles */
-    overflow: hidden;
-    position: relative;
 }
 
 /* ==========================================================================
-   CONTENEDOR DE LA APP (MOCKUP EN PC / FULLSCREEN EN MÓVIL)
-   ========================================================================== */
-.app-container {
-    width: 100%;
-    max-width: 450px;           /* Limita el ancho en PC para simular un celular elegante */
-    height: 90vh;               /* Contenido estético y centrado en PC */
-    max-height: 800px;
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 12px 40px rgba(111, 78, 55, 0.15);
-    border-radius: 24px;        /* Bordes redondeados de smartphone premium */
-    overflow: hidden;
-    border: 4px solid var(--surface);
-}
-
-/* Adaptación matemática exacta para pantallas de celulares reales */
-@media (max-width: 480px) {
-    .app-container {
-        max-width: 100%;
-        height: 100vh;
-        height: 100dvh;         /* Altura dinámica exacta en móviles sin scrollbar */
-        max-height: 100dvh;
-        border-radius: 0;
-        border: none;
-        position: fixed;        /* Evita rebotes o desbordamientos raros */
-        top: 0;
-        left: 0;
-    }
-}
-
-/* ==========================================================================
-   COMPONENTES INTERNOS
+   ESTILOS PARA LANDING PAGE (INDEX.HTML) Y LOGIN
    ========================================================================== */
 
-/* Navegación Superior */
+/* Navegación General */
 .navbar { 
     display: flex; 
-    justify-content: center; 
+    justify-content: space-between; 
     align-items: center;
-    padding: 15px 20px; 
+    padding: 15px 30px; 
     background: var(--surface); 
     border-bottom: 2px solid var(--border-color);
+}
+
+.navbar a {
+    color: var(--dark-calzado);
+    text-decoration: none;
+    font-weight: bold;
 }
 
 .logo { 
@@ -90,10 +58,143 @@ body {
     padding-bottom: 1px;
 }
 
-/* Área de la Cámara (Se expande de forma flexible) */
+/* Secciones Index */
+.hero {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-color);
+}
+.hero h1 {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    color: var(--dark-calzado);
+}
+.hero p {
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+.info-section {
+    padding: 60px 20px;
+    text-align: center;
+}
+.info-section h2 {
+    margin-bottom: 30px;
+}
+
+.features {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+.feature-card {
+    background: var(--surface);
+    padding: 25px;
+    border-radius: 15px;
+    width: 250px;
+    box-shadow: 0 4px 15px rgba(111, 78, 55, 0.08);
+    border: 1px solid var(--border-color);
+}
+.feature-card h3 {
+    margin-bottom: 10px;
+    color: var(--primary-warm);
+}
+
+/* Botón de la Landing */
+.btn-main {
+    background: var(--primary-warm);
+    color: var(--surface);
+    padding: 12px 25px;
+    text-decoration: none;
+    border-radius: 8px;
+    display: inline-block;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Estructura para centrar Login/Registro */
+.center-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh;
+    padding: 20px;
+}
+
+/* Contenedores Login y Registro */
+.auth-container {
+    background: var(--surface);
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(111, 78, 55, 0.12);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border-color);
+}
+.auth-container h2 {
+    margin-bottom: 10px;
+    color: var(--dark-calzado);
+}
+.auth-container p {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+
+/* Elementos de Formulario */
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 15px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box;
+    background: var(--bg-warm);
+    color: var(--dark-calzado);
+    font-family: inherit;
+}
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-warm);
+}
+
+.switch-text {
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+.switch-text a {
+    color: var(--primary-warm);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   ESTILOS EXCLUSIVOS: INTERFAZ DE CÁMARA (APP.HTML)
+   ========================================================================== */
+.app-container {
+    width: 100%;
+    max-width: 450px;
+    height: 90vh;
+    max-height: 800px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 40px rgba(111, 78, 55, 0.15);
+    border-radius: 24px;
+    overflow: hidden;
+    border: 4px solid var(--surface);
+    margin: auto;
+}
+
 #camera-container {
     position: relative;
-    flex: 1;                    /* Toma todo el espacio disponible del centro */
+    flex: 1;
     background: #111;
     overflow: hidden;
 }
@@ -101,17 +202,16 @@ body {
 #webcam {
     width: 100%;
     height: 100%;
-    object-fit: cover;          /* Evita que el video se aplaste o deforme */
+    object-fit: cover;
 }
 
-/* Panel de Información Flotante sobre el video */
 #simulation-overlay {
     position: absolute;
     top: 15px;
     left: 15px;
     right: 15px;
     background: rgba(255, 255, 255, 0.85); 
-    backdrop-filter: blur(8px);  /* Desenfoque de fondo premium */
+    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     padding: 12px 16px;
     border-radius: 14px;
@@ -144,7 +244,6 @@ body {
 
 .sim-data span {
     font-weight: 700;
-    color: var(--dark-calzado);
 }
 
 #color-preview {
@@ -157,12 +256,11 @@ body {
     vertical-align: middle;
 }
 
-/* Panel de Botones Inferior (Ajustado a 2 Columnas) */
 #controls-panel {
     background: var(--surface);
     padding: 16px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Modelo y Color ocupan 50% y 50% */
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     border-top: 1px solid var(--border-color);
 }
@@ -179,8 +277,6 @@ body {
     transition: all 0.2s ease;
     text-align: center;
 }
-
-/* Efecto de toque inmediato en celulares */
 .action-btn:active {
     background: var(--accent-light);
     color: var(--surface);
@@ -188,7 +284,6 @@ body {
     transform: scale(0.98); 
 }
 
-/* El botón Guardar abarca las 2 columnas por completo */
 .btn-save {
     grid-column: span 2;        
     background: var(--primary-warm) !important;
@@ -201,16 +296,13 @@ body {
     text-transform: uppercase;
     margin-top: 4px;
     box-shadow: 0 4px 12px rgba(231, 111, 81, 0.2);
-    transition: all 0.2s ease;
 }
-
 .btn-save:active {
     background: #d95d3f !important;
     transform: scale(0.98) !important;
-    box-shadow: 0 2px 8px rgba(231, 111, 81, 0.2) !important;
 }
 
-/* --- CONTROL DE HOVERS EXCLUSIVO EN COMPUTADORA (Saca los hovers pegajosos del móvil) --- */
+/* Control de Hovers en PC */
 @media (hover: hover) {
     .action-btn:hover {
         background: var(--accent-light);
@@ -226,33 +318,46 @@ body {
     }
 }
 
-/* --- CLASE GENERAL PARA OCULTAR ELEMENTOS --- */
 .hidden {
     display: none !important;
 }
 
-/* --- BOTÓN DE MEDICIÓN FLOTANTE DENTRO DE LA CÁMARA --- */
 #btn-medir-flotante {
     position: absolute;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%); /* Centrado horizontal exacto */
+    transform: translateX(-50%);
     background: rgba(231, 111, 81, 0.95); 
     color: #fff;
     border: 2px solid var(--surface);
     padding: 12px 20px;
     font-size: 13px;
     font-weight: 800;
-    border-radius: 30px; /* Forma de píldora interactiva */
+    border-radius: 30px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     z-index: 15;
-    width: auto;
-    max-width: 250px;
     white-space: nowrap;
-    transition: all 0.2s ease;
 }
-
 #btn-medir-flotante:active {
     background: #d95d3f;
     transform: translateX(-50%) scale(0.98);
+}
+
+/* Adaptación estricta para el probador en móviles */
+@media (max-width: 480px) {
+    /* El body de la app se congela para evitar scroll general */
+    body:has(.app-container) {
+        overflow: hidden;
+    }
+    .app-container {
+        max-width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        border: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
 }
