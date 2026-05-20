@@ -5,56 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso - Pasarela Virtual</title>
     <link rel="stylesheet" href="css/main.css?v=7">
-    <style>
-        /* Un pequeño estilo rápido para ocultar/mostrar secciones */
-        .hidden { display: none !important; }
-    </style>
 </head>
-<body class="center-content">
+<body>
 
-    <div id="container-login" class="auth-container">
-        <h2>Bienvenido al Sistema</h2>
-        <p>Ingresa tus datos para continuar</p>
-        <form id="login-form">
-            <input type="email" id="login-correo" placeholder="Correo electrónico" required>
-            <input type="password" id="login-password" placeholder="Contraseña" required>
-            
-            <button type="button" class="btn-main" onclick="loginUsuario(
-                document.getElementById('login-correo').value,
-                document.getElementById('login-password').value
-            )">Iniciar Sesión</button>
-        </form>
-        <p class="switch-text">¿No tienes cuenta? <a href="#" onclick="toggleAuthForm()">Regístrate aquí</a></p>
-    </div>
+    <div class="center-content">
+        <div id="container-login" class="auth-container">
+            <h2>Bienvenido</h2>
+            <p>Ingresa tus datos para continuar</p>
+            <form id="login-form">
+                <input type="email" id="login-correo" placeholder="Correo electrónico" required>
+                <input type="password" id="login-password" placeholder="Contraseña" required>
+                
+                <button type="button" class="btn-main" style="width: 100%; margin-top: 10px;" onclick="loginUsuario(
+                    document.getElementById('login-correo').value,
+                    document.getElementById('login-password').value
+                )">Iniciar Sesión</button>
+            </form>
+            <p class="switch-text">¿No tienes cuenta? <a href="#" onclick="toggleAuthForm()">Regístrate aquí</a></p>
+        </div>
 
-    <div id="container-registro" class="auth-container hidden">
-        <h2>Crear Cuenta</h2>
-        <p>Regístrate para personalizar tu experiencia de calzado en RA</p>
-        <form id="register-form">
-            <input type="text" id="reg-nombre" placeholder="Nombre(s)" required>
-            <input type="text" id="reg-apellidos" placeholder="Apellidos" required>
-            
-            <input type="email" id="reg-correo" placeholder="Correo electrónico" required>
-            <input type="password" id="reg-password" placeholder="Contraseña segura" required>
-            <input type="tel" id="reg-telefono" placeholder="Teléfono (10 dígitos)" required>
-            
-            <select id="reg-genero" required style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; background-color: white; font-family: inherit;">
-                <option value="" disabled selected>Selecciona tu género</option>
-                <option value="Masculino">Masculino</option>
-                <option value="Femenino">Femenino</option>
-                <option value="Prefiero no decirlo">Prefiero no decirlo</option>
-            </select>
-            
-            <button type="button" class="btn-main" onclick="registrarUsuario(
-                document.getElementById('reg-nombre').value,
-                document.getElementById('reg-apellidos').value,
-                document.getElementById('reg-correo').value,
-                document.getElementById('reg-password').value,
-                document.getElementById('reg-telefono').value,
-                document.getElementById('reg-genero').value
-            )">Crear Cuenta</button>
-        </form>
-        <p class="switch-text">¿Ya tienes cuenta? <a href="#" onclick="toggleAuthForm()">Inicia sesión aquí</a></p>
+        <div id="container-registro" class="auth-container hidden">
+            <h2>Crear Cuenta</h2>
+            <p>Regístrate para personalizar tu experiencia de calzado en RA</p>
+            <form id="register-form">
+                <input type="text" id="reg-nombre" placeholder="Nombre(s)" required>
+                <input type="text" id="reg-apellidos" placeholder="Apellidos" required>
+                <input type="email" id="reg-correo" placeholder="Correo electrónico" required>
+                <input type="password" id="reg-password" placeholder="Contraseña segura" required>
+                <input type="tel" id="reg-telefono" placeholder="Teléfono (10 dígitos)" required>
+                
+                <select id="reg-genero" required>
+                    <option value="" disabled selected>Selecciona tu género</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Prefiero no decirlo">Prefiero no decirlo</option>
+                </select>
+                
+                <button type="button" class="btn-main" style="width: 100%; margin-top: 10px;" onclick="registrarUsuario(
+                    document.getElementById('reg-nombre').value,
+                    document.getElementById('reg-apellidos').value,
+                    document.getElementById('reg-correo').value,
+                    document.getElementById('reg-password').value,
+                    document.getElementById('reg-telefono').value,
+                    document.getElementById('reg-genero').value
+                )">Crear Cuenta</button>
+            </form>
+            <p class="switch-text">¿Ya tienes cuenta? <a href="#" onclick="toggleAuthForm()">Inicia sesión aquí</a></p>
+        </div>
     </div>
     
     <script>
@@ -63,7 +60,6 @@
             document.getElementById('container-registro').classList.toggle('hidden');
         }
     </script>
-
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>
