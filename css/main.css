@@ -1,210 +1,78 @@
 /* ==========================================================================
-   VARIABLES DE MARCA (IDENTIDAD VISUAL TECNOLÓGICA)
-   ========================================================================== */
+   IDENTIDAD DE MARCA: STEPRA (CÁLIDO, CALZADO Y PROFESIONAL)
+   ========================================================================= */
 :root {
-    --bg-dark: #121214;        /* Fondo general profundo */
-    --surface: #1E1E24;        /* Tarjetas, contenedores y login */
-    --accent-tech: #00D2FF;    /* Azul Cian para escaneo, logos y bordes activos */
-    --accent-success: #00b300; /* Verde para confirmaciones y guardado */
-    --text-main: #FFFFFF;      /* Texto principal */
-    --text-muted: #A0A0A5;     /* Texto secundario o leyendas */
+    --bg-warm: #FFF8F0;          /* Crema suave y cálido */
+    --surface: #FFFFFF;          /* Paneles y tarjetas blancas limpias */
+    --primary-warm: #E76F51;      /* Naranja Terracota dinámico */
+    --dark-calzado: #6F4E37;      /* Café Cuero Profundo para textos y fuerza */
+    --accent-light: #F4A261;      /* Naranja claro sutil */
+    --text-muted: #9C8370;        /* Café suave para secundarios */
 }
 
-/* Base del Sitio */
+/* Base del Sitio con sensación de App Nativa */
 body { 
     margin: 0; 
-    font-family: 'Segoe UI', sans-serif; 
-    background: var(--bg-dark); 
-    color: var(--text-main);
+    font-family: 'Avenir Next', 'Segoe UI', system-ui, sans-serif; 
+    background: var(--bg-warm); 
+    color: var(--dark-calzado);
+    overflow: hidden; /* Mantiene la sensación de app sin scroll general */
 }
 
 /* ==========================================================================
-   COMPONENTES DE NAVEGACIÓN Y HOME (INDEX)
+   COMPONENTES DE NAVEGACIÓN Y LOGO
    ========================================================================== */
 
 .navbar { 
     display: flex; 
-    justify-content: space-between; 
+    justify-content: center; /* Centrado para que parezca app */
     align-items: center;
-    padding: 15px 30px; 
+    padding: 12px 20px; 
     background: var(--surface); 
-    border-bottom: 1px solid #2d2d35;
+    border-bottom: 2px solid #EAE0D5;
 }
 
 .logo { 
-    font-weight: bold; 
-    font-size: 1.3rem; 
-    letter-spacing: 0.5px;
-    color: var(--text-main);
+    font-weight: 900; 
+    font-size: 1.4rem; 
+    letter-spacing: -1px; /* Más compacto y moderno */
+    color: var(--dark-calzado);
+    text-transform: uppercase;
 }
 .logo span { 
-    color: var(--accent-tech); 
-}
-
-.navbar a {
-    color: var(--text-muted);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-.navbar a:hover {
-    color: var(--accent-tech);
-}
-
-/* Secciones Hero e Información */
-.hero { 
-    text-align: center; 
-    padding: 100px 20px; 
-    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-dark) 100%); 
-}
-
-.hero h1 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-}
-
-.hero p {
-    color: var(--text-muted);
-    max-width: 600px;
-    margin: 0 auto 30px auto;
-}
-
-.info-section { 
-    padding: 60px 20px; 
-    text-align: center; 
-}
-
-.info-section h2 {
-    color: var(--accent-tech);
-    margin-bottom: 20px;
-}
-
-.info-section p {
-    color: var(--text-muted);
-    max-width: 800px;
-    margin: 0 auto 40px auto;
-}
-
-.features { 
-    display: flex; 
-    justify-content: center; 
-    flex-wrap: wrap;
-    gap: 25px; 
-}
-
-.feature-card { 
-    background: var(--surface); 
-    padding: 25px; 
-    border-radius: 12px; 
-    width: 220px; 
-    border: 1px solid #2d2d35;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
-    transition: transform 0.2s ease;
-}
-.feature-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent-tech);
-}
-
-.feature-card h3 {
-    margin-top: 0;
-    color: var(--text-main);
-}
-
-.feature-card p {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 0;
-}
-
-/* Botones Principales de Interfaz */
-.btn-main { 
-    background: var(--accent-tech); 
-    color: #000000; 
-    padding: 12px 30px; 
-    text-decoration: none; 
-    border-radius: 6px; 
-    display: inline-block; 
-    border: none; 
-    font-size: 1rem; 
-    font-weight: bold;
-    cursor: pointer; 
-    transition: background 0.2s ease, transform 0.1s ease;
-}
-.btn-main:hover { 
-    background: #5ce6ff;
-    transform: scale(1.02);
-}
-
-.center-content { 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh; 
-    background: var(--bg-dark);
+    color: var(--primary-warm); 
+    border-bottom: 2px solid var(--primary-warm); /* Subrayado que evoca una suela */
 }
 
 /* ==========================================================================
-   CONTENEDOR LOGIN Y REGISTRO
+   CONTENEDORES PRINCIPALES (FLEXBOX PARA RESPONSIVIDAD)
    ========================================================================== */
 
-.auth-container { 
-    background: var(--surface); 
-    padding: 40px; 
-    border-radius: 16px; 
-    border: 1px solid #2d2d35;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
-    text-align: center; 
-    width: 320px; 
-}
-
-.auth-container h2 {
-    margin-top: 0;
-    color: var(--text-main);
-}
-
-.auth-container p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.switch-text a {
-    color: var(--accent-tech);
-    text-decoration: none;
-}
-.switch-text a:hover {
-    text-decoration: underline;
-}
-
-input { 
-    width: 100%; 
-    padding: 12px; 
-    margin: 10px 0; 
-    border: 1px solid #2d2d35; 
-    background: var(--bg-dark);
-    color: var(--text-main);
-    border-radius: 6px; 
-    box-sizing: border-box; 
-}
-input:focus {
-    outline: none;
-    border-color: var(--accent-tech);
+/* Esto centra el contenido y lo hace app */
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 /* ==========================================================================
-   APP DE CÁMARA (PROBADOR EN ACCIÓN)
+   APP DE CÁMARA (RESPONSIVA CON PANEL FLOTANTE CHINGÓN)
    ========================================================================== */
 
 #camera-container {
     position: relative;
-    width: 100%;
-    max-width: 640px;
-    height: 60vh; 
-    margin: 0 auto;
+    width: 92%; /* Pequeño margen lateral para que se vea app */
+    max-width: 480px; /* Tamaño máximo ideal en tablets y PC */
+    height: calc(100vh - 120px); /* Ocupa casi toda la altura visible */
+    margin: 15px auto;
     background: #000;
-    border-radius: 12px 12px 0 0;
+    border-radius: 20px; /* Bordes muy redondeados, suaves al tacto */
     overflow: hidden;
-    border: 1px solid #2d2d35;
+    box-shadow: 0 8px 30px rgba(111, 78, 55, 0.2); /* Sombra suave con color de marca */
+    border: 3px solid var(--surface);
 }
 
 #webcam {
@@ -213,18 +81,20 @@ input:focus {
     object-fit: cover;
 }
 
-/* Panel de Simulación Flotante */
+/* --- Panel de Simulación Flotante (Súper Chingón sobre la cámara) --- */
 #simulation-overlay {
     position: absolute;
     top: 15px;
+    left: 15px;
     right: 15px;
-    background: rgba(18, 18, 20, 0.9);
-    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.9); /* Blanco translúcido para que no tape todo */
+    backdrop-filter: blur(5px); /* Desenfoque del video por detrás */
+    color: var(--dark-calzado);
     padding: 12px;
-    border-radius: 8px;
+    border-radius: 12px;
     min-width: 200px;
-    border: 1px solid #2d2d35;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1px solid rgba(111, 78, 55, 0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     pointer-events: none;
     z-index: 10;
 }
@@ -233,80 +103,87 @@ input:focus {
     margin: 0 0 8px 0;
     font-size: 11px;
     text-transform: uppercase;
-    color: var(--accent-tech);
-    letter-spacing: 1px;
-    border-bottom: 1px solid #2d2d35;
-    padding-bottom: 4px;
+    color: var(--primary-warm);
+    letter-spacing: 2px;
+    font-weight: 900;
 }
 
 .sim-data {
-    font-size: 12px;
+    font-size: 13px;
     margin: 6px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #EAE0D5;
+    padding-bottom: 4px;
 }
 
 .sim-data span {
     font-weight: bold;
-    color: var(--text-main);
+    color: var(--dark-calzado);
 }
 
 #color-preview {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    border: 1px solid var(--text-main);
+    border: 2px solid var(--surface);
     background-color: #FFFFFF;
     margin-left: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* Panel de Botones Inteligente */
+/* --- Panel de Botones Inteligente (Flota abajo chingón) --- */
 #controls-panel {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 10px;
-    padding: 15px;
-    max-width: 640px;
-    margin: 0 auto;
-    box-sizing: border-box;
-    background: var(--surface);
-    border-radius: 0 0 12px 12px;
-    border: 1px solid #2d2d35;
-    border-top: none;
+    position: absolute;
+    bottom: 20px;
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-around; /* Botones más pequeños y espaciados */
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    padding: 10px;
+    border-radius: 20px; /* Bordes redondeados */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
 .action-btn {
-    background: var(--bg-dark);
-    color: var(--text-main);
-    border: 1px solid #2d2d35;
-    padding: 14px 10px;
-    border-radius: 8px;
+    flex: 1; /* Todos del mismo ancho */
+    max-width: 110px; /* No crecen mucho en tablets */
+    background: var(--surface);
+    color: var(--dark-calzado);
+    border: 2px solid var(--primary-warm);
+    padding: 12px 5px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.5px;
     transition: all 0.2s ease;
     text-align: center;
+    box-shadow: 0 4px 8px rgba(231, 111, 81, 0.1);
 }
 
 .action-btn:hover {
-    background: var(--accent-tech);
-    color: #000000;
-    border-color: var(--accent-tech);
+    background: var(--accent-light);
+    color: var(--surface);
+    transform: translateY(-2px);
 }
 
-/* El botón de guardar se expande por completo abajo */
+/* El botón de guardar es el más importante y se destaca */
 .btn-save {
-    background: var(--accent-success) !important;
-    border-color: var(--accent-success) !important;
-    color: var(--text-main) !important;
-    grid-column: span 2; 
-    font-size: 15px;
+    background: var(--primary-warm) !important;
+    color: var(--surface) !important;
+    border-color: var(--primary-warm) !important;
+    flex: 1.5; /* Ligeramente más ancho */
+    font-size: 12px;
 }
 
 .btn-save:hover {
-    background: #00ff00 !important;
-    color: #000000 !important;
-    border-color: #00ff00 !important;
+    background: #E05A3E !important;
+    transform: scale(1.05);
 }

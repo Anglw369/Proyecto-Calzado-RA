@@ -2,28 +2,33 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cámara - Pasarela Virtual</title>
-   <link rel="stylesheet" href="css/main.css?v=2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>StepRA - Pasarela Virtual</title>
+    <link rel="stylesheet" href="css/main.css?v=2">
 </head>
 <body>
 
-    <div id="camera-container">
-        <video id="webcam" autoplay playsinline></video>
+    <div class="app-wrapper">
+        <nav class="navbar">
+            <div class="logo">Step<span>RA</span></div>
+        </nav>
 
-        <div id="simulation-overlay">
-            <h3>RA Calzado (Simulación)</h3>
-            <div class="sim-data">Modelo: <span id="view-modelo">Deportivo Alpha</span></div>
-            <div class="sim-data">Color: <span><span id="view-color-name">Blanco</span> <div id="color-preview"></div></span></div>
-            <div class="sim-data">Talla Estimada: <span id="view-talla">Por medir...</span></div>
+        <div id="camera-container">
+            <video id="webcam" autoplay playsinline></video>
+
+            <div id="simulation-overlay">
+                <h3>Escáner StepRA</h3>
+                <div class="sim-data">Modelo: <span id="view-modelo">Modelo Uno</span></div>
+                <div class="sim-data">Color: <span><span id="view-color-name">Terracota</span> <div id="color-preview" style="background-color: #E76F51;"></div></span></div>
+                <div class="sim-data">Talla Estimada: <span id="view-talla">Por medir...</span></div>
+            </div>
+
+            <div id="controls-panel">
+                <button class="action-btn" onclick="intercambiarModelo()">👟 Modelo</button>
+                <button class="action-btn" onclick="intercambiarColor()">🎨 Color</button>
+                <button class="action-btn" onclick="simularMedicionIA()">📏 Medir</button>
+                <button class="action-btn btn-save" onclick="guardarConfiguracionActual()">Guardar</button>
+            </div>
         </div>
-    </div>
-
-    <div id="controls-panel">
-        <button class="action-btn" onclick="intercambiarModelo()">Cambio de modelo</button>
-        <button class="action-btn" onclick="intercambiarColor()">Cambio de color</button>
-        <button class="action-btn" onclick="simularMedicionIA()">Medir Pie (IA)</button>
-        <button class="action-btn btn-save" onclick="guardarConfiguracionActual()">Guardar Configuración</button>
     </div>
 
     <script type="module" src="js/auth.js"></script>
