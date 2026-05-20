@@ -201,3 +201,33 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(231, 111, 81, 0.3);
 }
+
+/* --- CLASE GENERAL PARA OCULTAR ELEMENTOS --- */
+.hidden {
+    display: none !important;
+}
+
+/* --- BOTÓN DE MEDICIÓN FLOTANTE DENTRO DE LA CÁMARA --- */
+#btn-medir-flotante {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%); /* Lo centra milimétricamente horizontal */
+    background: rgba(231, 111, 81, 0.95); /* Color de marca llamativo */
+    color: #fff;
+    border: 2px solid var(--surface);
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 800;
+    border-radius: 30px; /* Estilo píldora flotante */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    z-index: 15;
+    width: auto;
+    max-width: 250px;
+    white-space: nowrap;
+}
+
+#btn-medir-flotante:hover {
+    background: #d95d3f;
+    transform: translateX(-50%) scale(1.05); /* Mantiene el centrado al hacer hover */
+}

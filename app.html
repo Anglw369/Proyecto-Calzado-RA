@@ -6,7 +6,7 @@
     <title>Pasarela Virtual - StepRA</title>
     <link rel="stylesheet" href="css/main.css?v=3">
 </head>
-<body>
+<<body>
 
     <div class="app-container">
         <nav class="navbar">
@@ -16,18 +16,21 @@
         <div id="camera-container">
             <video id="webcam" autoplay playsinline></video>
 
-            <div id="simulation-overlay">
+            <div id="simulation-overlay" class="hidden">
                 <h3>Escáner Pasarela</h3>
                 <div class="sim-data">Modelo: <span id="view-modelo">Deportivo Alpha</span></div>
                 <div class="sim-data">Color: <span><span id="view-color-name">Terracota</span> <div id="color-preview" style="background-color: #E76F51;"></div></span></div>
                 <div class="sim-data">Talla Estimada: <span id="view-talla">Por medir...</span></div>
             </div>
+
+            <button id="btn-medir-flotante" class="action-btn hidden" onclick="simularMedicionIA()">
+                📏 Calibrar Medida (IA)
+            </button>
         </div>
 
         <div id="controls-panel">
             <button class="action-btn" onclick="intercambiarModelo()">👟 Modelo</button>
             <button class="action-btn" onclick="intercambiarColor()">🎨 Color</button>
-            <button class="action-btn" onclick="simularMedicionIA()">📏 Medir</button>
             <button class="action-btn btn-save" onclick="guardarConfiguracionActual()">Guardar</button>
         </div>
     </div>
