@@ -375,3 +375,39 @@ input:focus, select:focus {
         left: 0;
     }
 }
+
+/* ==========================================================================
+   AJUSTES DE NAVEGACIÓN COMPLEMENTARIOS (LOGO Y CERRAR SESIÓN)
+   ========================================================================== */
+.logo-link {
+    text-decoration: none; /* Quita la línea de enlace en el logo */
+    display: inline-block;
+}
+
+.btn-logout {
+    background: transparent;
+    border: none;
+    color: var(--dark-calzado);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+/* Efecto visual al presionar el botón de salida */
+.btn-logout:active {
+    background: rgba(10, 88, 202, 0.1);
+    color: var(--primary-warm);
+    transform: scale(0.95);
+}
+
+@media (hover: hover) {
+    .btn-logout:hover {
+        background: rgba(10, 88, 202, 0.08);
+        color: var(--primary-warm);
+    }
+}

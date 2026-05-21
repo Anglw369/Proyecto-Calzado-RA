@@ -81,3 +81,14 @@ async function guardarConfiguracionCalzado(modelo, color, talla) {
 window.registrarUsuario = registrarUsuario;
 window.loginUsuario = loginUsuario;
 window.guardarConfiguracionCalzado = guardarConfiguracionCalzado;
+
+
+function cerrarSesionUsuario() {
+    // Aquí agregas tu lógica existente (ej. auth.signOut() si usas Firebase)
+    console.log("Cerrando sesión...");
+    
+    // Al finalizar la desconexión, redirige al usuario al login
+    window.location.href = "login.html";
+}
+// Asegúrate de exponerla globalmente si estás usando módulos para que el onclick del HTML la encuentre:
+window.cerrarSesionUsuario = cerrarSesionUsuario;
