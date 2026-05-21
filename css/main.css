@@ -4,14 +4,17 @@
 /* ==========================================================================
    VARIABLES DE MARCA: STEPRA (AZUL, AMARILLO Y BEIGE ARENA)
    ========================================================================== */
+/* ==========================================================================
+   VARIABLES DE MARCA: STEPRA (AZUL, AMARILLO Y BEIGE CON MÁS PRESENCIA)
+   ========================================================================== */
 :root {
-    --bg-warm: #EFEAE2;          /* Beige Arena base para el fondo general */
-    --surface: #F9F6F0;          /* Beige Claro Premium para tarjetas, login y paneles */
-    --primary-warm: #0A58CA;      /* Azul Deportivo Fuerte (Color principal) */
-    --dark-calzado: #0B1B3D;      /* Azul Marino Profundo para textos estables */
-    --accent-light: #FFD166;      /* Amarillo Sport para interacciones */
-    --text-muted: #5B6E88;        /* Gris azulado para secundario */
-    --border-color: #D3C9BC;      /* Bordes beige más oscuros para dar relieve */
+    --bg-warm: #E6DFD3;          /* Beige Almendra: Más oscuro y con mucha presencia */
+    --surface: #F3EDE0;          /* Beige Arena Intenso: Para resaltar paneles y logins */
+    --primary-warm: #0A58CA;      /* Azul Deportivo Fuerte */
+    --dark-calzado: #0B1B3D;      /* Azul Marino Profundo para textos */
+    --accent-light: #FFD166;      /* Amarillo Sport para destaques */
+    --text-muted: #625E55;        /* Café grisáceo para textos secundarios */
+    --border-color: #D2C7B5;      /* Bordes más marcados para dar volumen */
 }
 /* Reset y Base General */
 * {
