@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pasarela Virtual - StepRA</title>
-    
-   <link rel="stylesheet" href="css/main.css?v=10">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css?v=11">
 </head>
 <body>
 
@@ -25,13 +25,17 @@
             </div>
 
             <button id="btn-medir-flotante" class="action-btn hidden" onclick="simularMedicionIA()">
-                📏 Calibrar Medida (IA)
+                <i class="fa-solid fa-ruler-combined"></i> Calibrar Medida (IA)
             </button>
         </div>
 
         <div id="controls-panel">
-            <button class="action-btn" onclick="intercambiarModelo()">👟 Modelo</button>
-            <button class="action-btn" onclick="intercambiarColor()">🎨 Color</button>
+            <button class="action-btn" onclick="intercambiarModelo()">
+                <i class="fa-solid fa-shoe-prints" style="display:block; margin-bottom:4px; font-size:14px;"></i> Modelo
+            </button>
+            <button class="action-btn" onclick="intercambiarColor()">
+                <i class="fa-solid fa-palette" style="display:block; margin-bottom:4px; font-size:14px;"></i> Color
+            </button>
             <button class="action-btn btn-save" onclick="guardarConfiguracionActual()">Guardar</button>
         </div>
     </div>
