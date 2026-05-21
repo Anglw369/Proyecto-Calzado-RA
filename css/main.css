@@ -1,16 +1,18 @@
 /* ==========================================================================
    VARIABLES DE MARCA: STEPRA (AZUL DEPORTIVO, AMARILLO SPORT Y GRIS URBANO)
    ========================================================================== */
+/* ==========================================================================
+   VARIABLES DE MARCA: STEPRA (AZUL, AMARILLO Y BEIGE ARENA)
+   ========================================================================== */
 :root {
-    --bg-warm: #F0F2F5;          /* Gris cemento muy claro y limpio */
-    --surface: #FFFFFF;          /* Fondo blanco puro para paneles */
-    --primary-warm: #0A58CA;      /* Azul Deportivo Fuerte (Color de marca principal) */
+    --bg-warm: #EFEAE2;          /* Beige Arena base para el fondo general */
+    --surface: #F9F6F0;          /* Beige Claro Premium para tarjetas, login y paneles */
+    --primary-warm: #0A58CA;      /* Azul Deportivo Fuerte (Color principal) */
     --dark-calzado: #0B1B3D;      /* Azul Marino Profundo para textos estables */
-    --accent-light: #FFD166;      /* Amarillo Sport para interacciones y destaques */
-    --text-muted: #5B6E88;        /* Gris azulado para etiquetas secundarias */
-    --border-color: #DDE2EB;      /* Líneas de división sutiles */
+    --accent-light: #FFD166;      /* Amarillo Sport para interacciones */
+    --text-muted: #5B6E88;        /* Gris azulado para secundario */
+    --border-color: #D3C9BC;      /* Bordes beige más oscuros para dar relieve */
 }
-
 /* Reset y Base General */
 * {
     box-sizing: border-box;
