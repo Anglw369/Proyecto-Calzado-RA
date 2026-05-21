@@ -1,7 +1,7 @@
 // js/auth.js
 import { supabase } from './supabase-config.js';
 
-// 1. FUNCIÓN PARA REGISTRAR NUEVOS USUARIOS (MÉTODO CORREGIDO)
+// 1. FUNCIÓN PARA REGISTRAR NUEVOS USUARIOS
 async function registrarUsuario(nombre, apellidos, correo, password, telefono, genero) {
     if(!nombre || !apellidos || !correo || !password || !telefono || !genero) {
         return alert("Por favor llena todos los campos obligatorios.");
@@ -17,7 +17,7 @@ async function registrarUsuario(nombre, apellidos, correo, password, telefono, g
                 password: password,
                 telefono: telefono,
                 genero: genero,
-                talla_preferida: 0,        // Se iniciará en cero hasta que la API mida el pie
+                talla_preferida: 0,        
                 largo_pie: 0, 
                 ancho_pie: 0,
                 ultimo_modelo: 'Ninguno', 
@@ -33,7 +33,7 @@ async function registrarUsuario(nombre, apellidos, correo, password, telefono, g
     }
 }
 
-// 2. FUNCIÓN PARA INICIAR SESIÓN (Muestra nombre y apellido en el saludo)
+// 2. FUNCIÓN PARA INICIAR SESIÓN
 async function loginUsuario(correo, password) {
     if(!correo || !password) return alert("Por favor llena todos los campos");
 
@@ -46,17 +46,15 @@ async function loginUsuario(correo, password) {
     if (error || !data || data.length === 0) {
         alert("Correo o contraseña incorrectos o el usuario no existe.");
     } else {
-        // Concatenamos nombre y apellido para el mensaje de bienvenida
         const nombreCompleto = data[0].nombre + " " + (data[0].apellidos || "");
         alert("¡Bienvenido, " + nombreCompleto + "!");
         
         sessionStorage.setItem('userId', data[0].id); 
-        // Te manda directo al probador de cámara (saliendo de la carpeta js)
         window.location.href = './app.html';
     }
 }
 
-// 3. FUNCIÓN PARA GUARDAR PREFERENCIAS DESDE EL PROBADOR EN TIEMPO REAL
+// 3. FUNCIÓN PARA GUARDAR PREFERENCIAS DESDE EL PROBADOR
 async function guardarConfiguracionCalzado(modelo, color, talla) {
     const userId = sessionStorage.getItem('userId');
     if(!userId) return console.error("No se encontró un usuario activo en la sesión.");
@@ -66,7 +64,7 @@ async function guardarConfiguracionCalzado(modelo, color, talla) {
         .update({ 
             ultimo_modelo: modelo, 
             ultimo_color: color,
-            talla_preferida: parseFloat(talla) // Aquí es donde la cámara inyectará la talla final
+            talla_preferida: parseFloat(talla) 
         })
         .eq('id', userId);
 
@@ -77,18 +75,15 @@ async function guardarConfiguracionCalzado(modelo, color, talla) {
     }
 }
 
-// Hacer las funciones accesibles globalmente
+// 4. FUNCIÓN PARA CERRAR SESIÓN REAL (Elimina el ID y redirige)
+function cerrarSesionUsuario() {
+    console.log("Destruyendo token de sesión local...");
+    sessionStorage.removeItem('userId'); // Borra de verdad los datos del usuario
+    window.location.href = "login.html"; // Redirige al login de inmediato
+}
+
+// EXPONER LAS FUNCIONES AL ENTORNO GLOBAL (Importante para que convivan con el onclick del HTML)
 window.registrarUsuario = registrarUsuario;
 window.loginUsuario = loginUsuario;
 window.guardarConfiguracionCalzado = guardarConfiguracionCalzado;
-
-
-function cerrarSesionUsuario() {
-    // Aquí agregas tu lógica existente (ej. auth.signOut() si usas Firebase)
-    console.log("Cerrando sesión...");
-    
-    // Al finalizar la desconexión, redirige al usuario al login
-    window.location.href = "login.html";
-}
-// Asegúrate de exponerla globalmente si estás usando módulos para que el onclick del HTML la encuentre:
 window.cerrarSesionUsuario = cerrarSesionUsuario;

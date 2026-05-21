@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio - Pasarela Virtual UTL</title>
-    <link rel="stylesheet" href="css/main.css?v=9">
+    <link rel="stylesheet" href="css/main.css?v=12">
 </head>
 <body>
     <nav class="navbar">
         <div class="logo">Step<span>RA</span></div>
-        <a href="login.html" class="btn-main" style="padding: 8px 16px; font-size: 0.9rem;">Iniciar Sesión</a>
+        <a href="login.html" id="nav-auth-btn" class="btn-main" style="padding: 8px 16px; font-size: 0.9rem;">Iniciar Sesión</a>
     </nav>
 
     <header class="hero">
         <h1>Visualiza el futuro de tu calzado</h1>
         <p>Proyecto de estadías enfocado en la implementación de Realidad Aumentada para el sector calzado.</p>
-        <a href="login.html" class="btn-main">Comenzar ahora</a>
+        <a href="login.html" id="hero-start-btn" class="btn-main">Comenzar ahora</a>
     </header>
 
     <section class="info-section">
@@ -32,5 +32,25 @@
             </div>
         </div>
     </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Buscamos si hay un usuario logueado en la memoria de la app
+            const userIdActivo = sessionStorage.getItem('userId');
+            
+            if (userIdActivo) {
+                console.log("Sesión activa detectada. Modificando accesos para apuntar a la app...");
+                
+                // 1. El botón de la barra de navegación cambia a decir "Ir a mi Probador" e irá a app.html
+                const navBtn = document.getElementById("nav-auth-btn");
+                navBtn.innerText = "Ir al Probador 👟";
+                navBtn.href = "app.html";
+                
+                // 2. El botón central del Hero te mandará directo a la cámara sin pasar por login
+                const heroBtn = document.getElementById("hero-start-btn");
+                heroBtn.href = "app.html";
+            }
+        });
+    </script>
 </body>
 </html>
