@@ -33,24 +33,28 @@
         </div>
     </section>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Buscamos si hay un usuario logueado en la memoria de la app
+   <script>
+        (function() {
+            // Buscamos el ID del usuario en el almacenamiento local de la app
             const userIdActivo = sessionStorage.getItem('userId');
             
             if (userIdActivo) {
-                console.log("Sesión activa detectada. Modificando accesos para apuntar a la app...");
+                console.log("Sesión activa detectada (" + userIdActivo + "). Ajustando accesos...");
                 
-                // 1. El botón de la barra de navegación cambia a decir "Ir a mi Probador" e irá a app.html
+                // Modificamos el botón de la barra de navegación
                 const navBtn = document.getElementById("nav-auth-btn");
-                navBtn.innerText = "Ir al Probador 👟";
-                navBtn.href = "app.html";
+                if (navBtn) {
+                    navBtn.innerText = "Ir al Probador 👟";
+                    navBtn.href = "app.html";
+                }
                 
-                // 2. El botón central del Hero te mandará directo a la cámara sin pasar por login
+                // Modificamos el botón principal del Hero
                 const heroBtn = document.getElementById("hero-start-btn");
-                heroBtn.href = "app.html";
+                if (heroBtn) {
+                    heroBtn.href = "app.html";
+                }
             }
-        });
+        })();
     </script>
 </body>
 </html>
