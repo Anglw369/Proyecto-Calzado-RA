@@ -1,31 +1,26 @@
-// Variables de estado globales de la aplicación
+// Variables de estado globales
 let modeloActual = "Cubo 3D (Tenis)";
 let colorNombreActual = "Azul Sport";
 let colorHexActual = "#0A58CA";
-let tallaActual = 0; 
+let trackingIniciado = false; 
+let tallaActual = 26.0; // Cambiamos a 26 base para que Three.js pueda escalar desde el inicio si cambias modelo
 
-// 1. CONTROLADOR PARA EL BOTÓN INFERIOR "MODELO" (Alterna visualmente de forma directa)
+// 1. EL BOTÓN "MODELO" ABRE EL SELECTOR VISUAL NATIVO DEL CELULAR DE INMEDIATO
 function intercambiarModelo() {
-    const selector = document.getElementById("select-modelo-manual");
-    
-    // Si el panel de herramientas está oculto, le avisa al usuario que caletre primero
-    if (document.getElementById("debug-tools-panel").classList.contains("hidden")) {
-        alert("Por favor, presiona primero el botón 'CALIBRAR MEDIDA (IA)' para activar los objetos y sus controles manuales.");
-        return;
+    // Forzamos la apertura de las opciones nativas en la pantalla
+    const picker = document.getElementById("model-picker-hidden");
+    if (picker) {
+        picker.click(); 
+        // Nota: En algunos navegadores móviles 'click()' en select requiere focus o una interacción directa,
+        // para asegurar compatibilidad total, si el click nativo se bloquea, usamos un menú selectivo limpio:
+        const opciones = prompt("Selecciona el modelo 3D:\n\nEscribe 1 para: Cubo 3D (Tenis)\nEscribe 2 para: Cilindro 3D (Bota)", picker.value === "cubo" ? "1" : "2");
+        if (opciones === "1") picker.value = "cubo";
+        if (opciones === "2") picker.value = "cilindro";
+        if (opciones === "1" || opciones === "2") seleccionarObjetoVisual(picker.value);
     }
-
-    // Alterna de forma automática la opción del menú desplegable visual
-    if (selector.value === "cubo") {
-        selector.value = "cilindro";
-    } else {
-        selector.value = "cubo";
-    }
-    
-    // Ejecuta el cambio visual en Three.js
-    seleccionarObjetoVisual(selector.value);
 }
 
-// 2. FUNCIÓN COLECTORA DEL SELECTOR VISUAL DE OBJETOS
+// 2. FUNCIÓN CAMBIADORA DE OBJETOS EN THREE.JS
 function seleccionarObjetoVisual(tipoForma) {
     if (tipoForma === "cilindro") {
         modeloActual = "Cilindro 3D (Bota)";
@@ -33,20 +28,21 @@ function seleccionarObjetoVisual(tipoForma) {
         modeloActual = "Cubo 3D (Tenis)";
     }
     
+    // Mostramos el cambio en el cartel beige superior
     document.getElementById("view-modelo").innerText = modeloActual;
 
-    // Llama al motor tridimensional de main.js
+    // Le ordenamos a main.js renderizar la forma geométrica
     if (typeof window.generarGeometriaSimulada === "function") {
         window.generarGeometriaSimulada(tipoForma, colorHexActual);
     }
 
-    // Mantiene el tamaño que tenga el slider configurado actualmente
-    if (tallaActual > 0 && typeof window.actualizarEscalaPorTalla === "function") {
+    // Le aplicamos el tamaño que tenga activo el sistema para que no se deforme
+    if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 }
 
-// 3. MANEJO MANUAL DE COLOR (PALETA NATIVA)
+// 3. CAMBIO DE COLOR LIBRE (FUNCIONA DESDE EL INICIO)
 function intercambiarColor() {
     document.getElementById('color-picker').click();
 }
@@ -63,7 +59,7 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 4. BARRA DE TAMAÑO MANUAL (SLIDER FLOTANTE INTERACTIVO)
+// 4. BARRA DE TAMAÑO MANUAL
 function ajustarTallaManual(nuevaTalla) {
     tallaActual = parseFloat(nuevaTalla);
     document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
@@ -73,44 +69,39 @@ function ajustarTallaManual(nuevaTalla) {
     }
 }
 
-// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" -> REVELA TODO EL PANEL DE SELECCIÓN MANUAL
+// 5. ACCIÓN DEL BOTÓN "CALIBRAR MEDIDA" (REVELA ÚNICAMENTE LA BARRA DE TALLA)
 function simularMedicionIA() {
-    tallaActual = 26.0; // Talla por defecto automática inicial
+    trackingIniciado = true;
+    tallaActual = 26.0; 
 
-    // 1. Mostramos los datos calculados en el cartel beige superior
     document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Auto)";
     
-    // 2. Sincronizamos el control deslizante al mismo valor
     const slider = document.getElementById("size-slider");
     if(slider) slider.value = tallaActual;
 
-    // 3. Renderizamos la escala inicial en Three.js
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 
-    // 4. ¡PUM! Forzamos la aparición del panel completo de herramientas manuales abajo
+    // Mostramos la barra de tamaño abajo por si el usuario quiere ajustar
     const toolsPanel = document.getElementById("debug-tools-panel");
     if (toolsPanel) {
         toolsPanel.classList.remove("hidden");
-        // Asegura que anule cualquier display:none previo del CSS
-        toolsPanel.style.setAttribute ? toolsPanel.style.setAttribute("display", "flex", "important") : toolsPanel.style.cssText += 'display: flex !important;';
+        toolsPanel.style.cssText += 'display: flex !important;';
     }
 
-    alert(`📐 [MÉTRICA IA]: Escaneo completo.\n\nSe ha activado el panel inferior de 'Ajuste Manual' por si necesitas refinar la talla o cambiar el objeto visualmente.`);
+    alert(`📐 [MÉTRICA IA]: Escaneo automático completo.\nTalla: ${tallaActual} MX.\n\nSe activó la barra de 'Talla Manual' inferior por si requieres ajustar el volumen.`);
 }
 
-// 6. GUARDAR CONFIGURACIÓN ACTUAL
+// 6. GUARDAR CONFIGURACIÓN
 function guardarConfiguracionActual() {
-    if (tallaActual === 0) tallaActual = 26.0;
-
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(modeloActual, colorHexActual, tallaActual);
-        alert(`¡Guardado en Supabase!\n\nModelo: ${modeloActual}\nColor: ${colorHexActual}\nTalla: ${tallaActual} MX`);
+        alert(`¡Guardado con éxito!\n\nModelo: ${modeloActual}\nColor: ${colorHexActual}\nTalla: ${tallaActual} MX`);
     }
 }
 
-// Exponer funciones globales al navegador
+// Exponer funciones globales
 window.intercambiarModelo = intercambiarModelo;
 window.seleccionarObjetoVisual = seleccionarObjetoVisual;
 window.intercambiarColor = intercambiarColor;

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pasarela Virtual - StepRA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/main.css?v=19">
+    <link rel="stylesheet" href="css/main.css?v=20">
 </head>
 <body>
 
@@ -34,23 +34,17 @@
             </button>
         </div>
 
-        <div id="debug-tools-panel" class="hidden" style="background: var(--surface); padding: 12px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
-            
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 10px; font-weight: 800; color: var(--dark-calzado); text-transform: uppercase; white-space: nowrap;">👟 Cambiar Objeto:</span>
-                <select id="select-modelo-manual" style="margin: 0; padding: 6px; font-size: 12px; font-weight: 700;" onchange="seleccionarObjetoVisual(this.value)">
-                    <option value="cubo">📦 Cubo 3D (Tenis)</option>
-                    <option value="cilindro">🛢️ Cilindro 3D (Bota)</option>
-                </select>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 10px; font-weight: 800; color: var(--dark-calzado); text-transform: uppercase; white-space: nowrap;">📏 Talla Manual:</span>
-                <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" style="margin: 0; flex: 1; accent-color: var(--primary-warm);" oninput="ajustarTallaManual(this.value)">
-            </div>
+        <div id="debug-tools-panel" class="hidden" style="background: var(--surface); padding: 14px 16px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--dark-calzado); text-transform: uppercase; white-space: nowrap;">📏 Talla Manual:</span>
+            <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" style="margin: 0; flex: 1; accent-color: var(--primary-warm);" oninput="ajustarTallaManual(this.value)">
         </div>
 
         <input type="color" id="color-picker" value="#0A58CA" style="display: none;" onchange="seleccionarColorManual(this.value)">
+
+        <select id="model-picker-hidden" style="display: none;" onchange="seleccionarObjetoVisual(this.value)">
+            <option value="cubo" selected>📦 Cubo 3D (Tenis)</option>
+            <option value="cilindro">🛢️ Cilindro 3D (Bota)</option>
+        </select>
 
         <div id="controls-panel" style="border-top: 1px solid var(--border-color);">
             <button class="action-btn" onclick="intercambiarModelo()">
