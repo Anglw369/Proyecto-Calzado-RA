@@ -1,76 +1,90 @@
-// Arreglos de simulación con formas geométricas recomendadas por los profes
-const modelosSimulados = ["Cubo 3D (Tenis)", "Cilindro 3D (Bota)"];
-const coloresSimulados = [
-    { name: "Azul Sport", hex: "#0A58CA" },
-    { name: "Amarillo Neón", hex: "#FFD166" },
-    { name: "Rojo Fuego", hex: "#FF3333" },
-    { name: "Negro Mate", hex: "#111111" }
-];
+// Variables de estado del usuario actual
+let modeloActual = "Cubo 3D (Tenis)";
+let colorNombreActual = "Personalizado";
+let colorHexActual = "#0A58CA";
+let tallaActual = 26.0; 
 
-let modeloActual = modelosSimulados[0];
-let colorNombreActual = coloresSimulados[0].name;
-let colorHexActual = coloresSimulados[0].hex;
-let tallaActual = 0; 
-
-let indexModelo = 0;
-let indexColor = 0;
-
-// 1. CONTROLADOR DE CAMBIO DE MODELO / FORMA
+// 1. MANEJO MANUAL DE MODELOS (PREGUNTA QUÉ FORMA RENDERIZAR)
 function intercambiarModelo() {
-    indexModelo = (indexModelo + 1) % modelosSimulados.length;
-    modeloActual = modelosSimulados[indexModelo];
+    // Abrimos un cuadro de opción simple para pruebas manuales
+    const seleccion = prompt("Selecciona el modelo 3D para pruebas:\nEscribe 1 para: Cubo 3D (Tenis)\nEscribe 2 para: Cilindro 3D (Bota)");
 
-    document.getElementById("view-modelo").innerText = modeloActual;
+    if (seleccion === "1") {
+        modeloActual = "Cubo 3D (Tenis)";
+        document.getElementById("view-modelo").innerText = modeloActual;
+        if (typeof window.generarGeometriaSimulada === "function") {
+            window.generarGeometriaSimulada("cubo", colorHexActual);
+        }
+    } else if (seleccion === "2") {
+        modeloActual = "Cilindro 3D (Bota)";
+        document.getElementById("view-modelo").innerText = modeloActual;
+        if (typeof window.generarGeometriaSimulada === "function") {
+            window.generarGeometriaSimulada("cilindro", colorHexActual);
+        }
+    } else if (seleccion !== null) {
+        alert("Opción no válida. Escribe sólo 1 o 2.");
+        return;
+    }
 
-    // Le ordenamos a Three.js re-renderizar la forma geométrica manteniendo el color actual
-    if (typeof window.generarGeometriaSimulada === "function") {
-        const tipoForma = (indexModelo === 1) ? "cilindro" : "cubo";
-        window.generarGeometriaSimulada(tipoForma, colorHexActual);
-        
-        // Mantener la escala actual si ya se midió el pie
-        if(tallaActual > 0) window.actualizarEscalaPorTalla(tallaActual);
+    // Volvemos a aplicar la escala que tenga actualmente el slider para que no se pierda
+    if (typeof window.actualizarEscalaPorTalla === "function") {
+        window.actualizarEscalaPorTalla(tallaActual);
     }
 }
 
-// 2. CONTROLADOR DE CAMBIO DE COLOR
+// 2. MANEJO MANUAL DE COLOR (ABRE LA PALETA DE COLORES NATIVA)
 function intercambiarColor() {
-    indexColor = (indexColor + 1) % coloresSimulados.length;
-    colorNombreActual = coloresSimulados[indexColor].name;
-    colorHexActual = coloresSimulados[indexColor].hex;
+    // Forzamos el clic de forma interna en el input input color invisible del HTML
+    document.getElementById('color-picker').click();
+}
 
+// Esta función se ejecuta automáticamente cuando eliges un color en la paleta
+function seleccionarColorManual(hexSeleccionado) {
+    colorHexActual = hexSeleccionado;
+    colorNombreActual = "Personalizado (" + hexSeleccionado.toUpperCase() + ")";
+
+    // Actualizamos los textos e indicadores beige en la pantalla
     document.getElementById("view-color-name").innerText = colorNombreActual;
     document.getElementById("color-preview").style.backgroundColor = colorHexActual;
 
-    // Le ordenamos a Three.js pintar la forma actual sin borrarla
+    // Pintamos la figura en Three.js sin destruirla
     if (typeof window.actualizarColorGeometria === "function") {
         window.actualizarColorGeometria(colorHexActual);
     }
 }
 
-// 3. CONTROLADOR DEL BOTÓN FLOTANTE "MEDIR" (IA ESCALADO REACCIONABLE)
-function simularMedicionIA() {
-    // Simulamos variaciones de tallas reales de calzado para demostrar el escalado dinámico
-    const tallasPrueba = [24.5, 25.5, 26.0, 27.0, 28.5];
-    const randomIdx = Math.floor(Math.random() * tallasPrueba.length);
-    tallaActual = tallasPrueba[randomIdx];
-
-    // 1. Refrescamos la interfaz Beige superior
-    document.getElementById("view-talla").innerText = tallaActual + " MX";
+// 3. BARRA DE TAMAÑO MANUAL (SLIDER INTERACTIVO)
+function ajustarTallaManual(nuevaTalla) {
+    tallaActual = parseFloat(nuevaTalla);
     
-    // 2. Modificamos la escala 3D en tiempo real en Three.js
+    // Actualiza el texto en la interfaz superior beige
+    document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Manual)";
+
+    // Ordena al motor Three.js estirar el eje Z en tiempo real
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
-
-    alert(`📐 [MÉTRICA IA]: Pie calibrado.\nTalla detectada: ${tallaActual} MX.\nLa forma 3D se ha ajustado proporcionalmente.`);
 }
 
-// 4. GUARDAR PREFERENCIAS
-function guardarConfiguracionActual() {
-    if (tallaActual === 0) tallaActual = 26.0;
+// 4. SIMULAR LA ACCIÓN DE LA IA (Se mantiene por compatibilidad)
+function simularMedicionIA() {
+    alert(`Modo Manual Activo.\nUsa la barra inferior 'Talla Manual' para calibrar el volumen exacto en tus pruebas.`);
+}
 
+// 5. GUARDAR CONFIGURACIÓN ACTUAL EN SUPABASE
+function guardarConfiguracionActual() {
     if (typeof window.guardarConfiguracionCalzado === "function") {
-        window.guardarConfiguracionCalzado(modeloActual, colorNombreActual, tallaActual);
-        alert(`¡Guardado en Supabase!\nForma: ${modeloActual}\nColor: ${colorNombreActual}\nTalla: ${tallaActual} MX`);
+        window.guardarConfiguracionCalzado(modeloActual, colorHexActual, tallaActual);
+        alert(`¡Guardado en la Nube con éxito!\n\nModelo: ${modeloActual}\nColor Hex: ${colorHexActual}\nTalla: ${tallaActual} MX`);
+    } else {
+        console.error("Error: Conexión con Supabase no lista.");
     }
 }
+
+// Hacer las funciones de depuración accesibles globalmente
+window.intercambiarModelo = intercambiarModelo;
+window.intercambiarColor = intercambiarColor;
+window.seleccionarColorManual = seleccionarColorManual;
+window.ajustarTallaManual = ajustarTallaManual;
+window.simularMedicionIA = simularMedicionIA;
+window.guardarConfiguracionActual = guardarConfiguracionActual;

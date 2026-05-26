@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pasarela Virtual - StepRA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/main.css?v=15">
+    <link rel="stylesheet" href="css/main.css?v=17">
 </head>
 <body>
 
@@ -26,7 +26,7 @@
                 <h3>Escáner Pasarela</h3>
                 <div class="sim-data">Modelo: <span id="view-modelo">Cubo 3D (Tenis)</span></div>
                 <div class="sim-data">Color: <span><span id="view-color-name">Azul Sport</span> <div id="color-preview" style="background-color: #0A58CA;"></div></span></div>
-                <div class="sim-data">Talla Estimada: <span id="view-talla">Por medir...</span></div>
+                <div class="sim-data">Talla Estimada: <span id="view-talla">26.0 MX (Manual)</span></div>
             </div>
 
             <button id="btn-medir-flotante" class="action-btn hidden" onclick="simularMedicionIA()">
@@ -34,7 +34,14 @@
             </button>
         </div>
 
-        <div id="controls-panel">
+        <div id="debug-size-panel" style="background: var(--surface); padding: 8px 16px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--dark-calzado); white-space: nowrap; text-transform: uppercase;">📏 Talla Manual:</span>
+            <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" style="margin: 0; flex: 1; accent-color: var(--primary-warm);" oninput="ajustarTallaManual(this.value)">
+        </div>
+
+        <input type="color" id="color-picker" value="#0A58CA" style="display: none;" onchange="seleccionarColorManual(this.value)">
+
+        <div id="controls-panel" style="border-top: none; padding-top: 0;">
             <button class="action-btn" onclick="intercambiarModelo()">
                 <i class="fa-solid fa-shoe-prints" style="display:block; margin-bottom:4px; font-size:14px;"></i> Modelo
             </button>
