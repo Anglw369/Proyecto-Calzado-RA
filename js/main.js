@@ -40,8 +40,9 @@ function init3DSpace() {
     function animate() {
         requestAnimationFrame(animate);
         
-        // Animación de rotación solo si no se ha detectado tracking de IA activo
-        if (currentMesh && document.getElementById("simulation-overlay").classList.contains("hidden")) {
+        // Animación de rotación inicial estética (sólo si el panel sigue oculto)
+        const overlay = document.getElementById("simulation-overlay");
+        if (currentMesh && overlay && overlay.classList.contains("hidden")) {
             currentMesh.rotation.y += 0.01;
             currentMesh.rotation.x += 0.005;
         }
@@ -92,38 +93,43 @@ function actualizarEscalaPorTalla(talla) {
     currentMesh.scale.set(escalaAnchoAlt, escalaAnchoAlt, escalaLargo);
 }
 
-// 5. ENCENDIDO SEGURO DE LA CÁMARA E INICIALIZACIÓN DE MEDIAPIPE
+// 5. ENCENDIDO SEGURO DE LA CÁMARA TRASERA NATIVA
 async function iniciarCamaraNativa() {
     try {
-        // Configuramos el stream de video de la cámara trasera
+        // Configuramos estrictamente la cámara trasera del entorno
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: "environment" }, width: 640, height: 480 }
+            video: { facingMode: { exact: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } }
         });
         videoElement.srcObject = stream;
-        console.log("Cámara trasera encendida.");
+        console.log("Cámara trasera encendida nativamente.");
+        
+        // Esperamos a que el video cargue sus datos reales para arrancar la IA
+        videoElement.onloadedmetadata = () => {
+            inicializarMediaPipePose();
+        };
     } catch (err) {
-        console.warn("No se detectó cámara trasera, usando genérica/PC...");
+        console.warn("No se detectó cámara trasera, usando cámara por defecto...");
         try {
             const streamGen = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
             videoElement.srcObject = streamGen;
+            videoElement.onloadedmetadata = () => {
+                inicializarMediaPipePose();
+            };
         } catch (cameraErr) {
             console.error("Error crítico de hardware de cámara:", cameraErr);
         }
     }
-
-    // Inicializar MediaPipe Pose una vez que la cámara esté lista
-    inicializarMediaPipePose();
 }
 
 // ==========================================================================
-// 6. MOTOR DE INTELIGENCIA ARTIFICIAL (MEDIAPIPE INTERACTION CORREGIDO)
+// 6. MOTOR DE INTELIGENCIA ARTIFICIAL CORREGIDO (SIN WINDOW.CAMERA COMPARTIDA)
 // ==========================================================================
 function inicializarMediaPipePose() {
     poseTracker = new Pose({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
     });
 
-    // Ajustes de rendimiento móvil
+    // Ajustes de máximo rendimiento móvil
     poseTracker.setOptions({
         modelComplexity: 0, 
         smoothLandmarks: true,
@@ -131,56 +137,55 @@ function inicializarMediaPipePose() {
         minTrackingConfidence: 0.5
     });
 
-    // Escuchador cuadro por cuadro
+    // Escuchador que procesa los puntos del pie
     poseTracker.onResults((results) => {
-        // Hacemos que aparezcan el cartel superior beige y tu botón amarillo "Calibrar"
-        // en cuanto la IA cargue el primer cuadro de video con éxito.
-        const overlay = document.getElementById("simulation-overlay");
-        const btnCalibrar = document.getElementById("btn-medir-flotante");
-        
-        if (overlay && overlay.classList.contains("hidden")) {
-            overlay.classList.remove("hidden");
-        }
-        if (btnCalibrar && btnCalibrar.classList.contains("hidden")) {
-            btnCalibrar.classList.remove("hidden");
-        }
-
         if (!results.poseLandmarks || !currentMesh) return;
 
         // Punto 28 = Tobillo Derecho
         const tobilloDerecho = results.poseLandmarks[28];
 
         if (tobilloDerecho && tobilloDerecho.visibility > 0.5) {
-            // Re-calibramos las matrices de conversión para que el objeto no vuele arriba
-            // Mapeamos los ejes para que se asiente abajo en la zona del calzado
-            const targetX = (tobilloDerecho.x - 0.5) * -3.2; 
-            const targetY = (tobilloDerecho.y - 0.5) * -2.4 - 0.6; // Empujamos hacia abajo en Y (-0.6)
+            // Conversión matemática calibrada para la cámara trasera sin efecto espejo
+            // Al ser cámara trasera, el eje X no se invierte
+            const targetX = (tobilloDerecho.x - 0.5) * 3.2; 
+            const targetY = (tobilloDerecho.y - 0.5) * -2.4 - 0.4; // Ajustado al suelo
 
-            // Filtro LERP suave para evitar temblores en el celular
+            // Filtro LERP para suavizar temblores de la mano
             currentMesh.position.x += (targetX - currentMesh.position.x) * 0.25;
             currentMesh.position.y += (targetY - currentMesh.position.y) * 0.25;
-            
-            // Profundidad escalada
             currentMesh.position.z = 1.2 + (tobilloDerecho.z * -1.8);
         }
     });
 
-    // Forzamos a la utilidad de cámara a respetar la orientación trasera original del móvil
-    const cameraUtils = new window.Camera(videoElement, {
-        onFrame: async () => {
+    // ACTIVACIÓN DE LA INTERFAZ DESDE EL SEGUNDO UNO
+    // No esperamos a que la IA detecte un cuerpo para mostrar los botones
+    const overlay = document.getElementById("simulation-overlay");
+    const btnCalibrar = document.getElementById("btn-medir-flotante");
+    if (overlay) overlay.classList.remove("hidden");
+    if (btnCalibrar) btnCalibrar.classList.remove("hidden");
+
+    // PROCESAMIENTO DIRECTO DEL STREAM: Enviamos los cuadros del video nativo a la IA
+    async function procesarCuadroVideo() {
+        if (!videoElement.paused && !videoElement.ended) {
             await poseTracker.send({ image: videoElement });
-        },
-        width: 640,
-        height: 480
-    });
-    cameraUtils.start();
-    console.log("Cerebro de Visión Artificial MediaPipe sincronizado con la interfaz.");
+        }
+        // Usamos el refresco nativo del navegador para no consumir batería de más
+        if (videoElement.requestVideoFrameCallback) {
+            videoElement.requestVideoFrameCallback(procesarCuadroVideo);
+        } else {
+            setTimeout(procesarCuadroVideo, 33); // Alternativa para navegadores antiguos (30fps)
+        }
+    }
+    
+    // Arrancamos el bucle de la IA
+    procesarCuadroVideo();
+    console.log("IA MediaPipe enlazada directamente al flujo de la cámara trasera nativa.");
 }
 
 // Encender los motores ordenadamente al cargar el DOM
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
     init3DSpace();
-    await iniciarCamaraNativa(); 
+    iniciarCamaraNativa(); 
 });
 
 // Exponer funciones globales
