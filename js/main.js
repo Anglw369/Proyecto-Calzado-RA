@@ -37,7 +37,7 @@ function init3DSpace() {
     function animate() {
         requestAnimationFrame(animate);
         if (currentMesh) {
-            // Si la UI sigue oculta (esperando pie), la figura rota de forma atractiva
+            // Si la UI sigue oculta (esperando pie), la figura rota de forma atractiva en el aire
             if (document.getElementById("simulation-overlay").classList.contains("hidden")) {
                 currentMesh.rotation.y += 0.01;
                 currentMesh.rotation.x += 0.005;
@@ -48,15 +48,17 @@ function init3DSpace() {
     animate();
 }
 
-// 2. FUNCIÓN PARA GENERAR EL CUBO O CILINDRO DINÁMICAMENTE
+// 2. FUNCIÓN PARA GENERAR EL CUBO O CILINDRO DINÁMICAMENTE (REPOSICIONADO PARA EL PIE)
 function generarGeometriaSimulada(tipo, colorHex) {
     if (currentMesh) scene.remove(currentMesh);
 
     let geometry;
     if (tipo === "cilindro") {
-        geometry = new THREE.CylinderGeometry(0.5, 0.5, 1.6, 32);
+        // Cilindro acostado e inclinado que simula el empeine/caña de una bota
+        geometry = new THREE.CylinderGeometry(0.35, 0.45, 1.6, 32);
     } else {
-        geometry = new THREE.BoxGeometry(1.2, 0.6, 2.0); // Caja proporcional
+        // Caja de zapatos estilizada: más larga que alta y ancha
+        geometry = new THREE.BoxGeometry(0.8, 0.45, 2.0); 
     }
 
     const material = new THREE.MeshStandardMaterial({ 
@@ -66,7 +68,13 @@ function generarGeometriaSimulada(tipo, colorHex) {
     });
 
     currentMesh = new THREE.Mesh(geometry, material);
-    currentMesh.position.set(0, -0.5, 1); // Posicionado a la altura del pie
+    
+    // ACOPLAMIENTO AL PIE REAL: Lo bajamos al suelo (-1.4) y lo alejamos un poco (1.2)
+    currentMesh.position.set(0, -1.3, 1.4); 
+    
+    // ROTACIÓN BASE EN PERSPECTIVA: Lo inclinamos hacia el frente para que encaje con la bota del video
+    currentMesh.rotation.set(0.2, 0.4, 0); 
+
     scene.add(currentMesh);
 }
 
@@ -77,18 +85,22 @@ function actualizarColorGeometria(colorHex) {
     }
 }
 
-// 4. ACTUALIZAR LA ESCALA (TALLA DEL PIE) EN TIEMPO REAL
+// 4. ACTUALIZAR LA ESCALA ANATÓMICA (SIMULACIÓN DE CALZADO LARGO Z)
 function actualizarEscalaPorTalla(talla) {
     if (!currentMesh) return;
-    // Talla base 26.0 = Escala 1.0. Sube o baja un 10% por cada número entero
-    const factorEscala = 1 + (talla - 26.0) * 0.1;
-    currentMesh.scale.set(factorEscala, factorEscala, factorEscala);
+    
+    // Talla base 26.0 = Escala 1.0
+    // En lugar de inflar la figura como globo, estiramos más el largo (Z) que es la longitud del pie
+    const escalaLargo = 1 + (talla - 26.0) * 0.15; // Crece más hacia el frente
+    const escalaAnchoAlt = 1 + (talla - 26.0) * 0.07; // El ancho y alto cambian discretamente
+    
+    currentMesh.scale.set(escalaAnchoAlt, escalaAnchoAlt, escalaLargo);
+    console.log(`[Three.js] Geometría estirada en eje Z para emular número ${talla} MX`);
 }
 
 // 5. ENCENDIDO SEGURO DE LA CÁMARA (BLINDADO CONTRA ERRORES EN PC Y MÓVIL)
 async function iniciarCamaraNativa() {
     try {
-        // Intentamos usar la cámara trasera en celulares de forma nativa
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { exact: "environment" } }
         });
@@ -97,7 +109,6 @@ async function iniciarCamaraNativa() {
     } catch (err) {
         console.warn("No se detectó cámara trasera (PC o Laptop), iniciando cámara genérica...");
         try {
-            // Si falla (como en la PC), iniciamos la cámara web normal por defecto
             const streamGen = await navigator.mediaDevices.getUserMedia({ video: true });
             videoElement.srcObject = streamGen;
             console.log("Cámara genérica/PC encendida con éxito.");
@@ -111,14 +122,13 @@ async function iniciarCamaraNativa() {
 function iniciarRastreadorIA() {
     console.log("Mapeando entorno visual...");
     
-    // Simulamos un retraso de 2.5 segundos que tarda la IA en procesar y enganchar el pie
     setTimeout(() => {
         const overlay = document.getElementById("simulation-overlay");
         if (overlay && overlay.classList.contains("hidden")) {
             overlay.classList.remove("hidden");
             document.getElementById("btn-medir-flotante").classList.remove("hidden");
             
-            // Asignamos una talla inicial medida por el algoritmo
+            // Forzamos la primera calibración anatómica automática
             tallaActual = 26.0;
             document.getElementById("view-talla").innerText = "26.0 MX (Auto)";
             actualizarEscalaPorTalla(tallaActual);
@@ -130,7 +140,7 @@ function iniciarRastreadorIA() {
 
 // Encender motores asíncronos en orden para que no se bloqueen entre sí
 window.addEventListener('DOMContentLoaded', async () => {
-    init3DSpace();          // 1. Inyecta el lienzo 3D con el cubo de inmediato (así nunca se ve negro)
+    init3DSpace();          // 1. Inyecta el lienzo 3D con la forma estilizada
     await iniciarCamaraNativa(); // 2. Enciende la cámara web según el dispositivo
     iniciarRastreadorIA();  // 3. Activa los paneles y calcula la escala del pie
 });
