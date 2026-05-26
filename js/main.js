@@ -5,6 +5,9 @@ const cameraContainer = document.getElementById('camera-container');
 // Variables del Motor 3D (Three.js)
 let scene, camera, renderer, currentMesh;
 
+// Variables de Inteligencia Artificial (MediaPipe Pose)
+let poseTracker;
+
 // 1. INICIALIZAR EL ESCENARIO 3D TRANSPARENTE
 function init3DSpace() {
     scene = new THREE.Scene();
@@ -36,28 +39,26 @@ function init3DSpace() {
     // Ciclo de animación continuo
     function animate() {
         requestAnimationFrame(animate);
-        if (currentMesh) {
-            // Si la UI sigue oculta (esperando pie), la figura rota de forma atractiva en el aire
-            if (document.getElementById("simulation-overlay").classList.contains("hidden")) {
-                currentMesh.rotation.y += 0.01;
-                currentMesh.rotation.x += 0.005;
-            }
+        
+        // Animación de rotación solo si no se ha detectado tracking de IA activo
+        if (currentMesh && document.getElementById("simulation-overlay").classList.contains("hidden")) {
+            currentMesh.rotation.y += 0.01;
+            currentMesh.rotation.x += 0.005;
         }
+        
         renderer.render(scene, camera);
     }
     animate();
 }
 
-// 2. FUNCIÓN PARA GENERAR EL CUBO O CILINDRO DINÁMICAMENTE (REPOSICIONADO PARA EL PIE)
+// 2. FUNCIÓN PARA GENERAR EL CUBO O CILINDRO DINÁMICAMENTE
 function generarGeometriaSimulada(tipo, colorHex) {
     if (currentMesh) scene.remove(currentMesh);
 
     let geometry;
     if (tipo === "cilindro") {
-        // Cilindro acostado e inclinado que simula el empeine/caña de una bota
         geometry = new THREE.CylinderGeometry(0.35, 0.45, 1.6, 32);
     } else {
-        // Caja de zapatos estilizada: más larga que alta y ancha
         geometry = new THREE.BoxGeometry(0.8, 0.45, 2.0); 
     }
 
@@ -69,10 +70,8 @@ function generarGeometriaSimulada(tipo, colorHex) {
 
     currentMesh = new THREE.Mesh(geometry, material);
     
-    // ACOPLAMIENTO AL PIE REAL: Lo bajamos al suelo (-1.4) y lo alejamos un poco (1.2)
-    currentMesh.position.set(0, -1.3, 1.4); 
-    
-    // ROTACIÓN BASE EN PERSPECTIVA: Lo inclinamos hacia el frente para que encaje con la bota del video
+    // Posición inicial por defecto
+    currentMesh.position.set(0, 0.8, 0.8); 
     currentMesh.rotation.set(0.2, 0.4, 0); 
 
     scene.add(currentMesh);
@@ -85,67 +84,98 @@ function actualizarColorGeometria(colorHex) {
     }
 }
 
-// 4. ACTUALIZAR LA ESCALA ANATÓMICA (SIMULACIÓN DE CALZADO LARGO Z)
+// 4. ACTUALIZAR LA ESCALA ANATÓMICA
 function actualizarEscalaPorTalla(talla) {
     if (!currentMesh) return;
-    
-    // Talla base 26.0 = Escala 1.0
-    // En lugar de inflar la figura como globo, estiramos más el largo (Z) que es la longitud del pie
-    const escalaLargo = 1 + (talla - 26.0) * 0.15; // Crece más hacia el frente
-    const escalaAnchoAlt = 1 + (talla - 26.0) * 0.07; // El ancho y alto cambian discretamente
-    
+    const escalaLargo = 1 + (talla - 26.0) * 0.15; 
+    const escalaAnchoAlt = 1 + (talla - 26.0) * 0.07; 
     currentMesh.scale.set(escalaAnchoAlt, escalaAnchoAlt, escalaLargo);
-    console.log(`[Three.js] Geometría estirada en eje Z para emular número ${talla} MX`);
 }
 
-// 5. ENCENDIDO SEGURO DE LA CÁMARA (BLINDADO CONTRA ERRORES EN PC Y MÓVIL)
+// 5. ENCENDIDO SEGURO DE LA CÁMARA E INICIALIZACIÓN DE MEDIAPIPE
 async function iniciarCamaraNativa() {
     try {
+        // Configuramos el stream de video de la cámara trasera
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: "environment" } }
+            video: { facingMode: { exact: "environment" }, width: 640, height: 480 }
         });
         videoElement.srcObject = stream;
-        console.log("Cámara trasera encendida con éxito.");
+        console.log("Cámara trasera encendida.");
     } catch (err) {
-        console.warn("No se detectó cámara trasera (PC o Laptop), iniciando cámara genérica...");
+        console.warn("No se detectó cámara trasera, usando genérica/PC...");
         try {
-            const streamGen = await navigator.mediaDevices.getUserMedia({ video: true });
+            const streamGen = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
             videoElement.srcObject = streamGen;
-            console.log("Cámara genérica/PC encendida con éxito.");
         } catch (cameraErr) {
-            console.error("Error crítico: El dispositivo no cuenta con cámaras activas o permisos.", cameraErr);
+            console.error("Error crítico de hardware de cámara:", cameraErr);
         }
     }
+
+    // Inicializar MediaPipe Pose una vez que la cámara esté lista
+    inicializarMediaPipePose();
 }
 
-// 6. TRACKING AUTOMÁTICO DE IA (CON INTERFAZ REACCIONABLE TIMEOUT CONTROLADO)
-function iniciarRastreadorIA() {
-    console.log("Mapeando entorno visual...");
-    
-    setTimeout(() => {
-        const overlay = document.getElementById("simulation-overlay");
-        if (overlay && overlay.classList.contains("hidden")) {
-            overlay.classList.remove("hidden");
-            document.getElementById("btn-medir-flotante").classList.remove("hidden");
+// ==========================================================================
+// 6. MOTOR DE INTELIGENCIA ARTIFICIAL (MEDIAPIPE INTERACTION)
+// ==========================================================================
+function inicializarMediaPipePose() {
+    poseTracker = new Pose({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
+
+    // Ajustes para máxima velocidad y rendimiento óptimo en celulares
+    poseTracker.setOptions({
+        modelComplexity: 0,       // 0 = Ultra rápido/baja carga (Ideal para web móvil)
+        smoothLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    // Escuchador que procesa los resultados de la IA cuadro por cuadro
+    poseTracker.onResults((results) => {
+        if (!results.poseLandmarks || !currentMesh) return;
+
+        // Puntos de MediaPipe: 27 = Tobillo Izquierdo, 28 = Tobillo Derecho
+        // Usaremos el tobillo derecho (punto 28) como ancla principal
+        const tobilloDerecho = results.poseLandmarks[28];
+
+        // Validamos la visibilidad del punto (que el pie esté a cuadro)
+        if (tobilloDerecho && tobilloDerecho.visibility > 0.5) {
             
-            // Forzamos la primera calibración anatómica automática
-            tallaActual = 26.0;
-            document.getElementById("view-talla").innerText = "26.0 MX (Auto)";
-            actualizarEscalaPorTalla(tallaActual);
+            // CONVERSIÓN DE COORDENADAS: MediaPipe da valores de 0 a 1, los pasamos al espacio 3D de Three.js
+            // Multiplicamos por factores de escala para mapear la pantalla de forma natural
+            const targetX = (tobilloDerecho.x - 0.5) * -3.5; 
+            const targetY = (tobilloDerecho.y - 0.5) * -2.8; 
+
+            // SUAVIZADO DE MOVIMIENTO (Interpolación Lineal - LERP)
+            // Hace que el objeto no tiemble de forma brusca y siga al pie suavemente
+            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.2;
+            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.2;
             
-            console.log("¡Mapeo completo! Extremidades ubicadas.");
+            // Ajustamos la rotación levemente con la profundidad Z que calcula la IA
+            currentMesh.position.z = 1.0 + (tobilloDerecho.z * -2.0);
         }
-    }, 2500); 
+    });
+
+    // Loop asíncrono que envía el feed del video a la IA constantemente
+    const cameraUtils = new window.Camera(videoElement, {
+        onFrame: async () => {
+            await poseTracker.send({ image: videoElement });
+        },
+        width: 640,
+        height: 480
+    });
+    cameraUtils.start();
+    console.log("Cerebro de Visión Artificial MediaPipe activado.");
 }
 
-// Encender motores asíncronos en orden para que no se bloqueen entre sí
+// Encender los motores ordenadamente al cargar el DOM
 window.addEventListener('DOMContentLoaded', async () => {
-    init3DSpace();          // 1. Inyecta el lienzo 3D con la forma estilizada
-    await iniciarCamaraNativa(); // 2. Enciende la cámara web según el dispositivo
-    iniciarRastreadorIA();  // 3. Activa los paneles y calcula la escala del pie
+    init3DSpace();
+    await iniciarCamaraNativa();
 });
 
-// Exponer funciones al plano global
+// Exponer funciones globales
 window.generarGeometriaSimulada = generarGeometriaSimulada;
 window.actualizarColorGeometria = actualizarColorGeometria;
 window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
