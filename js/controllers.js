@@ -4,12 +4,12 @@ let colorNombreActual = "Azul Sport";
 let colorHexActual = "#0A58CA";
 let tallaActual = 26.0; 
 
-// 1. EL BOTÓN "MODELO" ABRE EL PANEL VISUAL DE SELECCIÓN
+// 1. EL BOTÓN "MODELO" ABRE EL PANEL VISUAL DE SELECCIÓN (CORREGIDO)
 function intercambiarModelo() {
-    document.getElementById("menu-modelos-visual").classList.remove("hidden");
+    document.getElementById("menu-modelos-visual").style.display = "flex";
 }
 
-// 2. SELECCIÓN AL DAR TAP EN LAS TARJETAS CON ICONOS
+// 2. SELECCIÓN AL DAR TAP EN LAS TARJETAS CON ICONOS (CORREGIDO)
 function cambiarGeometriaTacto(tipoForma, nombreComercial) {
     modeloActual = nombreComercial;
     document.getElementById("view-modelo").innerText = modeloActual;
@@ -24,8 +24,8 @@ function cambiarGeometriaTacto(tipoForma, nombreComercial) {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 
-    // Cierra el menú al dar clic
-    document.getElementById("menu-modelos-visual").classList.add("hidden");
+    // Cierra el menú de forma limpia
+    document.getElementById("menu-modelos-visual").style.display = "none";
 }
 
 // 3. CAMBIO DE COLOR LIBRE NATIVO
