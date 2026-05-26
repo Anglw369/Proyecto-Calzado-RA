@@ -1,48 +1,34 @@
-// Variables de estado globales
+// Variables de estado globales de la interfaz
 let modeloActual = "Cubo 3D (Tenis)";
 let colorNombreActual = "Azul Sport";
 let colorHexActual = "#0A58CA";
-let trackingIniciado = false; 
-let tallaActual = 26.0; // Cambiamos a 26 base para que Three.js pueda escalar desde el inicio si cambias modelo
+let tallaActual = 26.0; 
 
-// 1. EL BOTÓN "MODELO" ABRE EL SELECTOR VISUAL NATIVO DEL CELULAR DE INMEDIATO
+// 1. EL BOTÓN "MODELO" ABRE EL PANEL VISUAL DE SELECCIÓN
 function intercambiarModelo() {
-    // Forzamos la apertura de las opciones nativas en la pantalla
-    const picker = document.getElementById("model-picker-hidden");
-    if (picker) {
-        picker.click(); 
-        // Nota: En algunos navegadores móviles 'click()' en select requiere focus o una interacción directa,
-        // para asegurar compatibilidad total, si el click nativo se bloquea, usamos un menú selectivo limpio:
-        const opciones = prompt("Selecciona el modelo 3D:\n\nEscribe 1 para: Cubo 3D (Tenis)\nEscribe 2 para: Cilindro 3D (Bota)", picker.value === "cubo" ? "1" : "2");
-        if (opciones === "1") picker.value = "cubo";
-        if (opciones === "2") picker.value = "cilindro";
-        if (opciones === "1" || opciones === "2") seleccionarObjetoVisual(picker.value);
-    }
+    document.getElementById("menu-modelos-visual").classList.remove("hidden");
 }
 
-// 2. FUNCIÓN CAMBIADORA DE OBJETOS EN THREE.JS
-function seleccionarObjetoVisual(tipoForma) {
-    if (tipoForma === "cilindro") {
-        modeloActual = "Cilindro 3D (Bota)";
-    } else {
-        modeloActual = "Cubo 3D (Tenis)";
-    }
-    
-    // Mostramos el cambio en el cartel beige superior
+// 2. SELECCIÓN AL DAR TAP EN LAS TARJETAS CON ICONOS
+function cambiarGeometriaTacto(tipoForma, nombreComercial) {
+    modeloActual = nombreComercial;
     document.getElementById("view-modelo").innerText = modeloActual;
 
-    // Le ordenamos a main.js renderizar la forma geométrica
+    // Llama a Three.js para renderizar la geometría
     if (typeof window.generarGeometriaSimulada === "function") {
         window.generarGeometriaSimulada(tipoForma, colorHexActual);
     }
 
-    // Le aplicamos el tamaño que tenga activo el sistema para que no se deforme
+    // Mantiene el tamaño proporcional configurado
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
+
+    // Cierra el menú al dar clic
+    document.getElementById("menu-modelos-visual").classList.add("hidden");
 }
 
-// 3. CAMBIO DE COLOR LIBRE (FUNCIONA DESDE EL INICIO)
+// 3. CAMBIO DE COLOR LIBRE NATIVO
 function intercambiarColor() {
     document.getElementById('color-picker').click();
 }
@@ -59,7 +45,7 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 4. BARRA DE TAMAÑO MANUAL
+// 4. BARRA DE AJUSTE DE TALLA MANUAL
 function ajustarTallaManual(nuevaTalla) {
     tallaActual = parseFloat(nuevaTalla);
     document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
@@ -69,9 +55,8 @@ function ajustarTallaManual(nuevaTalla) {
     }
 }
 
-// 5. ACCIÓN DEL BOTÓN "CALIBRAR MEDIDA" (REVELA ÚNICAMENTE LA BARRA DE TALLA)
+// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" (REVELA EL SLIDER)
 function simularMedicionIA() {
-    trackingIniciado = true;
     tallaActual = 26.0; 
 
     document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Auto)";
@@ -83,17 +68,16 @@ function simularMedicionIA() {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 
-    // Mostramos la barra de tamaño abajo por si el usuario quiere ajustar
     const toolsPanel = document.getElementById("debug-tools-panel");
     if (toolsPanel) {
         toolsPanel.classList.remove("hidden");
         toolsPanel.style.cssText += 'display: flex !important;';
     }
 
-    alert(`📐 [MÉTRICA IA]: Escaneo automático completo.\nTalla: ${tallaActual} MX.\n\nSe activó la barra de 'Talla Manual' inferior por si requieres ajustar el volumen.`);
+    alert(`📐 [MÉTRICA IA]: Calibración lista.\nTalla base: ${tallaActual} MX.\n\nPuedes ajustar la forma usando la barra de 'Talla Manual' inferior.`);
 }
 
-// 6. GUARDAR CONFIGURACIÓN
+// 6. GUARDAR PREFERENCIAS
 function guardarConfiguracionActual() {
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(modeloActual, colorHexActual, tallaActual);
@@ -103,7 +87,7 @@ function guardarConfiguracionActual() {
 
 // Exponer funciones globales
 window.intercambiarModelo = intercambiarModelo;
-window.seleccionarObjetoVisual = seleccionarObjetoVisual;
+window.cambiarGeometriaTacto = cambiarGeometriaTacto;
 window.intercambiarColor = intercambiarColor;
 window.seleccionarColorManual = seleccionarColorManual;
 window.ajustarTallaManual = ajustarTallaManual;
