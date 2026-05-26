@@ -122,7 +122,7 @@ async function iniciarCamaraNativa() {
 }
 
 // ==========================================================================
-// 6. MOTOR DE INTELIGENCIA ARTIFICIAL CORREGIDO (SIN WINDOW.CAMERA COMPARTIDA)
+// 6. MOTOR DE INTELIGENCIA ARTIFICIAL OPTIMIZADO (ANCLAJE Y MEDIDA REAL)
 // ==========================================================================
 function inicializarMediaPipePose() {
     poseTracker = new Pose({
@@ -137,47 +137,83 @@ function inicializarMediaPipePose() {
         minTrackingConfidence: 0.5
     });
 
-    // Escuchador que procesa los puntos del pie
+    // Escuchador que procesa los puntos del pie cuadro por cuadro
     poseTracker.onResults((results) => {
         if (!results.poseLandmarks || !currentMesh) return;
 
-        // Punto 28 = Tobillo Derecho
+        // PUNTOS ANATÓMICOS: 28 = Tobillo Derecho, 32 = Punta del Pie Derecho, 30 = Talón Derecho
         const tobilloDerecho = results.poseLandmarks[28];
+        const puntaPie = results.poseLandmarks[32];
+        const talon = results.poseLandmarks[30];
 
-        if (tobilloDerecho && tobilloDerecho.visibility > 0.5) {
-            // Conversión matemática calibrada para la cámara trasera sin efecto espejo
-            // Al ser cámara trasera, el eje X no se invierte
-            const targetX = (tobilloDerecho.x - 0.5) * 3.2; 
-            const targetY = (tobilloDerecho.y - 0.5) * -2.4 - 0.4; // Ajustado al suelo
+        // Validamos la visibilidad del pie en la cámara trasera
+        if (tobilloDerecho && tobilloDerecho.visibility > 0.65) {
+            
+            // 1. ANCLAJE MATRICIAL AL PIE (Eje X natural y Eje Y corregido hacia el suelo)
+            const targetX = (tobilloDerecho.x - 0.5) * 3.4; 
+            const targetY = (tobilloDerecho.y - 0.5) * -2.5 - 0.35; // Centrado sobre el calzado
 
-            // Filtro LERP para suavizar temblores de la mano
-            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.25;
-            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.25;
-            currentMesh.position.z = 1.2 + (tobilloDerecho.z * -1.8);
+            // Filtro LERP (Factor 0.3) para que se pegue firme y rápido al caminar sin vibrar
+            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.3;
+            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.3;
+            
+            // Profundidad adaptativa según la distancia calculada por la IA
+            currentMesh.position.z = 1.3 + (tobilloDerecho.z * -1.6);
+
+            // 2. CÁLCULO MÉTRICO DINÁMICO (AUTOMÁTICO POR IA)
+            // Solo calcula si detecta los puntos extremos y el cartel superior indica que no se ha movido el slider manual
+            const viewTalla = document.getElementById("view-talla");
+            if (puntaPie && talon && viewTalla && (viewTalla.innerText.includes("Por medir...") || viewTalla.innerText.includes("(Auto)"))) {
+                
+                // Medimos la distancia hipotenusa entre talón y punta en el plano del plano de imagen
+                const dx = puntaPie.x - talon.x;
+                const dy = puntaPie.y - talon.y;
+                const distanciaRelativa = Math.sqrt(dx * dx + dy * dy);
+
+                // Algoritmo de mapeo a escala de calzado mexicano (MX)
+                let tallaCalculada = 22.0 + (distanciaRelativa * 22);
+
+                // Acotamos el rango para evitar saltos locos por sombras del piso
+                if (tallaCalculada < 22.0) tallaCalculada = 24.5;
+                if (tallaCalculada > 30.0) tallaCalculada = 28.0;
+
+                // Redondeo exacto a tallas comerciales o medias tallas (.0 o .5)
+                tallaCalculada = Math.round(tallaCalculada * 2) / 2;
+
+                // Sincronizamos la variable interna de controllers.js para el slider
+                if (typeof window.tallaActual !== "undefined") {
+                    window.tallaActual = tallaCalculada;
+                    const slider = document.getElementById("size-slider");
+                    if (slider) slider.value = tallaCalculada;
+                }
+
+                // Refrescamos el cartel superior en tiempo real
+                viewTalla.innerText = tallaCalculada.toFixed(1) + " MX (Auto)";
+
+                // Escalamos el volumen tridimensional de la figura de forma proporcional
+                actualizarEscalaPorTalla(tallaCalculada);
+            }
         }
     });
 
     // ACTIVACIÓN DE LA INTERFAZ DESDE EL SEGUNDO UNO
-    // No esperamos a que la IA detecte un cuerpo para mostrar los botones
     const overlay = document.getElementById("simulation-overlay");
     const btnCalibrar = document.getElementById("btn-medir-flotante");
     if (overlay) overlay.classList.remove("hidden");
     if (btnCalibrar) btnCalibrar.classList.remove("hidden");
 
-    // PROCESAMIENTO DIRECTO DEL STREAM: Enviamos los cuadros del video nativo a la IA
+    // PROCESAMIENTO DIRECTO DEL STREAM
     async function procesarCuadroVideo() {
         if (!videoElement.paused && !videoElement.ended) {
             await poseTracker.send({ image: videoElement });
         }
-        // Usamos el refresco nativo del navegador para no consumir batería de más
         if (videoElement.requestVideoFrameCallback) {
             videoElement.requestVideoFrameCallback(procesarCuadroVideo);
         } else {
-            setTimeout(procesarCuadroVideo, 33); // Alternativa para navegadores antiguos (30fps)
+            setTimeout(procesarCuadroVideo, 33);
         }
     }
     
-    // Arrancamos el bucle de la IA
     procesarCuadroVideo();
     console.log("IA MediaPipe enlazada directamente al flujo de la cámara trasera nativa.");
 }
