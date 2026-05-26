@@ -1,72 +1,76 @@
-// Arreglos de simulación con nombres comerciales amigables
-const modelosSimulados = ["Deportivo Nike Air", "Casual Vans Urban", "Running Adidas Max", "Bota Industrial Pro"];
+// Arreglos de simulación con formas geométricas recomendadas por los profes
+const modelosSimulados = ["Cubo 3D (Tenis)", "Cilindro 3D (Bota)"];
 const coloresSimulados = [
-    { name: "Blanco", hex: "#FFFFFF" },
+    { name: "Azul Sport", hex: "#0A58CA" },
+    { name: "Amarillo Neón", hex: "#FFD166" },
     { name: "Rojo Fuego", hex: "#FF3333" },
-    { name: "Azul Sport", hex: "#3366FF" },
-    { name: "Negro Mate", hex: "#111111" },
-    { name: "Verde Neón", hex: "#33FF33" }
+    { name: "Negro Mate", hex: "#111111" }
 ];
 
-// Variables de estado del usuario actual
 let modeloActual = modelosSimulados[0];
 let colorNombreActual = coloresSimulados[0].name;
 let colorHexActual = coloresSimulados[0].hex;
-let tallaActual = 0; // Inicia en 0 hasta que simulemos el escaneo
+let tallaActual = 0; 
 
 let indexModelo = 0;
 let indexColor = 0;
 
-// 1. SIMULAR CAMBIO DE MODELO
+// 1. CONTROLADOR DE CAMBIO DE MODELO / FORMA
 function intercambiarModelo() {
     indexModelo = (indexModelo + 1) % modelosSimulados.length;
     modeloActual = modelosSimulados[indexModelo];
 
-    // Actualiza la pantalla de forma inmediata
     document.getElementById("view-modelo").innerText = modeloActual;
-    console.log("Modelo seleccionado en la simulación:", modeloActual);
+
+    // Le ordenamos a Three.js re-renderizar la forma geométrica manteniendo el color actual
+    if (typeof window.generarGeometriaSimulada === "function") {
+        const tipoForma = (indexModelo === 1) ? "cilindro" : "cubo";
+        window.generarGeometriaSimulada(tipoForma, colorHexActual);
+        
+        // Mantener la escala actual si ya se midió el pie
+        if(tallaActual > 0) window.actualizarEscalaPorTalla(tallaActual);
+    }
 }
 
-// 2. SIMULAR CAMBIO DE COLOR
+// 2. CONTROLADOR DE CAMBIO DE COLOR
 function intercambiarColor() {
     indexColor = (indexColor + 1) % coloresSimulados.length;
     colorNombreActual = coloresSimulados[indexColor].name;
     colorHexActual = coloresSimulados[indexColor].hex;
 
-    // Actualiza el texto y el circulito de color en pantalla
     document.getElementById("view-color-name").innerText = colorNombreActual;
     document.getElementById("color-preview").style.backgroundColor = colorHexActual;
-    console.log("Color seleccionado:", colorNombreActual, "Hex:", colorHexActual);
+
+    // Le ordenamos a Three.js pintar la forma actual sin borrarla
+    if (typeof window.actualizarColorGeometria === "function") {
+        window.actualizarColorGeometria(colorHexActual);
+    }
 }
 
-// 3. NUEVO: SIMULAR LA ACCIÓN DE LA API DE MEDICIÓN CON IA
+// 3. CONTROLADOR DEL BOTÓN FLOTANTE "MEDIR" (IA ESCALADO REACCIONABLE)
 function simularMedicionIA() {
-    // Genera una talla aleatoria real entre 24.5 y 29 para simular que la cámara midió el pie
-    const tallasPrueba = [25.0, 25.5, 26.0, 26.5, 27.0, 27.5, 28.0];
+    // Simulamos variaciones de tallas reales de calzado para demostrar el escalado dinámico
+    const tallasPrueba = [24.5, 25.5, 26.0, 27.0, 28.5];
     const randomIdx = Math.floor(Math.random() * tallasPrueba.length);
     tallaActual = tallasPrueba[randomIdx];
 
-    // Actualiza la pantalla
+    // 1. Refrescamos la interfaz Beige superior
     document.getElementById("view-talla").innerText = tallaActual + " MX";
-    alert(`¡Escáner Completo!\nLa IA detectó una talla de: ${tallaActual} MX`);
-}
-
-// 4. GUARDAR CONFIGURACIÓN ACTUAL EN SUPABASE
-function guardarConfiguracionActual() {
-    // Si el usuario no ha medido su pie, le asignamos una por defecto para que no vaya en 0
-    if (tallaActual === 0) {
-        tallaActual = 26.0;
-        document.getElementById("view-talla").innerText = "26.0 MX (Manual)";
+    
+    // 2. Modificamos la escala 3D en tiempo real en Three.js
+    if (typeof window.actualizarEscalaPorTalla === "function") {
+        window.actualizarEscalaPorTalla(tallaActual);
     }
 
+    alert(`📐 [MÉTRICA IA]: Pie calibrado.\nTalla detectada: ${tallaActual} MX.\nLa forma 3D se ha ajustado proporcionalmente.`);
+}
+
+// 4. GUARDAR PREFERENCIAS
+function guardarConfiguracionActual() {
+    if (tallaActual === 0) tallaActual = 26.0;
+
     if (typeof window.guardarConfiguracionCalzado === "function") {
-        // Le mandamos a Supabase el Modelo Comercial y el Color (Nombre + Hex)
-        const valorColorAGuardar = `${colorNombreActual} (${colorHexActual})`;
-        
-        window.guardarConfiguracionCalzado(modeloActual, valorColorAGuardar, tallaActual);
-        
-        alert(`¡Guardado con éxito en la Nube!\n\nModelo: ${modeloActual}\nColor: ${colorNombreActual}\nTalla: ${tallaActual} MX\n\nRevisa tu panel de Supabase.`);
-    } else {
-        console.error("Error: La conexión con auth.js no está lista.");
+        window.guardarConfiguracionCalzado(modeloActual, colorNombreActual, tallaActual);
+        alert(`¡Guardado en Supabase!\nForma: ${modeloActual}\nColor: ${colorNombreActual}\nTalla: ${tallaActual} MX`);
     }
 }
