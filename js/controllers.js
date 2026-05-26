@@ -45,11 +45,19 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 4. BARRA DE AJUSTE DE TALLA MANUAL
+// 4. BARRA DE TAMAÑO MANUAL (CORREGIDA PARA MOSTRAR LA TALLA EN TIEMPO REAL)
 function ajustarTallaManual(nuevaTalla) {
+    // Convertimos el valor de la barra a un número flotante
     tallaActual = parseFloat(nuevaTalla);
-    document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
+    
+    // ¡PUM! Buscamos el elemento beige superior y actualizamos el texto al instante
+    const viewTalla = document.getElementById("view-talla");
+    if (viewTalla) {
+        // .toFixed(1) asegura que muestre decimales limpios como "26.5 MX" o "27.0 MX"
+        viewTalla.innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
+    }
 
+    // Le mandamos el tamaño exacto al eje Z de Three.js en tiempo real
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }

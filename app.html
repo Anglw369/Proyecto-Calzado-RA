@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pasarela Virtual - StepRA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/main.css?v=21">
+    <link rel="stylesheet" href="css/main.css?v=23">
     <style>
         /* Panel selector visual de modelos (Grisalla Táctil) */
         .modal-container {
@@ -86,21 +86,21 @@
         <div id="camera-container">
             <video id="webcam" autoplay playsinline></video>
 
-       <div id="menu-modelos-visual" class="modal-container" style="display: none;">
-    <div class="modal-box">
-        <h4>Selecciona el Tipo de Calzado</h4>
-        <div class="options-wrapper">
-            <div class="option-button" onclick="cambiarGeometriaTacto('cubo', 'Cubo 3D (Tenis)')">
-                <i class="fa-solid fa-shoe-prints"></i>
-                <span>Cubo 3D<br>(Tenis)</span>
+            <div id="menu-modelos-visual" class="modal-container hidden">
+                <div class="modal-box">
+                    <h4>Selecciona el Tipo de Calzado</h4>
+                    <div class="options-wrapper">
+                        <div class="option-button" onclick="cambiarGeometriaTacto('cubo', 'Cubo 3D (Tenis)')">
+                            <i class="fa-solid fa-shoe-prints"></i>
+                            <span>Cubo 3D<br>(Tenis)</span>
+                        </div>
+                        <div class="option-button" onclick="cambiarGeometriaTacto('cilindro', 'Cilindro 3D (Bota)')">
+                            <i class="fa-solid fa-boot"></i>
+                            <span>Cilindro 3D<br>(Bota)</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="option-button" onclick="cambiarGeometriaTacto('cilindro', 'Cilindro 3D (Bota)')">
-                <i class="fa-solid fa-boot"></i>
-                <span>Cilindro 3D<br>(Bota)</span>
-            </div>
-        </div>
-    </div>
-</div>
 
             <div id="simulation-overlay" class="hidden">
                 <h3>Escáner Pasarela</h3>
