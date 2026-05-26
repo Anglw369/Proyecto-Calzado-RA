@@ -4,12 +4,15 @@ let colorNombreActual = "Azul Sport";
 let colorHexActual = "#0A58CA";
 let tallaActual = 26.0; 
 
-// 1. EL BOTÓN "MODELO" ABRE EL PANEL VISUAL DE SELECCIÓN (CORREGIDO)
+// 1. EL BOTÓN "MODELO" ABRE EL PANEL VISUAL DE SELECCIÓN
 function intercambiarModelo() {
-    document.getElementById("menu-modelos-visual").style.display = "flex";
+    const modal = document.getElementById("menu-modelos-visual");
+    if (modal) {
+        modal.style.display = "flex";
+    }
 }
 
-// 2. SELECCIÓN AL DAR TAP EN LAS TARJETAS CON ICONOS (CORREGIDO)
+// 2. SELECCIÓN AL DAR TAP EN LAS TARJETAS CON ICONOS
 function cambiarGeometriaTacto(tipoForma, nombreComercial) {
     modeloActual = nombreComercial;
     document.getElementById("view-modelo").innerText = modeloActual;
@@ -45,19 +48,17 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 4. BARRA DE TAMAÑO MANUAL (CORREGIDA PARA MOSTRAR LA TALLA EN TIEMPO REAL)
+// 4. BARRA DE TAMAÑO MANUAL (MUESTRA LA TALLA CONSTANTEMENTE EN TIEMPO REAL)
 function ajustarTallaManual(nuevaTalla) {
-    // Convertimos el valor de la barra a un número flotante
     tallaActual = parseFloat(nuevaTalla);
     
-    // ¡PUM! Buscamos el elemento beige superior y actualizamos el texto al instante
+    // Actualiza el cartel beige superior al instante mientras deslizas
     const viewTalla = document.getElementById("view-talla");
     if (viewTalla) {
-        // .toFixed(1) asegura que muestre decimales limpios como "26.5 MX" o "27.0 MX"
         viewTalla.innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
     }
 
-    // Le mandamos el tamaño exacto al eje Z de Three.js en tiempo real
+    // Modifica el eje Z en Three.js en tiempo real
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
@@ -93,7 +94,7 @@ function guardarConfiguracionActual() {
     }
 }
 
-// Exponer funciones globales
+// Exponer funciones globales de forma estricta para el HTML
 window.intercambiarModelo = intercambiarModelo;
 window.cambiarGeometriaTacto = cambiarGeometriaTacto;
 window.intercambiarColor = intercambiarColor;
