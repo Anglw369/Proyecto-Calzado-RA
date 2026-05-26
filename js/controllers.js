@@ -1,35 +1,52 @@
-// Variables de estado del usuario actual
+// Variables de estado globales de la aplicación
 let modeloActual = "Cubo 3D (Tenis)";
 let colorNombreActual = "Azul Sport";
 let colorHexActual = "#0A58CA";
 let tallaActual = 0; 
 
-// 1. ABRIR EL MODAL SELECCIONADOR DE MODELOS
+// 1. CONTROLADOR PARA EL BOTÓN INFERIOR "MODELO" (Alterna visualmente de forma directa)
 function intercambiarModelo() {
-    // Revelamos el modal visual con las tarjetas e iconos
-    document.getElementById("modal-modelos").classList.remove("hidden");
+    const selector = document.getElementById("select-modelo-manual");
+    
+    // Si el panel de herramientas está oculto, le avisa al usuario que caletre primero
+    if (document.getElementById("debug-tools-panel").classList.contains("hidden")) {
+        alert("Por favor, presiona primero el botón 'CALIBRAR MEDIDA (IA)' para activar los objetos y sus controles manuales.");
+        return;
+    }
+
+    // Alterna de forma automática la opción del menú desplegable visual
+    if (selector.value === "cubo") {
+        selector.value = "cilindro";
+    } else {
+        selector.value = "cubo";
+    }
+    
+    // Ejecuta el cambio visual en Three.js
+    seleccionarObjetoVisual(selector.value);
 }
 
-// Esta función se ejecuta al tocar una tarjeta de calzado en el modal
-function seleccionarModeloManual(tipoForma, nombreComercial) {
-    modeloActual = nombreComercial;
+// 2. FUNCIÓN COLECTORA DEL SELECTOR VISUAL DE OBJETOS
+function seleccionarObjetoVisual(tipoForma) {
+    if (tipoForma === "cilindro") {
+        modeloActual = "Cilindro 3D (Bota)";
+    } else {
+        modeloActual = "Cubo 3D (Tenis)";
+    }
+    
     document.getElementById("view-modelo").innerText = modeloActual;
 
-    // Le ordenamos a Three.js renderizar la figura seleccionada
+    // Llama al motor tridimensional de main.js
     if (typeof window.generarGeometriaSimulada === "function") {
         window.generarGeometriaSimulada(tipoForma, colorHexActual);
     }
 
-    // Mantenemos la escala que tenga activa el slider actualmente
+    // Mantiene el tamaño que tenga el slider configurado actualmente
     if (tallaActual > 0 && typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
-
-    // Cerramos el modal de forma limpia
-    document.getElementById("modal-modelos").classList.add("hidden");
 }
 
-// 2. MANEJO MANUAL DE COLOR (PALETA NATIVA)
+// 3. MANEJO MANUAL DE COLOR (PALETA NATIVA)
 function intercambiarColor() {
     document.getElementById('color-picker').click();
 }
@@ -46,47 +63,44 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 3. BARRA DE TAMAÑO MANUAL (SLIDER FLOTANTE INTERACTIVO)
+// 4. BARRA DE TAMAÑO MANUAL (SLIDER FLOTANTE INTERACTIVO)
 function ajustarTallaManual(nuevaTalla) {
     tallaActual = parseFloat(nuevaTalla);
-    
-    // Refrescamos la caja beige superior marcando que fue un ajuste manual
     document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
 
-    // Mandamos el factor métrico al eje Z de Three.js
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 }
 
-// 4. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" -> REVELA EL SLIDER MANUAL
+// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" -> REVELA TODO EL PANEL DE SELECCIÓN MANUAL
 function simularMedicionIA() {
-    // Simulamos que la IA corre el algoritmo automático y tira un valor base
-    const tallasPrueba = [25.0, 26.0, 26.5, 27.5, 28.0];
-    const randomIdx = Math.floor(Math.random() * tallasPrueba.length);
-    tallaActual = tallasPrueba[randomIdx];
+    tallaActual = 26.0; // Talla por defecto automática inicial
 
-    // 1. Mostramos los datos calculados por el escáner
-    document.getElementById("view-talla").innerText = tallaActual + " MX (Auto)";
+    // 1. Mostramos los datos calculados en el cartel beige superior
+    document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Auto)";
     
-    // 2. Sincronizamos el slider físico al mismo valor que arrojó la IA
+    // 2. Sincronizamos el control deslizante al mismo valor
     const slider = document.getElementById("size-slider");
-    slider.value = tallaActual;
+    if(slider) slider.value = tallaActual;
 
-    // 3. Modificamos el volumen 3D en Three.js
+    // 3. Renderizamos la escala inicial en Three.js
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 
-    // 4. ¡PUM! Revelamos la barra deslizable de ajuste manual abajo por si hay error
-    const sizePanel = document.getElementById("debug-size-panel");
-    sizePanel.classList.remove("hidden");
-    sizePanel.style.display = "flex"; // Forzamos el display flex para que alinee bien
+    // 4. ¡PUM! Forzamos la aparición del panel completo de herramientas manuales abajo
+    const toolsPanel = document.getElementById("debug-tools-panel");
+    if (toolsPanel) {
+        toolsPanel.classList.remove("hidden");
+        // Asegura que anule cualquier display:none previo del CSS
+        toolsPanel.style.setAttribute ? toolsPanel.style.setAttribute("display", "flex", "important") : toolsPanel.style.cssText += 'display: flex !important;';
+    }
 
-    alert(`📐 [MÉTRICA IA]: Pie calibrado de forma automática.\nTalla detectada: ${tallaActual} MX.\n\n⚠️ Si la figura no encaja del todo bien con tu pie, puedes afinar el volumen usando la barra de 'Ajuste Manual' que acaba de aparecer abajo.`);
+    alert(`📐 [MÉTRICA IA]: Escaneo completo.\n\nSe ha activado el panel inferior de 'Ajuste Manual' por si necesitas refinar la talla o cambiar el objeto visualmente.`);
 }
 
-// 5. GUARDAR CONFIGURACIÓN ACTUAL
+// 6. GUARDAR CONFIGURACIÓN ACTUAL
 function guardarConfiguracionActual() {
     if (tallaActual === 0) tallaActual = 26.0;
 
@@ -96,9 +110,9 @@ function guardarConfiguracionActual() {
     }
 }
 
-// Exponer funciones globales
+// Exponer funciones globales al navegador
 window.intercambiarModelo = intercambiarModelo;
-window.seleccionarModeloManual = seleccionarModeloManual;
+window.seleccionarObjetoVisual = seleccionarObjetoVisual;
 window.intercambiarColor = intercambiarColor;
 window.seleccionarColorManual = seleccionarColorManual;
 window.ajustarTallaManual = ajustarTallaManual;

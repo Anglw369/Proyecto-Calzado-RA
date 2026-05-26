@@ -5,28 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pasarela Virtual - StepRA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/main.css?v=18">
-    <style>
-        /* Estilos rápidos para el selector visual de modelos */
-        .modal-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 27, 61, 0.6); backdrop-filter: blur(4px);
-            z-index: 100; display: flex; align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background: var(--surface); padding: 20px; border-radius: 20px;
-            width: 85%; max-width: 360px; border: 2px solid var(--border-color); text-align: center;
-        }
-        .modal-title { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; color: var(--dark-calzado); }
-        .model-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .model-card {
-            background: var(--bg-warm); border: 1px solid var(--border-color); padding: 15px;
-            border-radius: 12px; cursor: pointer; transition: all 0.2s ease;
-        }
-        .model-card i { font-size: 24px; color: var(--primary-warm); margin-bottom: 8px; display: block; }
-        .model-card span { font-size: 11px; font-weight: 700; color: var(--dark-calzado); text-transform: uppercase; }
-        .model-card:active { background: var(--accent-light); transform: scale(0.95); }
-    </style>
+    <link rel="stylesheet" href="css/main.css?v=19">
 </head>
 <body>
 
@@ -53,27 +32,22 @@
             <button id="btn-medir-flotante" class="action-btn hidden" onclick="simularMedicionIA()">
                 <i class="fa-solid fa-ruler-combined"></i> Calibrar Medida (IA)
             </button>
-
-            <div id="modal-modelos" class="modal-overlay hidden">
-                <div class="modal-content">
-                    <div class="modal-title">Selecciona Tipo de Calzado</div>
-                    <div class="model-options-grid">
-                        <div class="model-card" onclick="seleccionarModeloManual('cubo', 'Cubo 3D (Tenis)')">
-                            <i class="fa-solid fa-shoe-prints"></i>
-                            <span>Cubo 3D<br>(Tenis)</span>
-                        </div>
-                        <div class="model-card" onclick="seleccionarModeloManual('cilindro', 'Cilindro 3D (Bota)')">
-                            <i class="fa-solid fa-boot"></i>
-                            <span>Cilindro 3D<br>(Bota)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <div id="debug-size-panel" class="hidden" style="background: var(--surface); padding: 10px 16px; border-top: 1px solid var(--border-color); align-items: center; gap: 10px;">
-            <span style="font-size: 10px; font-weight: 800; color: var(--dark-calzado); white-space: nowrap; text-transform: uppercase;">📏 Ajuste Manual:</span>
-            <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" style="margin: 0; flex: 1; accent-color: var(--primary-warm);" oninput="ajustarTallaManual(this.value)">
+        <div id="debug-tools-panel" class="hidden" style="background: var(--surface); padding: 12px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 800; color: var(--dark-calzado); text-transform: uppercase; white-space: nowrap;">👟 Cambiar Objeto:</span>
+                <select id="select-modelo-manual" style="margin: 0; padding: 6px; font-size: 12px; font-weight: 700;" onchange="seleccionarObjetoVisual(this.value)">
+                    <option value="cubo">📦 Cubo 3D (Tenis)</option>
+                    <option value="cilindro">🛢️ Cilindro 3D (Bota)</option>
+                </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 800; color: var(--dark-calzado); text-transform: uppercase; white-space: nowrap;">📏 Talla Manual:</span>
+                <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" style="margin: 0; flex: 1; accent-color: var(--primary-warm);" oninput="ajustarTallaManual(this.value)">
+            </div>
         </div>
 
         <input type="color" id="color-picker" value="#0A58CA" style="display: none;" onchange="seleccionarColorManual(this.value)">
