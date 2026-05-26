@@ -86,21 +86,21 @@
         <div id="camera-container">
             <video id="webcam" autoplay playsinline></video>
 
-            <div id="menu-modelos-visual" class="modal-container hidden">
-                <div class="modal-box">
-                    <h4>Selecciona el Tipo de Calzado</h4>
-                    <div class="options-wrapper">
-                        <div class="option-button" onclick="cambiarGeometriaTacto('cubo', 'Cubo 3D (Tenis)')">
-                            <i class="fa-solid fa-shoe-prints"></i>
-                            <span>Cubo 3D<br>(Tenis)</span>
-                        </div>
-                        <div class="option-button" onclick="cambiarGeometriaTacto('cilindro', 'Cilindro 3D (Bota)')">
-                            <i class="fa-solid fa-boot"></i>
-                            <span>Cilindro 3D<br>(Bota)</span>
-                        </div>
-                    </div>
-                </div>
+       <div id="menu-modelos-visual" class="modal-container" style="display: none;">
+    <div class="modal-box">
+        <h4>Selecciona el Tipo de Calzado</h4>
+        <div class="options-wrapper">
+            <div class="option-button" onclick="cambiarGeometriaTacto('cubo', 'Cubo 3D (Tenis)')">
+                <i class="fa-solid fa-shoe-prints"></i>
+                <span>Cubo 3D<br>(Tenis)</span>
             </div>
+            <div class="option-button" onclick="cambiarGeometriaTacto('cilindro', 'Cilindro 3D (Bota)')">
+                <i class="fa-solid fa-boot"></i>
+                <span>Cilindro 3D<br>(Bota)</span>
+            </div>
+        </div>
+    </div>
+</div>
 
             <div id="simulation-overlay" class="hidden">
                 <h3>Escáner Pasarela</h3>
