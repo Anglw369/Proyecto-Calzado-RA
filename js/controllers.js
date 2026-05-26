@@ -1,88 +1,104 @@
 // Variables de estado del usuario actual
 let modeloActual = "Cubo 3D (Tenis)";
-let colorNombreActual = "Personalizado";
+let colorNombreActual = "Azul Sport";
 let colorHexActual = "#0A58CA";
-let tallaActual = 26.0; 
+let tallaActual = 0; 
 
-// 1. MANEJO MANUAL DE MODELOS (PREGUNTA QUÉ FORMA RENDERIZAR)
+// 1. ABRIR EL MODAL SELECCIONADOR DE MODELOS
 function intercambiarModelo() {
-    // Abrimos un cuadro de opción simple para pruebas manuales
-    const seleccion = prompt("Selecciona el modelo 3D para pruebas:\nEscribe 1 para: Cubo 3D (Tenis)\nEscribe 2 para: Cilindro 3D (Bota)");
-
-    if (seleccion === "1") {
-        modeloActual = "Cubo 3D (Tenis)";
-        document.getElementById("view-modelo").innerText = modeloActual;
-        if (typeof window.generarGeometriaSimulada === "function") {
-            window.generarGeometriaSimulada("cubo", colorHexActual);
-        }
-    } else if (seleccion === "2") {
-        modeloActual = "Cilindro 3D (Bota)";
-        document.getElementById("view-modelo").innerText = modeloActual;
-        if (typeof window.generarGeometriaSimulada === "function") {
-            window.generarGeometriaSimulada("cilindro", colorHexActual);
-        }
-    } else if (seleccion !== null) {
-        alert("Opción no válida. Escribe sólo 1 o 2.");
-        return;
-    }
-
-    // Volvemos a aplicar la escala que tenga actualmente el slider para que no se pierda
-    if (typeof window.actualizarEscalaPorTalla === "function") {
-        window.actualizarEscalaPorTalla(tallaActual);
-    }
+    // Revelamos el modal visual con las tarjetas e iconos
+    document.getElementById("modal-modelos").classList.remove("hidden");
 }
 
-// 2. MANEJO MANUAL DE COLOR (ABRE LA PALETA DE COLORES NATIVA)
+// Esta función se ejecuta al tocar una tarjeta de calzado en el modal
+function seleccionarModeloManual(tipoForma, nombreComercial) {
+    modeloActual = nombreComercial;
+    document.getElementById("view-modelo").innerText = modeloActual;
+
+    // Le ordenamos a Three.js renderizar la figura seleccionada
+    if (typeof window.generarGeometriaSimulada === "function") {
+        window.generarGeometriaSimulada(tipoForma, colorHexActual);
+    }
+
+    // Mantenemos la escala que tenga activa el slider actualmente
+    if (tallaActual > 0 && typeof window.actualizarEscalaPorTalla === "function") {
+        window.actualizarEscalaPorTalla(tallaActual);
+    }
+
+    // Cerramos el modal de forma limpia
+    document.getElementById("modal-modelos").classList.add("hidden");
+}
+
+// 2. MANEJO MANUAL DE COLOR (PALETA NATIVA)
 function intercambiarColor() {
-    // Forzamos el clic de forma interna en el input input color invisible del HTML
     document.getElementById('color-picker').click();
 }
 
-// Esta función se ejecuta automáticamente cuando eliges un color en la paleta
 function seleccionarColorManual(hexSeleccionado) {
     colorHexActual = hexSeleccionado;
     colorNombreActual = "Personalizado (" + hexSeleccionado.toUpperCase() + ")";
 
-    // Actualizamos los textos e indicadores beige en la pantalla
     document.getElementById("view-color-name").innerText = colorNombreActual;
     document.getElementById("color-preview").style.backgroundColor = colorHexActual;
 
-    // Pintamos la figura en Three.js sin destruirla
     if (typeof window.actualizarColorGeometria === "function") {
         window.actualizarColorGeometria(colorHexActual);
     }
 }
 
-// 3. BARRA DE TAMAÑO MANUAL (SLIDER INTERACTIVO)
+// 3. BARRA DE TAMAÑO MANUAL (SLIDER FLOTANTE INTERACTIVO)
 function ajustarTallaManual(nuevaTalla) {
     tallaActual = parseFloat(nuevaTalla);
     
-    // Actualiza el texto en la interfaz superior beige
-    document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Manual)";
+    // Refrescamos la caja beige superior marcando que fue un ajuste manual
+    document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
 
-    // Ordena al motor Three.js estirar el eje Z en tiempo real
+    // Mandamos el factor métrico al eje Z de Three.js
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 }
 
-// 4. SIMULAR LA ACCIÓN DE LA IA (Se mantiene por compatibilidad)
+// 4. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" -> REVELA EL SLIDER MANUAL
 function simularMedicionIA() {
-    alert(`Modo Manual Activo.\nUsa la barra inferior 'Talla Manual' para calibrar el volumen exacto en tus pruebas.`);
+    // Simulamos que la IA corre el algoritmo automático y tira un valor base
+    const tallasPrueba = [25.0, 26.0, 26.5, 27.5, 28.0];
+    const randomIdx = Math.floor(Math.random() * tallasPrueba.length);
+    tallaActual = tallasPrueba[randomIdx];
+
+    // 1. Mostramos los datos calculados por el escáner
+    document.getElementById("view-talla").innerText = tallaActual + " MX (Auto)";
+    
+    // 2. Sincronizamos el slider físico al mismo valor que arrojó la IA
+    const slider = document.getElementById("size-slider");
+    slider.value = tallaActual;
+
+    // 3. Modificamos el volumen 3D en Three.js
+    if (typeof window.actualizarEscalaPorTalla === "function") {
+        window.actualizarEscalaPorTalla(tallaActual);
+    }
+
+    // 4. ¡PUM! Revelamos la barra deslizable de ajuste manual abajo por si hay error
+    const sizePanel = document.getElementById("debug-size-panel");
+    sizePanel.classList.remove("hidden");
+    sizePanel.style.display = "flex"; // Forzamos el display flex para que alinee bien
+
+    alert(`📐 [MÉTRICA IA]: Pie calibrado de forma automática.\nTalla detectada: ${tallaActual} MX.\n\n⚠️ Si la figura no encaja del todo bien con tu pie, puedes afinar el volumen usando la barra de 'Ajuste Manual' que acaba de aparecer abajo.`);
 }
 
-// 5. GUARDAR CONFIGURACIÓN ACTUAL EN SUPABASE
+// 5. GUARDAR CONFIGURACIÓN ACTUAL
 function guardarConfiguracionActual() {
+    if (tallaActual === 0) tallaActual = 26.0;
+
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(modeloActual, colorHexActual, tallaActual);
-        alert(`¡Guardado en la Nube con éxito!\n\nModelo: ${modeloActual}\nColor Hex: ${colorHexActual}\nTalla: ${tallaActual} MX`);
-    } else {
-        console.error("Error: Conexión con Supabase no lista.");
+        alert(`¡Guardado en Supabase!\n\nModelo: ${modeloActual}\nColor: ${colorHexActual}\nTalla: ${tallaActual} MX`);
     }
 }
 
-// Hacer las funciones de depuración accesibles globalmente
+// Exponer funciones globales
 window.intercambiarModelo = intercambiarModelo;
+window.seleccionarModeloManual = seleccionarModeloManual;
 window.intercambiarColor = intercambiarColor;
 window.seleccionarColorManual = seleccionarColorManual;
 window.ajustarTallaManual = ajustarTallaManual;
