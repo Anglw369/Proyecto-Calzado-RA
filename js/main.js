@@ -116,48 +116,56 @@ async function iniciarCamaraNativa() {
 }
 
 // ==========================================================================
-// 6. MOTOR DE INTELIGENCIA ARTIFICIAL (MEDIAPIPE INTERACTION)
+// 6. MOTOR DE INTELIGENCIA ARTIFICIAL (MEDIAPIPE INTERACTION CORREGIDO)
 // ==========================================================================
 function inicializarMediaPipePose() {
     poseTracker = new Pose({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
     });
 
-    // Ajustes para máxima velocidad y rendimiento óptimo en celulares
+    // Ajustes de rendimiento móvil
     poseTracker.setOptions({
-        modelComplexity: 0,       // 0 = Ultra rápido/baja carga (Ideal para web móvil)
+        modelComplexity: 0, 
         smoothLandmarks: true,
         minDetectionConfidence: 0.5,
         minTrackingConfidence: 0.5
     });
 
-    // Escuchador que procesa los resultados de la IA cuadro por cuadro
+    // Escuchador cuadro por cuadro
     poseTracker.onResults((results) => {
+        // Hacemos que aparezcan el cartel superior beige y tu botón amarillo "Calibrar"
+        // en cuanto la IA cargue el primer cuadro de video con éxito.
+        const overlay = document.getElementById("simulation-overlay");
+        const btnCalibrar = document.getElementById("btn-medir-flotante");
+        
+        if (overlay && overlay.classList.contains("hidden")) {
+            overlay.classList.remove("hidden");
+        }
+        if (btnCalibrar && btnCalibrar.classList.contains("hidden")) {
+            btnCalibrar.classList.remove("hidden");
+        }
+
         if (!results.poseLandmarks || !currentMesh) return;
 
-        // Puntos de MediaPipe: 27 = Tobillo Izquierdo, 28 = Tobillo Derecho
-        // Usaremos el tobillo derecho (punto 28) como ancla principal
+        // Punto 28 = Tobillo Derecho
         const tobilloDerecho = results.poseLandmarks[28];
 
-        // Validamos la visibilidad del punto (que el pie esté a cuadro)
         if (tobilloDerecho && tobilloDerecho.visibility > 0.5) {
-            
-            // CONVERSIÓN DE COORDENADAS: MediaPipe da valores de 0 a 1, los pasamos al espacio 3D de Three.js
-            // Multiplicamos por factores de escala para mapear la pantalla de forma natural
-            const targetX = (tobilloDerecho.x - 0.5) * -3.5; 
-            const targetY = (tobilloDerecho.y - 0.5) * -2.8; 
+            // Re-calibramos las matrices de conversión para que el objeto no vuele arriba
+            // Mapeamos los ejes para que se asiente abajo en la zona del calzado
+            const targetX = (tobilloDerecho.x - 0.5) * -3.2; 
+            const targetY = (tobilloDerecho.y - 0.5) * -2.4 - 0.6; // Empujamos hacia abajo en Y (-0.6)
 
-            // SUAVIZADO DE MOVIMIENTO (Interpolación Lineal - LERP)
-            // Hace que el objeto no tiemble de forma brusca y siga al pie suavemente
-            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.2;
-            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.2;
+            // Filtro LERP suave para evitar temblores en el celular
+            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.25;
+            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.25;
             
-            // Ajustamos la rotación levemente con la profundidad Z que calcula la IA
-            currentMesh.position.z = 1.0 + (tobilloDerecho.z * -2.0);
+            // Profundidad escalada
+            currentMesh.position.z = 1.2 + (tobilloDerecho.z * -1.8);
         }
     });
 
-    // Loop asíncrono que envía el feed del video a la IA constantemente
+    // Forzamos a la utilidad de cámara a respetar la orientación trasera original del móvil
     const cameraUtils = new window.Camera(videoElement, {
         onFrame: async () => {
             await poseTracker.send({ image: videoElement });
@@ -166,13 +174,13 @@ function inicializarMediaPipePose() {
         height: 480
     });
     cameraUtils.start();
-    console.log("Cerebro de Visión Artificial MediaPipe activado.");
+    console.log("Cerebro de Visión Artificial MediaPipe sincronizado con la interfaz.");
 }
 
 // Encender los motores ordenadamente al cargar el DOM
 window.addEventListener('DOMContentLoaded', async () => {
     init3DSpace();
-    await iniciarCamaraNativa();
+    await iniciarCamaraNativa(); 
 });
 
 // Exponer funciones globales
