@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <title>StepRA - Probador Virtual</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css?v=32">
+    <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0a58ca",
+                        "dark-calzado": "#0b1b3d",
+                        "background": "#f3ede0"
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos del modal nativo para corregir el bug borroso */
+        .custom-modal {
+            position: fixed; inset: 0; background: rgba(11,27,61,0.8);
+            z-index: 99999 !important; display: none; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-black text-dark-calzado antialiased min-h-screen flex flex-col justify-between overflow-hidden">
+
+    <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
+        <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
+
+        <div id="menu-modelos-visual" class="custom-modal">
+            <div class="bg-[#f8f5ee] p-6 rounded-2xl border-2 border-[#d2c7b5] text-center w-80 max-w-full shadow-2xl flex flex-col gap-4">
+                <h4 class="font-black uppercase tracking-wider text-xs">Selecciona Tipo de Calzado</h4>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-[#e6dfd3] p-4 rounded-xl border cursor-pointer flex flex-col items-center gap-2" onclick="cambiarGeometriaTacto('cubo', 'Cubo 3D (Tenis)')">
+                        <i class="fa-solid fa-shoe-prints text-2xl text-primary"></i>
+                        <span class="text-[10px] font-black uppercase">Cubo 3D<br>(Tenis)</span>
+                    </div>
+                    <div class="bg-[#e6dfd3] p-4 rounded-xl border cursor-pointer flex flex-col items-center gap-2" onclick="cambiarGeometriaTacto('cilindro', 'Cilindro 3D (Bota)')">
+                        <i class="fa-solid fa-boot text-2xl text-primary"></i>
+                        <span class="text-[10px] font-black uppercase">Cilindro 3D<br>(Bota)</span>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('menu-modelos-visual').style.display='none'" class="text-xs text-gray-400 uppercase font-bold mt-2">Cancelar</button>
+            </div>
+        </div>
+
+        <div id="simulation-overlay" class="absolute top-3 left-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg shadow-xl z-30 grid grid-cols-3 gap-2 items-center">
+            <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-200">Escáner Pasarela</h3>
+            <div class="flex flex-col items-center text-[11px] border-r border-gray-300 pr-1">
+                <span class="text-[8px] text-gray-400 font-bold uppercase">Modelo</span>
+                <span id="view-modelo" class="font-bold truncate max-w-[90px]">Cargando...</span>
+            </div>
+            <div class="flex flex-col items-center text-[11px] border-r border-gray-300 pr-1">
+                <span class="text-[8px] text-gray-400 font-bold uppercase">Color</span>
+                <span class="font-bold flex items-center gap-1"><span id="view-color-name">...</span><div id="color-preview" class="w-2.5 h-2.5 rounded-full border border-black"></div></span>
+            </div>
+            <div class="flex flex-col items-center text-[11px]">
+                <span class="text-[8px] text-gray-400 font-bold uppercase">Talla Base</span>
+                <span id="view-talla" class="font-bold text-blue-700">...</span>
+            </div>
+        </div>
+
+        <button id="btn-medir-flotante" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#ffd166] text-dark-calzado border-2 border-white px-6 py-2.5 rounded-full text-xs font-black shadow-2xl z-40 whitespace-nowrap" onclick="simularMedicionIA()">
+            <i class="fa-solid fa-ruler-combined"></i> Calibrar Medida (IA)
+        </button>
+    </div>
+
+    <div class="bg-white flex flex-col z-40">
+        <div id="debug-tools-panel" class="hidden p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
+            <span class="text-[10px] font-black text-dark-calzado uppercase whitespace-nowrap">📏 Talla Manual:</span>
+            <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" class="flex-1 accent-primary h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="ajustarTallaManual(this.value)">
+        </div>
+
+        <input type="color" id="color-picker" value="#0A58CA" class="hidden" onchange="seleccionarColorManual(this.value)">
+
+        <div class="p-4 grid grid-cols-2 gap-3 border-t border-gray-300">
+            <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-xs font-bold uppercase flex flex-col items-center" onclick="intercambiarModelo()">
+                <i class="fa-solid fa-shoe-prints mb-1 text-sm text-primary"></i> Modelo
+            </button>
+            <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-xs font-bold uppercase flex flex-col items-center" onclick="intercambiarColor()">
+                <i class="fa-solid fa-palette mb-1 text-sm text-primary"></i> Color
+            </button>
+            
+            <button class="col-span-2 bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md" onclick="ejecutarGuardadoConFiltro()">
+                Guardar Configuración
+            </button>
+            <button onclick="window.location.href='app.html'" class="col-span-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1">✕ Volver al Catálogo</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+    <script type="module" src="js/auth.js"></script>
+    <script src="js/controllers.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const modeloId = params.get('modelo') || 'cubo';
+            const colorHex = params.get('color') || '#0A58CA';
+            const talla = params.get('talla') || '26.0';
+
+            // Ejecutamos la inyección diferida en cuanto el motor tridimensional esté listo
+            setTimeout(() => {
+                if (typeof window.generarGeometriaSimulada === 'function') {
+                    window.generarGeometriaSimulada(modeloId, colorHex);
+                    window.actualizarEscalaPorTalla(parseFloat(talla));
+
+                    // Pintamos los letreros dinámicos del Escáner
+                    document.getElementById('view-modelo').innerText = modeloId === 'cilindro' ? 'Cilindro 3D (Bota)' : 'Cubo 3D (Tenis)';
+                    document.getElementById('view-color-name').innerText = colorHex.toUpperCase();
+                    document.getElementById('color-preview').style.backgroundColor = colorHex;
+                    document.getElementById('view-talla').innerText = parseFloat(talla).toFixed(1) + ' MX';
+                    
+                    // Sincronizamos las variables de controllers.js
+                    window.tallaActual = parseFloat(talla);
+                    window.colorHexActual = colorHex;
+                    window.modeloActual = modeloId === 'cilindro' ? 'Cilindro 3D (Bota)' : 'Cubo 3D (Tenis)';
+                }
+            }, 500);
+        });
+
+        function ejecutarGuardadoConFiltro() {
+            const activo = localStorage.getItem('stepra_session') === 'active';
+            if(!activo) {
+                alert('🔒 [AUTENTICACIÓN REQUERIDA]\n\nPara guardar tu calzado en Supabase debes iniciar sesión.');
+                window.location.href = 'login.html';
+            } else {
+                // Almacenamos localmente para reflejarlo en el perfil al volver
+                localStorage.setItem('user_modelo', window.modeloActual);
+                localStorage.setItem('user_color', window.colorHexActual);
+                localStorage.setItem('user_talla', window.tallaActual);
+                
+                if (typeof window.guardarConfiguracionActual === 'function') {
+                    window.guardarConfiguracionActual();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

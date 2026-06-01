@@ -4,7 +4,7 @@ let colorNombreActual = "Azul Sport";
 let colorHexActual = "#0A58CA";
 let tallaActual = 26.0; 
 
-// 1. EL BOTÓN "MODELO" ABRE EL PANEL VISUAL DE SELECCIÓN
+// 1. EL BOTÓN "MODELO" ABRE EL PANEL VISUAL DE SELECCIÓN SIN INTERFERENCIAS
 function intercambiarModelo() {
     const modal = document.getElementById("menu-modelos-visual");
     if (modal) {
@@ -48,17 +48,15 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 4. BARRA DE TAMAÑO MANUAL (MUESTRA LA TALLA CONSTANTEMENTE EN TIEMPO REAL)
+// 4. BARRA DE TAMAÑO MANUAL
 function ajustarTallaManual(nuevaTalla) {
     tallaActual = parseFloat(nuevaTalla);
     
-    // Actualiza el cartel beige superior al instante mientras deslizas
     const viewTalla = document.getElementById("view-talla");
     if (viewTalla) {
         viewTalla.innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
     }
 
-    // Modifica el eje Z en Three.js en tiempo real
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
@@ -79,8 +77,7 @@ function simularMedicionIA() {
 
     const toolsPanel = document.getElementById("debug-tools-panel");
     if (toolsPanel) {
-        toolsPanel.classList.remove("hidden");
-        toolsPanel.style.cssText += 'display: flex !important;';
+        toolsPanel.style.display = "flex";
     }
 
     alert(`📐 [MÉTRICA IA]: Calibración lista.\nTalla base: ${tallaActual} MX.\n\nPuedes ajustar la forma usando la barra de 'Talla Manual' inferior.`);
