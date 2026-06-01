@@ -11,7 +11,7 @@ let localVideoStream = null; // Guardará el canal de la cámara para poder apag
 
 // 1. INICIALIZAR EL ESCENARIO 3D TRANSPARENTE
 function init3DSpace() {
-    // Si ya existe un renderizador viejo, lo limpiamos para no saturar la memoria
+    // Limpieza preventiva de lienzos fantasma
     const canvasViejo = cameraContainer.querySelector('canvas');
     if (canvasViejo) canvasViejo.remove();
 
@@ -24,14 +24,18 @@ function init3DSpace() {
     dirLight.position.set(0, 4, 4);
     scene.add(dirLight);
 
-    // Cámara de perspectiva
-    camera = new THREE.PerspectiveCamera(45, cameraContainer.clientWidth / cameraContainer.clientHeight, 0.1, 1000);
+    // Calculamos las proporciones en tiempo real ahora que el contenedor ya mide el 100% de la pantalla
+    const anchoReal = cameraContainer.clientWidth || window.innerWidth;
+    const altoReal = cameraContainer.clientHeight || window.innerHeight;
+
+    // Cámara de perspectiva balanceada
+    camera = new THREE.PerspectiveCamera(45, anchoReal / altoReal, 0.1, 1000);
     camera.position.z = 5;
 
-    // Renderizador transparente encima de la cámara
+    // Renderizador con transparencia encima del feed de video
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(cameraContainer.clientWidth, cameraContainer.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(anchoReal, altoReal);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
@@ -41,13 +45,6 @@ function init3DSpace() {
     // Ciclo de animación continuo
     function animate() {
         requestAnimationFrame(animate);
-        
-        // Rotación estética inicial si no se está calibrando todavía
-        const toolsPanel = document.getElementById("debug-tools-panel");
-        if (currentMesh && toolsPanel && toolsPanel.classList.contains("hidden")) {
-            currentMesh.rotation.y += 0.01;
-        }
-        
         if (renderer && scene && camera) {
             renderer.render(scene, camera);
         }

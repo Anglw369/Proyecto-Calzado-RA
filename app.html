@@ -5,12 +5,10 @@
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
     <title>StepRA - Panel de Aplicación</title>
 
-    <!-- Iconos y Fuentes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=35">
+    <link rel="stylesheet" href="css/main.css?v=36">
 
-    <!-- Tailwind y Alpine -->
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
     <script>
@@ -43,15 +41,40 @@
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
       x-data="{ subPage: 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' } }"
-      x-init="if(isLoggedIn) { 
-          historial.modelo = localStorage.getItem('user_modelo') || 'Ninguno';
-          historial.color = localStorage.getItem('user_color') || '#0A58CA';
-          historial.talla = localStorage.getItem('user_talla') || '0.0';
-      }">
+      x-init="
+        // Verificar si venimos regresando del login tras un guardado temporal de invitado
+        if (isLoggedIn && localStorage.getItem('temp_retorno') === 'true') {
+            localStorage.removeItem('temp_retorno');
+            subPage = 'ar_view';
+            
+            // Recuperamos los datos que tenías de invitado
+            window.modeloActual = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
+            window.colorHexActual = localStorage.getItem('user_color') || '#0A58CA';
+            window.tallaActual = parseFloat(localStorage.getItem('user_talla') || '26.0');
 
-  <!-- ==========================================================================
-       VISTA A: EL CATÁLOGO DE PRODUCTOS (BALSAMIQ STYLE)
-       ========================================================================== -->
+            // Esperamos un instante a que Alpine dibuje la interfaz del probador y la encendemos
+            Alpine.nextTick(() => {
+                document.getElementById('view-modelo').innerText = window.modeloActual;
+                document.getElementById('view-color-name').innerText = window.colorHexActual.toUpperCase();
+                document.getElementById('color-preview').style.backgroundColor = window.colorHexActual;
+                document.getElementById('view-talla').innerText = window.tallaActual.toFixed(1) + ' MX';
+                
+                const idProd = window.modeloActual.includes('Bota') ? 'cilindro' : 'cubo';
+                if (typeof window.iniciarMotoresManuales === 'function') {
+                    window.iniciarMotoresManuales();
+                    window.generarGeometriaSimulada(idProd, window.colorHexActual);
+                    window.actualizarEscalaPorTalla(window.tallaActual);
+                    guardarConfiguracionActual(); // Sube automáticamente a Supabase
+                }
+            });
+        } else if (isLoggedIn) {
+            // Carga normal del historial de perfil
+            historial.modelo = localStorage.getItem('user_modelo') || 'Ninguno';
+            historial.color = localStorage.getItem('user_color') || '#0A58CA';
+            historial.talla = localStorage.getItem('user_talla') || '0.0';
+        }
+      ">
+
   <div x-show="subPage === 'catalog'" x-cloak class="min-h-screen flex flex-col bg-background">
     <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50 px-4 py-4 flex items-center justify-between">
       <div class="text-xl font-bold"><a href="index.html"><span>Step</span><span class="text-primary">RA</span></a></div>
@@ -64,7 +87,6 @@
       </div>
     </header>
 
-    <!-- PANEL LATERAL DE PERFIL -->
     <div x-show="openProfile" x-cloak class="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm" @click.away="openProfile = false">
         <div class="bg-white w-full max-w-sm h-full p-6 shadow-2xl flex flex-col justify-between border-l border-gray-300" @click.stop>
             <div>
@@ -90,13 +112,12 @@
                 </div>
             </div>
             <div class="border-t pt-4">
-                <button x-show="isLoggedIn" onclick="localStorage.removeItem('stepra_session'); window.location.reload();" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
+                <button x-show="isLoggedIn" onclick="localStorage.removeItem('stepra_session'); localStorage.removeItem('user_modelo'); window.location.reload();" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
                 <button x-show="!isLoggedIn" onclick="window.location.href='login.html'" class="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Iniciar Sesión</button>
             </div>
         </div>
     </div>
 
-    <!-- Grid de Productos -->
     <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
       <h2 class="text-2xl font-bold mb-6 text-center">Modelados Disponibles</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-items-center">
@@ -111,7 +132,6 @@
       </div>
     </main>
 
-    <!-- Modal Atributos Catálogo -->
     <div x-show="openProductModal" x-cloak class="fixed inset-0 bg-black/50 tyranny z-40 flex items-center justify-center p-4">
       <div class="bg-white rounded-lg p-6 w-full max-w-md border border-gray-400 relative flex flex-col gap-4" @click.away="openProductModal = false">
         <button class="absolute top-4 right-4 text-gray-500 font-bold" @click="openProductModal = false">✕</button>
@@ -135,7 +155,6 @@
             <button @click="selectedColor = '#198754'" :class="selectedColor === '#198754' ? 'ring-4 ring-primary' : ''" class="w-10 h-10 rounded-full bg-[#198754] border"></button>
           </div>
         </div>
-        <!-- Gatillo para inicializar la cámara sólo al dar clic -->
         <button @click="openProductModal = false; subPage = 'ar_view'; encenderProbadorDesdeCatalogo(selectedProduct.id, selectedColor, selectedTalla);" 
                 class="w-full bg-primary text-white py-3 rounded font-bold text-lg shadow hover:opacity-90 transition-all">
           Probar en mi Pie 👟
@@ -144,15 +163,11 @@
     </div>
   </div>
 
-  <!-- ==========================================================================
-       VISTA B: EL PROBADOR VIRTUAL INTEGRADO (AR VIEW SIN TRABAS)
-       ========================================================================== -->
   <div x-show="subPage === 'ar_view'" x-cloak class="ar-screen-fix">
     
     <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
         <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
 
-        <!-- Modal Cambio de Modelo Interno -->
         <div id="menu-modelos-visual" class="custom-modal" style="display: none;">
             <div class="bg-[#f8f5ee] p-6 rounded-2xl border-2 border-[#d2c7b5] text-center w-80 max-w-[90%] shadow-2xl flex flex-col gap-4">
                 <h4 class="font-black uppercase tracking-wider text-xs text-dark-calzado">Selecciona Tipo de Calzado</h4>
@@ -170,7 +185,6 @@
             </div>
         </div>
 
-        <!-- Banner Superior de Datos -->
         <div id="simulation-overlay" class="absolute top-3 left-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg shadow-xl z-30 grid grid-cols-3 gap-2 items-center">
             <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-200">Escáner Pasarela</h3>
             <div class="flex flex-col items-center text-[11px] border-r border-gray-300 pr-1">
@@ -192,7 +206,6 @@
         </button>
     </div>
 
-    <!-- Mandos Manuales -->
     <div class="bg-white flex flex-col z-40 w-full shrink-0">
         <div id="debug-tools-panel" class="hidden p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
             <span class="text-[10px] font-black text-dark-calzado uppercase whitespace-nowrap">📏 Talla Manual:</span>
@@ -209,13 +222,13 @@
                 <i class="fa-solid fa-palette mb-1 text-sm text-primary"></i> Color
             </button>
             
-            <!-- Interceptor Inteligente para Guardado Conectado -->
             <button class="col-span-2 bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md" 
                     @click="if(!isLoggedIn) { 
-                        alert('🔒 [AUTENTICACIÓN REQUERIDA]\n\nGuardaremos tu configuración temporalmente en la memoria del navegador. Inicia sesión para subirla a Supabase.'); 
+                        alert('🔒 [AUTENTICACIÓN REQUERIDA]\n\nGuardaremos tu configuración en la memoria del navegador temporalmente. Inicia sesión para subirla a Supabase.'); 
                         localStorage.setItem('temp_modelo', window.modeloActual);
                         localStorage.setItem('temp_color', window.colorHexActual);
                         localStorage.setItem('temp_talla', window.tallaActual);
+                        localStorage.setItem('temp_retorno', 'true'); // Bandera de vuelta inteligente
                         window.location.href = 'login.html'; 
                     } else { 
                         localStorage.setItem('user_modelo', window.modeloActual);
@@ -230,17 +243,15 @@
     </div>
   </div>
 
-  <!-- Hilos de Ejecución Core -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
- <script src="js/controllers.js?v=35"></script>
-  <script src="js/main.js?v=35"></script>
+  <script src="js/controllers.js?v=36"></script>
+  <script src="js/main.js?v=36"></script>
 
   <script>
-      // Esta función inyecta los parámetros seleccionados de forma nativa en el motor 3D
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
           window.tallaActual = parseFloat(tallaBase);
           window.colorHexActual = hexColor;
@@ -254,14 +265,18 @@
           const slider = document.getElementById("size-slider");
           if (slider) slider.value = window.tallaActual;
 
-          // Lanzamos el encendido físico sincronizado de la escena y hardware de video
-          if (typeof window.generarGeometriaSimulada === 'function') {
-              window.generarGeometriaSimulada(idModelo, hexColor);
-              window.actualizarEscalaPorTalla(window.tallaActual);
-          }
-          if (typeof window.iniciarMotoresManuales === 'function') {
-              window.iniciarMotoresManuales();
-          }
+          // ¡SOLUCIÓN RADICAL AL BUG DE LA CÁMARA NEGRA!
+          // Usamos nextTick para garantizar que Alpine ya quitó el 'display: none' del probador
+          // y el contenedor ya mide el 100% real de la pantalla antes de prender el hardware.
+          Alpine.nextTick(() => {
+              if (typeof window.iniciarMotoresManuales === 'function') {
+                  window.iniciarMotoresManuales();
+              }
+              if (typeof window.generarGeometriaSimulada === 'function') {
+                  window.generarGeometriaSimulada(idModelo, hexColor);
+                  window.actualizarEscalaPorTalla(window.tallaActual);
+              }
+          });
       }
   </script>
 </body>

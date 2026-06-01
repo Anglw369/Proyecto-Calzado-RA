@@ -46,27 +46,28 @@
 
     <script>
         function ejecutarLoginLocal() {
+            // Guardamos la sesión activa en el navegador
             localStorage.setItem("stepra_session", "active");
 
-            // EL TRUCO DEL RETORNO: Verificamos si venía de un guardado temporal de invitado
+            // Si venía de intentar guardar una configuración de invitado, retenemos los datos
             const tempModelo = localStorage.getItem('temp_modelo');
             const tempColor = localStorage.getItem('temp_color');
             const tempTalla = localStorage.getItem('temp_talla');
 
             if (tempModelo && tempColor && tempTalla) {
-                // Sincronizamos las variables oficiales del perfil
                 localStorage.setItem('user_modelo', tempModelo);
                 localStorage.setItem('user_color', tempColor);
                 localStorage.setItem('user_talla', tempTalla);
 
-                // Limpiamos la memoria temporal
+                // Borramos los temporales de invitado
                 localStorage.removeItem('temp_modelo');
                 localStorage.removeItem('temp_color');
                 localStorage.removeItem('temp_talla');
                 
-                alert("🔐 [SESIÓN VINCULADA]\n\nSe ha sincronizado tu calzado personalizado con Supabase. Regresando al Probador Virtual...");
+                alert("🔐 [SESIÓN VINCULADA]\n\nSincronizando tus preferencias con Supabase. Abriendo el Probador Virtual...");
             }
             
+            // Redirige directo a la aplicación principal
             window.location.href = "app.html";
         }
     </script>
