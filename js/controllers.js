@@ -17,17 +17,13 @@ function cambiarGeometriaTacto(tipoForma, nombreComercial) {
     modeloActual = nombreComercial;
     document.getElementById("view-modelo").innerText = modeloActual;
 
-    // Llama a Three.js para renderizar la geometría
     if (typeof window.generarGeometriaSimulada === "function") {
         window.generarGeometriaSimulada(tipoForma, colorHexActual);
     }
-
-    // Mantiene el tamaño proporcional configurado
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 
-    // Cierra el menú de forma limpia
     document.getElementById("menu-modelos-visual").style.display = "none";
 }
 
@@ -48,7 +44,7 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 4. BARRA DE TAMAÑO MANUAL (MUESTRA LA TALLA CONSTANTEMENTE EN TIEMPO REAL)
+// 4. BARRA DE TAMAÑO MANUAL
 function ajustarTallaManual(nuevaTalla) {
     tallaActual = parseFloat(nuevaTalla);
     
@@ -57,13 +53,12 @@ function ajustarTallaManual(nuevaTalla) {
         viewTalla.innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
     }
 
-    // Modifica el eje Z en Three.js en tiempo real
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 }
 
-// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" (REVELA EL SLIDER Y LANZA ALERTA ESTILIZADA)
+// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA"
 function simularMedicionIA() {
     tallaActual = 26.0; 
 
@@ -81,13 +76,14 @@ function simularMedicionIA() {
         toolsPanel.style.display = "flex";
     }
 
-    // Lanza de forma automática el modal de alerta con diseño premium en el HTML
-    alert(`📐 [MÉTRICA IA]\n\nCalibración lista.\nTalla base estimada: ${tallaActual.toFixed(1)} MX.\n\nPuedes ajustar la forma exacta usando la barra de 'Talla Manual' inferior.`);
+    // Invocamos el puente de alerta de Alpine con iconos de métrica
+    if (typeof window.dispararAlertaPremium === "function") {
+        window.dispararAlertaPremium(`📐 [MÉTRICA IA]\n\nCalibración lista.\nTalla base estimada: ${tallaActual.toFixed(1)} MX.\n\nPuedes ajustar la forma exacta usando la barra de 'Talla Manual' inferior.`, 'straighten', 'Calibración');
+    }
 }
 
 // 6. GUARDAR PREFERENCIAS
 function guardarConfiguracionActual() {
-    // Sincronizamos las variables globales al alcance del entorno por seguridad antes de subir
     window.modeloActual = modeloActual;
     window.colorHexActual = colorHexActual;
     window.tallaActual = tallaActual;
@@ -95,8 +91,10 @@ function guardarConfiguracionActual() {
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(modeloActual, colorHexActual, tallaActual);
         
-        // Dispara la alerta estilizada con icono de check de éxito
-        alert(`¡Guardado con éxito en tu cuenta de Supabase!\n\n📦 Modelo: ${modeloActual}\n🎨 Color: ${colorHexActual.toUpperCase()}\n📏 Talla: ${tallaActual.toFixed(1)} MX`);
+        // Invocamos el puente de alerta de Alpine con iconos de éxito
+        if (typeof window.dispararAlertaPremium === "function") {
+            window.dispararAlertaPremium(`¡Guardado con éxito en tu cuenta de Supabase!\n\n📦 Modelo: ${modeloActual}\n🎨 Color: ${colorHexActual.toUpperCase()}\n📏 Talla: ${tallaActual.toFixed(1)} MX`, 'check_circle', 'Éxito');
+        }
     }
 }
 

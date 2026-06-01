@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=36">
+    <link rel="stylesheet" href="css/main.css?v=38">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -40,19 +40,25 @@
     </style>
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
-      x-data="{ subPage: 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' } }"
+      x-data="{ subPage: 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación' }"
       x-init="
+        // Exponer disparador de alerta al entorno global de JS de forma segura
+        window.dispararAlertaPremium = (mensaje, icono = 'info', titulo = 'Notificación') => {
+            alertText = mensaje;
+            alertIcon = icono;
+            alertTitle = titulo;
+            alertOpen = true;
+        };
+
         // Verificar si venimos regresando del login tras un guardado temporal de invitado
         if (isLoggedIn && localStorage.getItem('temp_retorno') === 'true') {
             localStorage.removeItem('temp_retorno');
             subPage = 'ar_view';
             
-            // Recuperamos los datos que tenías de invitado
             window.modeloActual = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
             window.colorHexActual = localStorage.getItem('user_color') || '#0A58CA';
             window.tallaActual = parseFloat(localStorage.getItem('user_talla') || '26.0');
 
-            // Esperamos un instante a que Alpine dibuje la interfaz del probador y la encendemos
             Alpine.nextTick(() => {
                 document.getElementById('view-modelo').innerText = window.modeloActual;
                 document.getElementById('view-color-name').innerText = window.colorHexActual.toUpperCase();
@@ -64,11 +70,10 @@
                     window.iniciarMotoresManuales();
                     window.generarGeometriaSimulada(idProd, window.colorHexActual);
                     window.actualizarEscalaPorTalla(window.tallaActual);
-                    guardarConfiguracionActual(); // Sube automáticamente a Supabase
+                    guardarConfiguracionActual(); 
                 }
             });
         } else if (isLoggedIn) {
-            // Carga normal del historial de perfil
             historial.modelo = localStorage.getItem('user_modelo') || 'Ninguno';
             historial.color = localStorage.getItem('user_color') || '#0A58CA';
             historial.talla = localStorage.getItem('user_talla') || '0.0';
@@ -132,7 +137,7 @@
       </div>
     </main>
 
-    <div x-show="openProductModal" x-cloak class="fixed inset-0 bg-black/50 tyranny z-40 flex items-center justify-center p-4">
+    <div x-show="openProductModal" x-cloak class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
       <div class="bg-white rounded-lg p-6 w-full max-w-md border border-gray-400 relative flex flex-col gap-4" @click.away="openProductModal = false">
         <button class="absolute top-4 right-4 text-gray-500 font-bold" @click="openProductModal = false">✕</button>
         <h3 class="text-2xl font-bold" x-text="selectedProduct?.name"></h3>
@@ -222,14 +227,15 @@
                 <i class="fa-solid fa-palette mb-1 text-sm text-primary"></i> Color
             </button>
             
-            <button class="col-span-2 bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md" 
+            <button class="col-span-2 bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md active:bg-[#08449E]" 
                     @click="if(!isLoggedIn) { 
-                        alert('🔒 [AUTENTICACIÓN REQUERIDA]\n\nGuardaremos tu configuración en la memoria del navegador temporalmente. Inicia sesión para subirla a Supabase.'); 
+                        dispararAlertaPremium('🔒 [AUTENTICACIÓN REQUERIDA]\n\nGuardaremos tu calzado en la memoria del navegador. Inicia sesión para subirlo a Supabase.', 'lock', 'Seguridad'); 
                         localStorage.setItem('temp_modelo', window.modeloActual);
                         localStorage.setItem('temp_color', window.colorHexActual);
                         localStorage.setItem('temp_talla', window.tallaActual);
-                        localStorage.setItem('temp_retorno', 'true'); // Bandera de vuelta inteligente
-                        window.location.href = 'login.html'; 
+                        localStorage.setItem('temp_retorno', 'true');
+                        // Demoramos la redirección para que el usuario pueda ver la alerta estética primero
+                        setTimeout(() => { window.location.href = 'login.html'; }, 2500); 
                     } else { 
                         localStorage.setItem('user_modelo', window.modeloActual);
                         localStorage.setItem('user_color', window.colorHexActual);
@@ -243,13 +249,26 @@
     </div>
   </div>
 
+  <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click="alertOpen = false">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4 transform transition-all" @click.stop>
+          <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto">
+              <span class="material-symbols-outlined text-2xl" x-text="alertIcon">info</span>
+          </div>
+          <h4 class="text-xs font-black uppercase tracking-widest text-gray-400" x-text="alertTitle">Notificación</h4>
+          <p class="text-sm font-medium text-dark-calzado whitespace-pre-line" x-text="alertText"></p>
+          <button @click="alertOpen = false" class="w-full bg-primary text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow hover:opacity-95 transition-all">
+              Entendido
+          </button>
+      </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-<script src="js/controllers.js?v=37"></script>
-  <script src="js/main.js?v=37"></script>
+  <script src="js/controllers.js?v=38"></script>
+  <script src="js/main.js?v=38"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
@@ -265,9 +284,7 @@
           const slider = document.getElementById("size-slider");
           if (slider) slider.value = window.tallaActual;
 
-          // ¡SOLUCIÓN RADICAL AL BUG DE LA CÁMARA NEGRA!
-          // Usamos nextTick para garantizar que Alpine ya quitó el 'display: none' del probador
-          // y el contenedor ya mide el 100% real de la pantalla antes de prender el hardware.
+          //nextTick garantiza que el contenedor AR ya mide el 100% real antes de prender el hardware
           Alpine.nextTick(() => {
               if (typeof window.iniciarMotoresManuales === 'function') {
                   window.iniciarMotoresManuales();
@@ -277,54 +294,6 @@
                   window.actualizarEscalaPorTalla(window.tallaActual);
               }
           });
-      }
-  </script>
-  <!-- ==========================================
-       MODAL DE ALERTA STEPRA PERSONALIZADO 
-       ========================================== -->
-  <div id="stepra-custom-alert" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4 transform transition-all scale-95">
-          <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-              <span class="material-symbols-outlined text-2xl" id="alert-icon-type">info</span>
-          </div>
-          <h4 class="text-xs font-black uppercase tracking-widest text-gray-400" id="alert-title-text">Notificación</h4>
-          <p class="text-sm font-medium text-dark-calzado whitespace-pre-line" id="alert-message-text"></p>
-          <button onclick="cerrarAlertaStepRA()" class="w-full bg-primary text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow hover:opacity-95 active:scale-95 transition-all">
-              Entendido
-          </button>
-      </div>
-  </div>
-
-  <script>
-      // Reemplazo estético global para los alert()
-      window.alert = function(mensaje) {
-          const alertModal = document.getElementById('stepra-custom-alert');
-          const alertMessage = document.getElementById('alert-message-text');
-          const alertIcon = document.getElementById('alert-icon-type');
-          const alertTitle = document.getElementById('alert-title-text');
-
-          if (alertModal && alertMessage) {
-              alertMessage.innerText = mensaje;
-              
-              // Si el mensaje contiene un candado, le cambiamos el icono a seguridad
-              if (mensaje.includes('🔒') || mensaje.includes('AUTENTICACIÓN')) {
-                  alertIcon.innerText = 'lock';
-                  alertTitle.innerText = 'Seguridad';
-              } else if (mensaje.includes('¡Guardado') || mensaje.includes('ÉXITO')) {
-                  alertIcon.innerText = 'check_circle';
-                  alertTitle.innerText = 'Éxito';
-              } else {
-                  alertIcon.innerText = 'info';
-                  alertTitle.innerText = 'Notificación';
-              }
-
-              alertModal.style.display = 'flex';
-          }
-      };
-
-      function cerrarAlertaStepRA() {
-          const alertModal = document.getElementById('stepra-custom-alert');
-          if (alertModal) alertModal.style.display = 'none';
       }
   </script>
 </body>
