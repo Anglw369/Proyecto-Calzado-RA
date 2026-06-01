@@ -225,13 +225,19 @@ function inicializarMediaPipePose() {
     console.log("IA MediaPipe enlazada directamente al flujo de la cámara trasera nativa.");
 }
 
-// Encender los motores ordenadamente al cargar el DOM
-window.addEventListener('DOMContentLoaded', () => {
+// 7. FUNCIÓN DISPARADORA MANUAL DESDE EL CATÁLOGO
+function iniciarMotoresManuales() {
     init3DSpace();
-    iniciarCamaraNativa(); 
+    iniciarCamaraNativa();
+}
+
+// Inicialización pasiva: Ya no enciende la cámara en el catálogo por detrás
+window.addEventListener('DOMContentLoaded', () => {
+    // Los motores se quedan en espera hasta que invoquemos la función manual
 });
 
-// Exponer funciones globales
+// Exponer la función de arranque al entorno de app.html
+window.iniciarMotoresManuales = iniciarMotoresManuales;
 window.generarGeometriaSimulada = generarGeometriaSimulada;
 window.actualizarColorGeometria = actualizarColorGeometria;
 window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
