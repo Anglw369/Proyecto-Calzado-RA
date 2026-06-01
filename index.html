@@ -1,60 +1,49 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Pasarela Virtual UTL</title>
-    <link rel="stylesheet" href="css/main.css?v=12">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="logo">Step<span>RA</span></div>
-        <a href="login.html" id="nav-auth-btn" class="btn-main" style="padding: 8px 16px; font-size: 0.9rem;">Iniciar Sesión</a>
-    </nav>
-
-    <header class="hero">
-        <h1>Visualiza el futuro de tu calzado</h1>
-        <p>Proyecto de estadías enfocado en la implementación de Realidad Aumentada para el sector calzado.</p>
-        <a href="login.html" id="hero-start-btn" class="btn-main">Comenzar ahora</a>
-    </header>
-
-    <section class="info-section">
-        <h2>¿De qué trata este proyecto?</h2>
-        <p>Esta aplicación permite a los usuarios probarse modelos de calzado en tiempo real utilizando la cámara de su dispositivo, facilitando la decisión de compra y personalización.</p>
-        <div class="features">
-            <div class="feature-card">
-                <h3>Detección</h3>
-                <p>Identificación de extremidades mediante IA.</p>
-            </div>
-            <div class="feature-card">
-                <h3>Modelado 3D</h3>
-                <p>Visualización de calzado con alta fidelidad.</p>
-            </div>
-        </div>
-    </section>
-
-   <script>
-        (function() {
-            // Buscamos el ID del usuario en el almacenamiento local de la app
-            const userIdActivo = sessionStorage.getItem('userId');
-            
-            if (userIdActivo) {
-                console.log("Sesión activa detectada (" + userIdActivo + "). Ajustando accesos...");
-                
-                // Modificamos el botón de la barra de navegación
-                const navBtn = document.getElementById("nav-auth-btn");
-                if (navBtn) {
-                    navBtn.innerText = "Ir al Probador 👟";
-                    navBtn.href = "app.html";
-                }
-                
-                // Modificamos el botón principal del Hero
-                const heroBtn = document.getElementById("hero-start-btn");
-                if (heroBtn) {
-                    heroBtn.href = "app.html";
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>StepRA - Bienvenidos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0a58ca",
+                        "dark-calzado": "#0b1b3d",
+                        "background": "#f3ede0",
+                        "surface": "#f8f5ee"
+                    }
                 }
             }
-        })();
+        }
     </script>
+</head>
+<body class="bg-background text-dark-calzado antialiased min-h-screen flex flex-col">
+
+    <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="text-xl font-bold uppercase tracking-wider">
+                <span>Step</span><span class="text-primary">RA</span>
+            </div>
+            <div>
+                <a href="login.html" class="bg-primary text-white px-6 py-2 rounded font-bold shadow hover:opacity-90 transition-all inline-block">
+                    Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-center text-center px-4 py-20 gap-6">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Visualiza el futuro de tu calzado</h1>
+        <p class="text-lg text-gray-600 max-w-2xl">Proyecto de estadías enfocado en la implementación de Realidad Aumentada interactiva para el sector calzado.</p>
+        
+        <a href="app.html" class="bg-primary text-white px-8 py-3 rounded text-lg font-bold shadow-lg hover:opacity-95 transition-all inline-block">
+            Ver Catálogo
+        </a>
+    </main>
+
 </body>
 </html>

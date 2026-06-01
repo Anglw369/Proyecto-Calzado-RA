@@ -1,74 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso - Pasarela Virtual</title>
-        <link rel="stylesheet" href="css/main.css?v=13">
-
-</head>
-<body>
-
-    <div class="center-content">
-        <div id="container-login" class="auth-container">
-            <h2>Bienvenido</h2>
-            <p>Ingresa tus datos para continuar</p>
-            <form id="login-form">
-                <input type="email" id="login-correo" placeholder="Correo electrónico" required>
-                <input type="password" id="login-password" placeholder="Contraseña" required>
-                
-                <button type="button" class="btn-main" style="width: 100%; margin-top: 10px;" onclick="loginUsuario(
-                    document.getElementById('login-correo').value,
-                    document.getElementById('login-password').value
-                )">Iniciar Sesión</button>
-            </form>
-            <p class="switch-text">¿No tienes cuenta? <a href="#" onclick="toggleAuthForm()">Regístrate aquí</a></p>
-        </div>
-
-        <div id="container-registro" class="auth-container hidden">
-            <h2>Crear Cuenta</h2>
-            <p>Regístrate para personalizar tu experiencia de calzado en RA</p>
-            <form id="register-form">
-                <input type="text" id="reg-nombre" placeholder="Nombre(s)" required>
-                <input type="text" id="reg-apellidos" placeholder="Apellidos" required>
-                <input type="email" id="reg-correo" placeholder="Correo electrónico" required>
-                <input type="password" id="reg-password" placeholder="Contraseña segura" required>
-                <input type="tel" id="reg-telefono" placeholder="Teléfono (10 dígitos)" required>
-                
-                <select id="reg-genero" required>
-                    <option value="" disabled selected>Selecciona tu género</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
-                    <option value="Prefiero no decirlo">Prefiero no decirlo</option>
-                </select>
-                
-                <button type="button" class="btn-main" style="width: 100%; margin-top: 10px;" onclick="registrarUsuario(
-                    document.getElementById('reg-nombre').value,
-                    document.getElementById('reg-apellidos').value,
-                    document.getElementById('reg-correo').value,
-                    document.getElementById('reg-password').value,
-                    document.getElementById('reg-telefono').value,
-                    document.getElementById('reg-genero').value
-                )">Crear Cuenta</button>
-            </form>
-            <p class="switch-text">¿Ya tienes cuenta? <a href="#" onclick="toggleAuthForm()">Inicia sesión aquí</a></p>
-        </div>
-    </div>
-    
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>StepRA - Iniciar Sesión</title>
+    <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script>
-        function toggleAuthForm() {
-            document.getElementById('container-login').classList.toggle('hidden');
-            document.getElementById('container-registro').classList.toggle('hidden');
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0a58ca",
+                        "dark-calzado": "#0b1b3d",
+                        "background": "#f3ede0"
+                    }
+                }
+            }
         }
     </script>
-    <script type="module" src="js/auth.js"></script>
+</head>
+<body class="bg-background text-dark-calzado antialiased min-h-screen flex flex-col">
+
+    <header class="w-full bg-white border-b border-gray-300 py-4 px-6 flex items-center justify-between">
+        <div class="text-xl font-bold">
+            <a href="index.html"><span>Step</span><span class="text-primary">RA</span></a>
+        </div>
+        <a href="index.html" class="text-gray-500 font-bold hover:text-dark-calzado">Volver</a>
+    </header>
+
+    <main class="flex-1 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-300 text-center">
+            <h2 class="text-2xl font-bold mb-2">Bienvenido</h2>
+            <p class="text-gray-500 mb-6">Ingresa tus credenciales para continuar</p>
+            
+            <form class="flex flex-col gap-4" onsubmit="event.preventDefault();">
+                <input type="email" id="login-email" placeholder="Correo electrónico" class="border border-gray-300 rounded px-4 py-3 bg-gray-50 focus:outline-none focus:border-primary w-full">
+                <input type="password" id="login-password" placeholder="Contraseña" class="border border-gray-300 rounded px-4 py-3 bg-gray-50 focus:outline-none focus:border-primary w-full">
+                
+                <button type="button" onclick="ejecutarLoginLocal()" class="bg-primary text-white py-3 rounded font-bold shadow hover:opacity-90 transition-all w-full">
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </main>
+
     <script>
-        // Si el usuario ya está logueado y entra al login por error, lo mandamos directo a la app
-        document.addEventListener("DOMContentLoaded", function() {
-            if (sessionStorage.getItem('userId')) {
-                window.location.href = "app.html";
-            }
-        });
+        function ejecutarLoginLocal() {
+            // Guardamos una bandera de sesión en el navegador
+            localStorage.setItem("stepra_session", "active");
+            // Mandamos al usuario directo a la aplicación
+            window.location.href = "app.html";
+        }
     </script>
 </body>
 </html>
