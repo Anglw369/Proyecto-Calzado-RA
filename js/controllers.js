@@ -48,7 +48,7 @@ function seleccionarColorManual(hexSeleccionado) {
     }
 }
 
-// 4. BARRA DE TAMAÑO MANUAL
+// 4. BARRA DE TAMAÑO MANUAL (MUESTRA LA TALLA CONSTANTEMENTE EN TIEMPO REAL)
 function ajustarTallaManual(nuevaTalla) {
     tallaActual = parseFloat(nuevaTalla);
     
@@ -57,12 +57,13 @@ function ajustarTallaManual(nuevaTalla) {
         viewTalla.innerText = tallaActual.toFixed(1) + " MX (Ajuste)";
     }
 
+    // Modifica el eje Z en Three.js en tiempo real
     if (typeof window.actualizarEscalaPorTalla === "function") {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 }
 
-// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" (REVELA EL SLIDER)
+// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" (REVELA EL SLIDER Y LANZA ALERTA ESTILIZADA)
 function simularMedicionIA() {
     tallaActual = 26.0; 
 
@@ -80,18 +81,30 @@ function simularMedicionIA() {
         toolsPanel.style.display = "flex";
     }
 
-    alert(`📐 [MÉTRICA IA]: Calibración lista.\nTalla base: ${tallaActual} MX.\n\nPuedes ajustar la forma usando la barra de 'Talla Manual' inferior.`);
+    // Lanza de forma automática el modal de alerta con diseño premium en el HTML
+    alert(`📐 [MÉTRICA IA]\n\nCalibración lista.\nTalla base estimada: ${tallaActual.toFixed(1)} MX.\n\nPuedes ajustar la forma exacta usando la barra de 'Talla Manual' inferior.`);
 }
 
 // 6. GUARDAR PREFERENCIAS
 function guardarConfiguracionActual() {
+    // Sincronizamos las variables globales al alcance del entorno por seguridad antes de subir
+    window.modeloActual = modeloActual;
+    window.colorHexActual = colorHexActual;
+    window.tallaActual = tallaActual;
+
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(modeloActual, colorHexActual, tallaActual);
-        alert(`¡Guardado con éxito!\n\nModelo: ${modeloActual}\nColor: ${colorHexActual}\nTalla: ${tallaActual} MX`);
+        
+        // Dispara la alerta estilizada con icono de check de éxito
+        alert(`¡Guardado con éxito en tu cuenta de Supabase!\n\n📦 Modelo: ${modeloActual}\n🎨 Color: ${colorHexActual.toUpperCase()}\n📏 Talla: ${tallaActual.toFixed(1)} MX`);
     }
 }
 
-// Exponer funciones globales de forma estricta para el HTML
+// Exponer funciones globales de forma estricta para el HTML y Alpine
+window.modeloActual = modeloActual;
+window.colorHexActual = colorHexActual;
+window.tallaActual = tallaActual;
+
 window.intercambiarModelo = intercambiarModelo;
 window.cambiarGeometriaTacto = cambiarGeometriaTacto;
 window.intercambiarColor = intercambiarColor;

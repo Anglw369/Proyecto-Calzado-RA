@@ -248,8 +248,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-  <script src="js/controllers.js?v=36"></script>
-  <script src="js/main.js?v=36"></script>
+<script src="js/controllers.js?v=37"></script>
+  <script src="js/main.js?v=37"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
@@ -277,6 +277,54 @@
                   window.actualizarEscalaPorTalla(window.tallaActual);
               }
           });
+      }
+  </script>
+  <!-- ==========================================
+       MODAL DE ALERTA STEPRA PERSONALIZADO 
+       ========================================== -->
+  <div id="stepra-custom-alert" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4 transform transition-all scale-95">
+          <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+              <span class="material-symbols-outlined text-2xl" id="alert-icon-type">info</span>
+          </div>
+          <h4 class="text-xs font-black uppercase tracking-widest text-gray-400" id="alert-title-text">Notificación</h4>
+          <p class="text-sm font-medium text-dark-calzado whitespace-pre-line" id="alert-message-text"></p>
+          <button onclick="cerrarAlertaStepRA()" class="w-full bg-primary text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow hover:opacity-95 active:scale-95 transition-all">
+              Entendido
+          </button>
+      </div>
+  </div>
+
+  <script>
+      // Reemplazo estético global para los alert()
+      window.alert = function(mensaje) {
+          const alertModal = document.getElementById('stepra-custom-alert');
+          const alertMessage = document.getElementById('alert-message-text');
+          const alertIcon = document.getElementById('alert-icon-type');
+          const alertTitle = document.getElementById('alert-title-text');
+
+          if (alertModal && alertMessage) {
+              alertMessage.innerText = mensaje;
+              
+              // Si el mensaje contiene un candado, le cambiamos el icono a seguridad
+              if (mensaje.includes('🔒') || mensaje.includes('AUTENTICACIÓN')) {
+                  alertIcon.innerText = 'lock';
+                  alertTitle.innerText = 'Seguridad';
+              } else if (mensaje.includes('¡Guardado') || mensaje.includes('ÉXITO')) {
+                  alertIcon.innerText = 'check_circle';
+                  alertTitle.innerText = 'Éxito';
+              } else {
+                  alertIcon.innerText = 'info';
+                  alertTitle.innerText = 'Notificación';
+              }
+
+              alertModal.style.display = 'flex';
+          }
+      };
+
+      function cerrarAlertaStepRA() {
+          const alertModal = document.getElementById('stepra-custom-alert');
+          if (alertModal) alertModal.style.display = 'none';
       }
   </script>
 </body>
