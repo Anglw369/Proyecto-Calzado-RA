@@ -8,7 +8,7 @@ let scene, camera, renderer, currentMesh;
 // Variables de Inteligencia Artificial (MediaPipe Pose)
 let poseTracker;
 
-// 1. INICIALIZAR EL ESCENARIO 3D TRANSPARENTE
+// 1. INICIALIZAR EL ESCENARIO 3D TRANSPARENTE (AUTO-SINCRONIZADO CON PARÁMETROS)
 function init3DSpace() {
     scene = new THREE.Scene();
 
@@ -33,8 +33,15 @@ function init3DSpace() {
     renderer.domElement.style.zIndex = '5'; 
     cameraContainer.appendChild(renderer.domElement);
 
-    // Generar la primera forma geométrica por defecto (Cubo)
-    generarGeometriaSimulada("cubo", "#0A58CA");
+    // LEER PARÁMETROS ANTES DE DIBUJAR PARA EVITAR EL COLOR AZUL PREDETERMINADO
+    const params = new URLSearchParams(window.location.search);
+    const modeloId = params.get('modelo') || 'cubo';
+    const colorHex = params.get('color') || '#0A58CA';
+    const talla = parseFloat(params.get('talla') || '26.0');
+
+    // Generar la forma geométrica con los datos exactos del catálogo
+    generarGeometriaSimulada(modeloId, colorHex);
+    actualizarEscalaPorTalla(talla);
 
     // Ciclo de animación continuo
     function animate() {

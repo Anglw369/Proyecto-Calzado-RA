@@ -1,21 +1,16 @@
 /* ==========================================================================
-   VARIABLES DE MARCA: STEPRA (AZUL DEPORTIVO, AMARILLO SPORT Y GRIS URBANO)
-   ========================================================================== */
-/* ==========================================================================
-   VARIABLES DE MARCA: STEPRA (AZUL, AMARILLO Y BEIGE ARENA)
-   ========================================================================== */
-/* ==========================================================================
    VARIABLES DE MARCA: STEPRA (AZUL, AMARILLO Y BEIGE CON MÁS PRESENCIA)
    ========================================================================== */
 :root {
-    --bg-warm: #E6DFD3;          /* Beige Almendra: Más oscuro y con mucha presencia */
-    --surface: #F3EDE0;          /* Beige Arena Intenso: Para resaltar paneles y logins */
+    --bg-warm: #E6DFD3;          /* Beige Almendra */
+    --surface: #F3EDE0;          /* Beige Arena Intenso */
     --primary-warm: #0A58CA;      /* Azul Deportivo Fuerte */
     --dark-calzado: #0B1B3D;      /* Azul Marino Profundo para textos */
     --accent-light: #FFD166;      /* Amarillo Sport para destaques */
     --text-muted: #625E55;        /* Café grisáceo para textos secundarios */
-    --border-color: #D2C7B5;      /* Bordes más marcados para dar volumen */
+    --border-color: #D2C7B5;      /* Bordes más marcados */
 }
+
 /* Reset y Base General */
 * {
     box-sizing: border-box;
@@ -33,8 +28,6 @@ body {
 /* ==========================================================================
    ESTILOS PARA LANDING PAGE (INDEX.HTML) Y LOGIN
    ========================================================================== */
-
-/* Navegación General */
 .navbar { 
     display: flex; 
     justify-content: space-between; 
@@ -59,153 +52,20 @@ body {
 }
 .logo span { 
     color: var(--primary-warm); 
-    border-bottom: 3px solid var(--accent-light); /* Subrayado amarillo */
+    border-bottom: 3px solid var(--accent-light);
     padding-bottom: 1px;
 }
 
-/* Secciones Index */
-.hero {
-    text-align: center;
-    padding: 80px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border-color);
-}
-.hero h1 {
-    font-size: 2.2rem;
-    margin-bottom: 15px;
-    color: var(--dark-calzado);
-}
-.hero p {
-    color: var(--text-muted);
-    margin-bottom: 25px;
-}
-
-.info-section {
-    padding: 60px 20px;
-    text-align: center;
-}
-.info-section h2 {
-    margin-bottom: 30px;
-    color: var(--primary-warm);
-}
-
-.features {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-top: 20px;
-}
-.feature-card {
-    background: var(--surface);
-    padding: 25px;
-    border-radius: 15px;
-    width: 250px;
-    box-shadow: 0 4px 15px rgba(10, 88, 202, 0.05);
-    border: 1px solid var(--border-color);
-}
-.feature-card h3 {
-    margin-bottom: 10px;
-    color: var(--primary-warm);
-}
-
-/* Botón de la Landing (Azul con letras blancas) */
-.btn-main {
-    background: var(--primary-warm);
-    color: var(--surface);
-    padding: 12px 25px;
-    text-decoration: none;
-    border-radius: 8px;
-    display: inline-block;
-    border: none;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-.btn-main:hover {
-    background: #08449E;
-}
-
-/* Estructura para centrar Login/Registro */
-.center-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 90vh;
-    padding: 20px;
-}
-
-/* Contenedores Login y Registro */
-.auth-container {
-    background: var(--surface);
-    padding: 35px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(10, 88, 202, 0.06);
-    text-align: center;
-    width: 100%;
-    max-width: 400px;
-    border: 1px solid var(--border-color);
-}
-.auth-container h2 {
-    margin-bottom: 10px;
-    color: var(--dark-calzado);
-}
-.auth-container p {
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    font-size: 0.95rem;
-}
-
-/* Elementos de Formulario */
-input, select {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0 15px 0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-sizing: border-box;
-    background: var(--bg-warm);
-    color: var(--dark-calzado);
-    font-family: inherit;
-}
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--primary-warm);
-}
-
-.switch-text {
-    margin-top: 15px;
-    font-size: 0.9rem;
-}
-.switch-text a {
-    color: var(--primary-warm);
-    text-decoration: none;
-    font-weight: bold;
-}
-
 /* ==========================================================================
-   ESTILOS EXCLUSIVOS: INTERFAZ DE CÁMARA (APP.HTML)
+   ESTILOS OPTIMIZADOS PARA EL PROBADOR VIRTUAL (PROBADOR.HTML)
    ========================================================================== */
-.app-container {
-    width: 100%;
-    max-width: 450px;
-    height: 90vh;
-    max-height: 800px;
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 12px 40px rgba(10, 88, 202, 0.12);
-    border-radius: 24px;
-    overflow: hidden;
-    border: 4px solid var(--surface);
-    margin: auto;
-}
 
+/* Contenedor de cámara fluido que respeta estrictamente los límites de pantalla */
 #camera-container {
     position: relative;
-    flex: 1;
-    background: #111;
+    width: 100%;
+    height: 100%;
+    background: #000;
     overflow: hidden;
 }
 
@@ -213,193 +73,81 @@ input:focus, select:focus {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
+
+/* Forzar que el lienzo de Three.js comparta el mismo espacio exacto */
+#camera-container canvas {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 5;
+    pointer-events: none; /* Deja pasar los clics si es necesario */
+}
+
+/* El Escáner Horizontal Compacto que evita bloquear el modelado */
 #simulation-overlay {
     position: absolute;
-    top: 10px; /* Reducido de 15px */
-    left: 10px;
-    right: 10px;
-    background: rgba(255, 255, 255, 0.85); /* Un toque más transparente */
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    padding: 6px 12px; /* Reducido a la mitad para ahorrar espacio vertical */
-    border-radius: 10px;
-    border: 1px solid rgba(10, 88, 202, 0.1);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(10, 88, 202, 0.15);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     pointer-events: none;
-    z-index: 10;
-    
-    /* Convertimos el contenedor en un flujo horizontal compacto */
+    z-index: 30;
     display: grid;
     grid-template-columns: repeat(3, 1fr); 
-    gap: 8px;
+    gap: 10px;
     align-items: center;
 }
 
 #simulation-overlay h3 {
-    grid-column: span 3; /* El título abarca el ancho superior */
-    margin-bottom: 2px;
-    font-size: 9px; /* Texto más discreto */
+    grid-column: span 3;
+    margin-bottom: 4px;
+    font-size: 10px;
     text-transform: uppercase;
     color: var(--primary-warm);
-    letter-spacing: 1px;
-    font-weight: 800;
+    letter-spacing: 1.2px;
+    font-weight: 900;
     text-align: center;
     border-bottom: 1px solid rgba(10, 88, 202, 0.15);
-    padding-bottom: 2px;
+    padding-bottom: 3px;
 }
 
-.sim-data {
-    font-size: 11px; /* Letra compacta pero legible */
-    margin: 0;
-    display: flex;
-    flex-direction: column; /* Apila el título del dato arriba y el valor abajo */
-    align-items: center;
-    text-align: center;
-}
-
-/* Quitamos las líneas divisorias horizontales viejas */
-.sim-data:not(:last-child) {
-    border-bottom: none;
-    padding-bottom: 0;
-    border-right: 1px dashed rgba(91, 110, 136, 0.25); /* Ponemos un separador vertical sutil */
-}
-
-.sim-data span {
-    font-weight: 700;
-    margin-top: 1px;
-    font-size: 11px;
-    color: var(--dark-calzado);
-}
-
+/* Color Preview Circular del Escáner */
 #color-preview {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
     border: 1px solid var(--dark-calzado);
-    margin-left: 6px;
+    margin-left: 4px;
     vertical-align: middle;
 }
 
-#controls-panel {
-    background: var(--surface);
-    padding: 16px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    border-top: 1px solid var(--border-color);
-}
-
-.action-btn {
-    background: var(--bg-warm);
-    color: var(--dark-calzado);
-    border: 1px solid var(--border-color);
-    padding: 10px 5px; /* Ajustado ligeramente para dar espacio al icono */
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
-    transition: all 0.2s ease;
-    text-align: center;
-    text-transform: uppercase;
-}
-
-/* Toque en celulares cambia a Amarillo con texto oscuro */
-.action-btn:active {
-    background: var(--accent-light);
-    color: var(--dark-calzado);
-    border-color: var(--accent-light);
-    transform: scale(0.98); 
-}
-
-/* El botón Guardar es Azul Fuerte */
-.btn-save {
-    grid-column: span 2;        
-    background: var(--primary-warm) !important;
-    color: var(--surface) !important;
-    border: none !important;
-    padding: 15px 10px;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-top: 4px;
-    box-shadow: 0 4px 12px rgba(10, 88, 202, 0.2);
-}
-.btn-save:active {
-    background: #08449E !important;
-    transform: scale(0.98) !important;
-}
-
-/* Control de Hovers en PC */
-@media (hover: hover) {
-    .action-btn:hover {
-        background: var(--accent-light);
-        color: var(--dark-calzado);
-        border-color: var(--accent-light);
-    }
-    .btn-save:hover {
-        background: #08449E !important;
-    }
-    #btn-medir-flotante:hover {
-        background: #08449E;
-        transform: translateX(-50%) scale(1.05);
-    }
-}
-
+/* Ocultador Técnico */
 .hidden {
     display: none !important;
 }
 
-/* Botón flotante amarillo deportivo para que resalte mucho dentro del video */
-#btn-medir-flotante {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent-light); 
-    color: var(--dark-calzado);
-    border: 2px solid var(--surface);
-    padding: 12px 20px;
-    font-size: 13px;
-    font-weight: 800;
-    border-radius: 30px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    z-index: 15;
-    white-space: nowrap;
-}
-#btn-medir-flotante:active {
-    background: #e6bd55;
-    transform: translateX(-50%) scale(0.98);
-}
-
-/* Adaptación estricta para el probador en móviles */
-@media (max-width: 480px) {
-    body:has(.app-container) {
-        overflow: hidden;
-    }
-    .app-container {
-        max-width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        max-height: 100dvh;
-        border-radius: 0;
-        border: none;
-        position: fixed;
-        top: 0;
-        left: 0;
+/* Control de Hovers en PC para Botones de Acción */
+@media (hover: hover) {
+    #btn-medir-flotante:hover {
+        background: #e6bd55;
+        transform: translateX(-50%) scale(1.03);
     }
 }
 
-/* ==========================================================================
-   AJUSTES DE NAVEGACIÓN COMPLEMENTARIOS (LOGO Y CERRAR SESIÓN)
-   ========================================================================== */
-.logo-link {
-    text-decoration: none; /* Quita la línea de enlace en el logo */
-    display: inline-block;
-}
-
+/* Estilos complementarios de salida seguros */
 .btn-logout {
     background: transparent;
     border: none;
@@ -413,17 +161,8 @@ input:focus, select:focus {
     justify-content: center;
     transition: all 0.2s ease;
 }
-
-/* Efecto visual al presionar el botón de salida */
 .btn-logout:active {
     background: rgba(10, 88, 202, 0.1);
     color: var(--primary-warm);
     transform: scale(0.95);
-}
-
-@media (hover: hover) {
-    .btn-logout:hover {
-        background: rgba(10, 88, 202, 0.08);
-        color: var(--primary-warm);
-    }
 }
