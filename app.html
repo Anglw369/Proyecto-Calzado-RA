@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=38">
+    <link rel="stylesheet" href="css/main.css?v=39">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -40,20 +40,42 @@
     </style>
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
-      x-data="{ subPage: 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación' }"
+      x-data="{ subPage: sessionStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación' }"
       x-init="
-        // Exponer disparador de alerta al entorno global de JS de forma segura
+        // CORRECCIÓN 1: Interceptor inteligente de alertas para bloquear mensajes vacíos o fantasmas
         window.dispararAlertaPremium = (mensaje, icono = 'info', titulo = 'Notificación') => {
+            if (!mensaje || mensaje.trim() === '' || mensaje === 'undefined') return;
             alertText = mensaje;
             alertIcon = icono;
             alertTitle = titulo;
             alertOpen = true;
         };
 
-        // Verificar si venimos regresando del login tras un guardado temporal de invitado
+        // Si la sesión está activa, cargamos el historial
+        if(isLoggedIn) { 
+            historial.modelo = localStorage.getItem('user_modelo') || 'Ninguno';
+            historial.color = localStorage.getItem('user_color') || '#0A58CA';
+            historial.talla = localStorage.getItem('user_talla') || '0.0';
+        }
+
+        // CORRECCIÓN 3: Persistencia real al recargar la página estando en el probador
+        if (subPage === 'ar_view') {
+            const savedMod = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
+            const savedCol = localStorage.getItem('user_color') || '#0A58CA';
+            const savedTal = localStorage.getItem('user_talla') || '26.0';
+            
+            const idProd = savedMod.includes('Bota') ? 'cilindro' : 'cubo';
+            
+            Alpine.nextTick(() => {
+                encenderProbadorDesdeCatalogo(idProd, savedCol, savedTal);
+            });
+        }
+
+        // Retorno automático tras iniciar sesión desde el modo invitado
         if (isLoggedIn && localStorage.getItem('temp_retorno') === 'true') {
             localStorage.removeItem('temp_retorno');
             subPage = 'ar_view';
+            sessionStorage.setItem('stepra_subpage', 'ar_view');
             
             window.modeloActual = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
             window.colorHexActual = localStorage.getItem('user_color') || '#0A58CA';
@@ -73,10 +95,6 @@
                     guardarConfiguracionActual(); 
                 }
             });
-        } else if (isLoggedIn) {
-            historial.modelo = localStorage.getItem('user_modelo') || 'Ninguno';
-            historial.color = localStorage.getItem('user_color') || '#0A58CA';
-            historial.talla = localStorage.getItem('user_talla') || '0.0';
         }
       ">
 
@@ -117,7 +135,7 @@
                 </div>
             </div>
             <div class="border-t pt-4">
-                <button x-show="isLoggedIn" onclick="localStorage.removeItem('stepra_session'); localStorage.removeItem('user_modelo'); window.location.reload();" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
+                <button x-show="isLoggedIn" onclick="localStorage.removeItem('stepra_session'); localStorage.removeItem('user_modelo'); sessionStorage.clear(); window.location.reload();" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
                 <button x-show="!isLoggedIn" onclick="window.location.href='login.html'" class="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Iniciar Sesión</button>
             </div>
         </div>
@@ -160,7 +178,7 @@
             <button @click="selectedColor = '#198754'" :class="selectedColor === '#198754' ? 'ring-4 ring-primary' : ''" class="w-10 h-10 rounded-full bg-[#198754] border"></button>
           </div>
         </div>
-        <button @click="openProductModal = false; subPage = 'ar_view'; encenderProbadorDesdeCatalogo(selectedProduct.id, selectedColor, selectedTalla);" 
+        <button @click="openProductModal = false; subPage = 'ar_view'; sessionStorage.setItem('stepra_subpage', 'ar_view'); encenderProbadorDesdeCatalogo(selectedProduct.id, selectedColor, selectedTalla);" 
                 class="w-full bg-primary text-white py-3 rounded font-bold text-lg shadow hover:opacity-90 transition-all">
           Probar en mi Pie 👟
         </button>
@@ -212,7 +230,7 @@
     </div>
 
     <div class="bg-white flex flex-col z-40 w-full shrink-0">
-        <div id="debug-tools-panel" class="hidden p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
+        <div id="debug-tools-panel" style="display: none;" class="p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
             <span class="text-[10px] font-black text-dark-calzado uppercase whitespace-nowrap">📏 Talla Manual:</span>
             <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" class="flex-1 accent-primary h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="ajustarTallaManual(this.value)">
         </div>
@@ -227,24 +245,26 @@
                 <i class="fa-solid fa-palette mb-1 text-sm text-primary"></i> Color
             </button>
             
-            <button class="col-span-2 bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md active:bg-[#08449E]" 
-                    @click="if(!isLoggedIn) { 
-                        dispararAlertaPremium('🔒 [AUTENTICACIÓN REQUERIDA]\n\nGuardaremos tu calzado en la memoria del navegador. Inicia sesión para subirlo a Supabase.', 'lock', 'Seguridad'); 
-                        localStorage.setItem('temp_modelo', window.modeloActual);
-                        localStorage.setItem('temp_color', window.colorHexActual);
-                        localStorage.setItem('temp_talla', window.tallaActual);
-                        localStorage.setItem('temp_retorno', 'true');
-                        // Demoramos la redirección para que el usuario pueda ver la alerta estética primero
-                        setTimeout(() => { window.location.href = 'login.html'; }, 2500); 
-                    } else { 
+            <button class="col-span-2 bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md" 
+                    @click="
                         localStorage.setItem('user_modelo', window.modeloActual);
                         localStorage.setItem('user_color', window.colorHexActual);
                         localStorage.setItem('user_talla', window.tallaActual);
-                        guardarConfiguracionActual(); 
-                    }">
+
+                        if(!isLoggedIn) { 
+                            dispararAlertaPremium('🔒 [AUTENTICACIÓN REQUERIDA]\n\nGuardaremos tu configuración temporalmente. Inicia sesión para subirla a Supabase.', 'lock', 'Seguridad'); 
+                            localStorage.setItem('temp_modelo', window.modeloActual);
+                            localStorage.setItem('temp_color', window.colorHexActual);
+                            localStorage.setItem('temp_talla', window.tallaActual);
+                            localStorage.setItem('temp_retorno', 'true');
+                            setTimeout(() => { window.location.href = 'login.html'; }, 2200); 
+                        } else { 
+                            guardarConfiguracionActual(); 
+                        }
+                    ">
                 Guardar Configuración
             </button>
-            <button @click="subPage = 'catalog'; window.location.reload();" class="col-span-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1">✕ Volver al Catálogo</button>
+            <button @click="sessionStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" class="col-span-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1">✕ Volver al Catálogo</button>
         </div>
     </div>
   </div>
@@ -267,8 +287,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-  <script src="js/controllers.js?v=38"></script>
-  <script src="js/main.js?v=38"></script>
+  <script src="js/controllers.js?v=39"></script>
+  <script src="js/main.js?v=39"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
@@ -284,7 +304,6 @@
           const slider = document.getElementById("size-slider");
           if (slider) slider.value = window.tallaActual;
 
-          //nextTick garantiza que el contenedor AR ya mide el 100% real antes de prender el hardware
           Alpine.nextTick(() => {
               if (typeof window.iniciarMotoresManuales === 'function') {
                   window.iniciarMotoresManuales();

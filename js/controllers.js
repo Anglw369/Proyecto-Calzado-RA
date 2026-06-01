@@ -71,12 +71,13 @@ function simularMedicionIA() {
         window.actualizarEscalaPorTalla(tallaActual);
     }
 
+    // CORRECCIÓN 2: Modificamos el estilo de display directo para convivir con Alpine
     const toolsPanel = document.getElementById("debug-tools-panel");
     if (toolsPanel) {
         toolsPanel.style.display = "flex";
     }
 
-    // Invocamos el puente de alerta de Alpine con iconos de métrica
+    // Disparador de alerta de Alpine con canal validado
     if (typeof window.dispararAlertaPremium === "function") {
         window.dispararAlertaPremium(`📐 [MÉTRICA IA]\n\nCalibración lista.\nTalla base estimada: ${tallaActual.toFixed(1)} MX.\n\nPuedes ajustar la forma exacta usando la barra de 'Talla Manual' inferior.`, 'straighten', 'Calibración');
     }
@@ -91,9 +92,8 @@ function guardarConfiguracionActual() {
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(modeloActual, colorHexActual, tallaActual);
         
-        // Invocamos el puente de alerta de Alpine con iconos de éxito
         if (typeof window.dispararAlertaPremium === "function") {
-            window.dispararAlertaPremium(`¡Guardado con éxito en tu cuenta de Supabase!\n\n📦 Modelo: ${modeloActual}\n🎨 Color: ${colorHexActual.toUpperCase()}\n📏 Talla: ${tallaActual.toFixed(1)} MX`, 'check_circle', 'Éxito');
+            window.dispararAlertaPremium(`¡Guardado con éxito!\n\n📦 Modelo: ${modeloActual}\n🎨 Color: ${colorHexActual.toUpperCase()}\n📏 Talla: ${tallaActual.toFixed(1)} MX`, 'check_circle', 'Éxito');
         }
     }
 }
