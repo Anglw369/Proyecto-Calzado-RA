@@ -131,14 +131,16 @@ function inicializarMediaPipePose() {
         minTrackingConfidence: 0.5
     });
 
+    // Escuchador que procesa los puntos del pie cuadro por cuadro
     poseTracker.onResults((results) => {
         if (!results.poseLandmarks || !currentMesh) return;
 
+        // PUNTOS ANATÓMICOS: 28 = Tobillo Derecho, 32 = Punta del Pie Derecho, 30 = Talón Derecho
         const tobilloDerecho = results.poseLandmarks[28];
         const puntaPie = results.poseLandmarks[32];
         const talon = results.poseLandmarks[30];
 
-        // El objeto 3D SIEMPRE sigue la posición del pie en X, Y, Z (Adherencia continua)
+        // 1. ADHERENCIA CONTINUA (El objeto SIEMPRE persigue la posición de tu pie)
         if (tobilloDerecho && tobilloDerecho.visibility > 0.6) {
             const targetX = (tobilloDerecho.x - 0.5) * 3.4; 
             const targetY = (tobilloDerecho.y - 0.5) * -2.5 - 0.4; 
@@ -147,8 +149,8 @@ function inicializarMediaPipePose() {
             currentMesh.position.y += (targetY - currentMesh.position.y) * 0.35;
             currentMesh.position.z = 1.3 + (tobilloDerecho.z * -1.6);
 
-            // ¡EL FILTRO INTELIGENTE DE CALIBRACIÓN!:
-            // El tamaño SOLO se calcula si "iaMidiendoActivamente" es verdadero (cuando presionas el botón amarillo)
+            // 2. CANDADO DE ESCALA RESTRUCTURADO (¡CERO MOVIMIENTOS SI NO ESTÁ ESCANEANDO!)
+            // Movimos la actualización de tamaño aquí adentro para que NUNCA cambie la escala a menos que presiones el botón amarillo
             if (iaMidiendoActivamente && puntaPie && talon) {
                 const dx = puntaPie.x - talon.x;
                 const dy = puntaPie.y - talon.y;
@@ -160,12 +162,17 @@ function inicializarMediaPipePose() {
 
                 tallaCalculada = Math.round(tallaCalculada * 2) / 2;
 
-                // Sincronizamos los elementos visuales
+                // Sincronizamos las variables globales y elementos de la interfaz
                 window.tallaActual = tallaCalculada;
                 const slider = document.getElementById("size-slider");
                 if (slider) slider.value = tallaCalculada;
 
-                document.getElementById("view-talla").innerText = tallaCalculada.toFixed(1) + " MX (Auto)";
+                const viewTalla = document.getElementById("view-talla");
+                if (viewTalla) {
+                    viewTalla.innerText = tallaCalculada.toFixed(1) + " MX (Auto)";
+                }
+
+                // Escalamos físicamente la figura únicamente en este instante de captura activa
                 actualizarScaleConGarantia(tallaCalculada);
             }
         }
