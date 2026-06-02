@@ -58,31 +58,37 @@ function ajustarTallaManual(nuevaTalla) {
     }
 }
 
-// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA"
+// 5. ACCIÓN DEL BOTÓN FLOTANTE "CALIBRAR MEDIDA" (CON CONGELACIÓN AUTOMÁTICA)
 function simularMedicionIA() {
-    tallaActual = 26.0; 
-
-    document.getElementById("view-talla").innerText = tallaActual.toFixed(1) + " MX (Auto)";
-    
-    const slider = document.getElementById("size-slider");
-    if(slider) slider.value = tallaActual;
-
-    if (typeof window.actualizarEscalaPorTalla === "function") {
-        window.actualizarEscalaPorTalla(tallaActual);
+    // 1. Encendemos el motor de escaneo de tamaño en main.js
+    if (typeof window.setIaMidiendoActivamente === "function") {
+        window.setIaMidiendoActivamente(true);
     }
 
-    // CORRECCIÓN 2: Modificamos el estilo de display directo para convivir con Alpine
-    const toolsPanel = document.getElementById("debug-tools-panel");
-    if (toolsPanel) {
-        toolsPanel.style.display = "flex";
+    const viewTalla = document.getElementById("view-talla");
+    if (viewTalla) {
+        viewTalla.innerText = "Escaneando pie...";
     }
 
-    // Disparador de alerta de Alpine con canal validado
-    if (typeof window.dispararAlertaPremium === "function") {
-        window.dispararAlertaPremium(`📐 [MÉTRICA IA]\n\nCalibración lista.\nTalla base estimada: ${tallaActual.toFixed(1)} MX.\n\nPuedes ajustar la forma exacta usando la barra de 'Talla Manual' inferior.`, 'straighten', 'Calibración');
-    }
+    // 2. Esperamos exactamente 1.2 segundos a que la IA estabilice la distancia del calzado
+    setTimeout(() => {
+        // Apagamos la lectura para congelar la escala tridimensional de Three.js
+        if (typeof window.setIaMidiendoActivamente === "function") {
+            window.setIaMidiendoActivamente(false);
+        }
+
+        // Mostramos el panel del slider manual por si el usuario quiere refinar el tamaño
+        const toolsPanel = document.getElementById("debug-tools-panel");
+        if (toolsPanel) {
+            toolsPanel.style.display = "flex";
+        }
+
+        // Lanzamos tu alerta premium con la talla final congelada
+        if (typeof window.dispararAlertaPremium === "function") {
+            window.dispararAlertaPremium(`📐 [MÉTRICA IA COMPLETADA]\n\nCalibración exitosa.\n\nTalla fijada: ${window.tallaActual.toFixed(1)} MX.\n\nEl tamaño se ha congelado correctamente. Si deseas refinarlo, puedes usar el control deslizante manual inferior.`, 'straighten', 'Calibración');
+        }
+    }, 1200); 
 }
-
 // 6. GUARDAR PREFERENCIAS
 function guardarConfiguracionActual() {
     window.modeloActual = modeloActual;
