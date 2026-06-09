@@ -47,8 +47,27 @@ async function loginUsuario(correo, password) {
         const nombreCompleto = data[0].nombre + " " + (data[0].apellidos || "");
         alert("¡Bienvenido, " + nombreCompleto + "!");
         
+        // Inicializamos los tokens estrictos de sesión que busca app.html
         sessionStorage.setItem('userId', data[0].id);
         sessionStorage.setItem('stepra_session', 'active'); 
+
+        // Si venía de intentar guardar una configuración de invitado, recuperamos sus datos
+        const tempModelo = localStorage.getItem('temp_modelo');
+        const tempColor = localStorage.getItem('temp_color');
+        const tempTalla = localStorage.getItem('temp_talla');
+
+        if (tempModelo && tempColor && tempTalla) {
+            localStorage.setItem('user_modelo', tempModelo);
+            localStorage.setItem('user_color', tempColor);
+            localStorage.setItem('user_talla', tempTalla);
+
+            // Limpiamos los temporales de invitado
+            localStorage.removeItem('temp_modelo');
+            localStorage.removeItem('temp_color');
+            localStorage.removeItem('temp_talla');
+        }
+        
+        // Redirige directo a la aplicación principal sincronizada
         window.location.href = './app.html';
     }
 }
