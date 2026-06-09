@@ -19,18 +19,18 @@ function init3DSpace() {
 
     scene = new THREE.Scene();
 
-    // Luces optimizadas para vista desde arriba
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // Luces equilibradas para el plano del suelo
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-    dirLight.position.set(0, 5, 2); // Luz cenital apuntando ligeramente al frente
+    dirLight.position.set(0, 4, 2); 
     scene.add(dirLight);
 
     const anchoReal = cameraContainer.clientWidth || window.innerWidth;
     const altoReal = cameraContainer.clientHeight || window.innerHeight;
 
     camera = new THREE.PerspectiveCamera(45, anchoReal / altoReal, 0.1, 1000);
-    camera.position.z = 5;
+    camera.position.set(0, 0, 4); // Centramos la cámara sobre el origen visual
 
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(anchoReal, altoReal);
@@ -56,11 +56,9 @@ function generarGeometriaSimulada(tipo, colorHex) {
 
     let geometry;
     if (tipo === "cilindro") {
-        // Ajustamos proporciones para que actúe como una bota vista desde arriba
-        geometry = new THREE.CylinderGeometry(0.38, 0.42, 1.5, 32);
+        geometry = new THREE.CylinderGeometry(0.32, 0.38, 1.4, 32);
     } else {
-        // Dimensiones optimizadas para simular la caja de un tenis cubriendo el pie
-        geometry = new THREE.BoxGeometry(0.75, 0.45, 1.9); 
+        geometry = new THREE.BoxGeometry(0.65, 0.4, 1.7); 
     }
 
     const material = new THREE.MeshStandardMaterial({ 
@@ -71,11 +69,10 @@ function generarGeometriaSimulada(tipo, colorHex) {
 
     currentMesh = new THREE.Mesh(geometry, material);
     
-    // PERSPECTIVA EN PRIMERA PERSONA:
-    // Acostamos la figura geométrica sobre el plano del suelo (eje X rotado -90 grados)
-    // para que coincida con el usuario mirando hacia sus propios pies.
+    // CALIBRACIÓN DE PRIMERA PERSONA: 
+    // Acostamos el modelo completamente plano sobre el piso y ajustamos el pivote central
     currentMesh.rotation.set(-Math.PI / 2, 0, 0); 
-    currentMesh.position.set(0, -1.0, 1.0); 
+    currentMesh.position.set(0, -0.8, 0); 
 
     scene.add(currentMesh);
 }
@@ -92,7 +89,6 @@ function actualizarEscalaPorTalla(talla) {
     if (!currentMesh) return;
     const escalaLargo = 1 + (talla - 26.0) * 0.15; 
     const escalaAnchoAlt = 1 + (talla - 26.0) * 0.07; 
-    // Ajustamos la escala considerando que el modelado ahora está acostado
     currentMesh.scale.set(escalaAnchoAlt, escalaAnchoAlt, escalaLargo);
 }
 
@@ -125,7 +121,7 @@ async function iniciarCamaraNativa() {
 }
 
 // ==========================================================================
-// 6. MOTOR DE REALIDAD AUMENTADA EN PRIMERA PERSONA (VISTA HACIA ABAJO)
+// 6. MOTOR DE REALIDAD AUMENTADA EN PRIMERA PERSONA (VISTA RECALIBRADA)
 // ==========================================================================
 function inicializarMediaPipePose() {
     poseTracker = new Pose({
@@ -135,47 +131,47 @@ function inicializarMediaPipePose() {
     poseTracker.setOptions({
         modelComplexity: 0, 
         smoothLandmarks: true,
-        minDetectionConfidence: 0.45, // Más sensible para capturas verticales rápidas
-        minTrackingConfidence: 0.45
+        minDetectionConfidence: 0.4, // Tolerancia alta para capturar el pie rápidamente desde arriba
+        minTrackingConfidence: 0.4
     });
 
     poseTracker.onResults((results) => {
         if (!results.poseLandmarks || !currentMesh) return;
 
-        // PUNTOS ANATÓMICOS: 28 = Tobillo Derecho, 32 = Punta del Pie Derecho, 30 = Talón Derecho
+        // PUNTOS CLAVE: 28 = Tobillo Derecho, 32 = Punta del Pie Derecho, 30 = Talón Derecho
         const tobilloDerecho = results.poseLandmarks[28];
         const puntaPie = results.poseLandmarks[32];
         const talon = results.poseLandmarks[30];
 
-        // Validamos visibilidad del pie con un umbral optimizado para pie descalzo (0.35)
-        if (puntaPie && talon && puntaPie.visibility > 0.35) {
+        // Validamos visibilidad utilizando la punta del pie como ancla de proximidad
+        if (puntaPie && puntaPie.visibility > 0.3) {
             
-            // ¡ANCLAJE CENTRAL EN PRIMERA PERSONA!:
-            // Calculamos el PUNTO MEDIO EXACTO entre el talón y la punta del pie.
-            const centroPieX = (puntaPie.x + talon.x) / 2;
-            const centroPieY = (puntaPie.y + talon.y) / 2;
+            // FÓRMULA DE CORRECCIÓN MATRICIAL: 
+            // Enfoque suavizado para centrar el objeto tridimensional sobre tu pie real
+            // reduciendo los multiplicadores para evitar que el calzado se escape a las esquinas.
+            const targetX = (puntaPie.x - 0.5) * -2.4; 
+            const targetY = (puntaPie.y - 0.5) * -2.2 - 0.4; 
 
-            // Mapeo calibrado para la perspectiva de la cámara viendo hacia el piso
-            const targetX = (centroPieX - 0.5) * 3.5; 
-            const targetY = (centroPieY - 0.5) * -2.6 - 0.2; 
+            // Interpolación LERP fluida
+            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.35;
+            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.35;
+            
+            // Estabilización del eje Z (Profundidad en el suelo)
+            currentMesh.position.z = 1.5 + (puntaPie.z * -1.2);
 
-            // Filtro dinámico para que el calzado siga firmemente tus dedos al moverte
-            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.4;
-            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.4;
-            currentMesh.position.z = 1.4 + (talon.z * -1.5);
+            // Rotación automática inteligente para alinearse al giro natural de tu pierna
+            if (talon) {
+                const anguloGiro = Math.atan2(puntaPie.y - talon.y, puntaPie.x - talon.x);
+                currentMesh.rotation.z = -anguloGiro + (Math.PI / 2);
+            }
 
-            // Alineamos la rotación Z para que el cubo gire hacia donde apunte tu pie en el azulejo
-            const anguloGiro = Math.atan2(puntaPie.y - talon.y, puntaPie.x - talon.x);
-            currentMesh.rotation.z = -anguloGiro + (Math.PI / 2);
-
-            // CÁLCULO DE ESCALA AUTOMÁTICA DURANTE EL SEGUNDO DE CAPTURA ACTIVA
-            if (iaMidiendoActivamente) {
+            // ESCANEO MÉTRICO ACTIVO AL PULSAR EL BOTÓN AMARILLO
+            if (iaMidiendoActivamente && talon) {
                 const dx = puntaPie.x - talon.x;
                 const dy = puntaPie.y - talon.y;
                 const distanciaRelativa = Math.sqrt(dx * dx + dy * dy);
 
-                // Mapeo métrico ajustado para la distancia del ojo al piso
-                let tallaCalculada = 21.5 + (distanciaRelativa * 25);
+                let tallaCalculada = 22.0 + (distanciaRelativa * 24);
                 if (tallaCalculada < 22.0) tallaCalculada = 24.5;
                 if (tallaCalculada > 30.0) tallaCalculada = 28.0;
 
