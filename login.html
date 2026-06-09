@@ -36,19 +36,22 @@
             <form class="flex flex-col gap-4" onsubmit="event.preventDefault();">
                 <input type="email" id="login-email" placeholder="Correo electrónico" class="border border-gray-300 rounded px-4 py-3 bg-gray-50 focus:outline-none focus:border-primary w-full">
                 <input type="password" id="login-password" placeholder="Contraseña" class="border border-gray-300 rounded px-4 py-3 bg-gray-50 focus:outline-none focus:border-primary w-full">
-                <button type="button" onclick="loginUsuario(document.getElementById('login-email').value, document.getElementById('login-password').value)" class="bg-primary text-white py-3 rounded font-bold shadow hover:opacity-90 transition-all w-full">
-    Iniciar Sesión
-</button>
+                
+                <!-- Este botón ahora llama con total seguridad a la función global expuesta por el módulo de Supabase -->
+                <button type="button" onclick="if(typeof window.loginUsuario === 'function') { window.loginUsuario(document.getElementById('login-email').value, document.getElementById('login-password').value); } else { console.error('El módulo auth.js aún no se ha cargado.'); }" class="bg-primary text-white py-3 rounded font-bold shadow hover:opacity-90 transition-all w-full">
+                    Iniciar Sesión
+                </button>
             </form>
         </div>
     </main>
 
+    <!-- MODAL DE ALERTA STEPRA PERSONALIZADO PARA INTERCEPTAR ALERT() NATIVOS -->
     <div id="stepra-custom-alert" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-gray-300 shadow-2xl text-center flex flex-col gap-4">
             <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-                <span class="material-symbols-outlined text-2xl" id="alert-icon-type">info</span>
+                <span class="material-symbols-outlined text-2xl" id="alert-icon-type">lock</span>
             </div>
-            <h4 class="text-xs font-black uppercase tracking-widest text-gray-400" id="alert-title-text">Notificación</h4>
+            <h4 class="text-xs font-black uppercase tracking-widest text-gray-400" id="alert-title-text">Sincronización</h4>
             <p class="text-sm font-medium text-dark-calzado whitespace-pre-line" id="alert-message-text"></p>
             <button onclick="cerrarAlertaYRedirigir()" class="w-full bg-primary text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow hover:opacity-95 transition-all">
                 Continuar
@@ -56,54 +59,31 @@
         </div>
     </div>
 
+    <!-- INYECTOR ESTÉTICO DE ALERTAS -->
     <script>
         let urlDestinoFinal = "app.html";
 
         window.alert = function(mensaje) {
             const alertModal = document.getElementById('stepra-custom-alert');
             const alertMessage = document.getElementById('alert-message-text');
-            const alertIcon = document.getElementById('alert-icon-type');
-            const alertTitle = document.getElementById('alert-title-text');
 
             if (alertModal && alertMessage) {
                 alertMessage.innerText = mensaje;
-                alertIcon.innerText = 'enhanced_encryption';
-                alertTitle.innerText = 'Sincronización';
                 alertModal.style.display = 'flex';
+            } else {
+                // Caída de respaldo por si el DOM no ha cargado completamente
+                window.alertNative(mensaje);
             }
         };
+        // Guardamos copia de respaldo nativa por seguridad
+        window.alertNative = window.alertNative || alert;
 
         function cerrarAlertaYRedirigir() {
             window.location.href = urlDestinoFinal;
         }
-
-        function ejecutarLoginLocal() {
-            // Unificamos el token de sesión en sessionStorage para consistencia con auth.js
-            sessionStorage.setItem("stepra_session", "active");
-            
-            // Simulación de ID de usuario para pruebas locales estables
-            if (!sessionStorage.getItem('userId')) {
-                sessionStorage.setItem('userId', 'usr_utl_demo');
-            }
-
-            const tempModelo = localStorage.getItem('temp_modelo');
-            const tempColor = localStorage.getItem('temp_color');
-            const tempTalla = localStorage.getItem('temp_talla');
-
-            if (tempModelo && tempColor && tempTalla) {
-                localStorage.setItem('user_modelo', tempModelo);
-                localStorage.setItem('user_color', tempColor);
-                localStorage.setItem('user_talla', tempTalla);
-
-                localStorage.removeItem('temp_modelo');
-                localStorage.removeItem('temp_color');
-                localStorage.removeItem('temp_talla');
-                
-                alert("🔐 [SESIÓN VINCULADA]\n\nSincronizando tus preferencias con Supabase. Abriendo el Probador Virtual...");
-            } else {
-                window.location.href = "app.html";
-            }
-        }
     </script>
+
+    <!-- TRUCO DE CONEXIÓN MODULAR: Forzamos la carga del archivo auth como módulo para que Supabase responda -->
+    <script type="module" src="js/auth.js"></script>
 </body>
 </html>
