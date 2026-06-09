@@ -224,11 +224,8 @@
                 <span id="view-talla" class="font-bold text-blue-700">Por medir...</span>
             </div>
         </div>
-
-        <button id="btn-medir-flotante" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#ffd166] text-dark-calzado border-2 border-white px-6 py-2.5 rounded-full text-xs font-black shadow-2xl z-45 whitespace-nowrap" onclick="simularMedicionIA()">
-            <i class="fa-solid fa-ruler-combined"></i> Calibrar Medida (IA)
-        </button>
-    </div>
+        
+        </div>
 
     <div class="bg-white flex flex-col z-40 w-full shrink-0">
         <div id="debug-tools-panel" style="display: none;" class="p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
@@ -238,15 +235,22 @@
 
         <input type="color" id="color-picker" value="#0A58CA" class="hidden" onchange="seleccionarColorManual(this.value)">
 
-        <div class="p-4 grid grid-cols-2 gap-3 border-t border-gray-300 bg-white">
-            <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-xs font-bold uppercase flex flex-col items-center" onclick="intercambiarModelo()">
-                <i class="fa-solid fa-shoe-prints mb-1 text-sm text-primary"></i> Modelo
-            </button>
-            <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-xs font-bold uppercase flex flex-col items-center" onclick="intercambiarColor()">
-                <i class="fa-solid fa-palette mb-1 text-sm text-primary"></i> Color
-            </button>
+        <div class="p-4 flex flex-col gap-3 border-t border-gray-300 bg-white">
+            <div class="grid grid-cols-3 gap-2">
+                <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-[11px] font-bold uppercase flex flex-col items-center justify-center transition-all active:scale-95" onclick="intercambiarModelo()">
+                    <i class="fa-solid fa-shoe-prints mb-1 text-xs text-primary"></i> Modelo
+                </button>
+                
+                <button class="bg-[#ffd166] text-dark-calzado border border-[#e6bd55] py-2.5 rounded-xl text-[11px] font-black uppercase flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm" onclick="simularMedicionIA()">
+                    <i class="fa-solid fa-ruler-combined mb-1 text-xs"></i> Calibrar
+                </button>
+
+                <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-[11px] font-bold uppercase flex flex-col items-center justify-center transition-all active:scale-95" onclick="intercambiarColor()">
+                    <i class="fa-solid fa-palette mb-1 text-xs text-primary"></i> Color
+                </button>
+            </div>
             
-            <button class="col-span-2 bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md" 
+            <button class="w-full bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md active:bg-[#08449E] transition-all" 
                     @click="
                         localStorage.setItem('user_modelo', window.modeloActual);
                         localStorage.setItem('user_color', window.colorHexActual);
@@ -291,8 +295,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-<script src="js/controllers.js?v=45"></script>
-  <script src="js/main.js?v=45"></script>
+<script src="js/controllers.js?v=46"></script>
+  <script src="js/main.js?v=46"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
