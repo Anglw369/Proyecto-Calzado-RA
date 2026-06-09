@@ -1,7 +1,6 @@
 // js/auth.js
 import { supabase } from './supabase-config.js';
 
-// 1. FUNCIÓN PARA REGISTRAR NUEVOS USUARIOS
 async function registrarUsuario(nombre, apellidos, correo, password, telefono, genero) {
     if(!nombre || !apellidos || !correo || !password || !telefono || !genero) {
         return alert("Por favor llena todos los campos obligatorios.");
@@ -33,7 +32,6 @@ async function registrarUsuario(nombre, apellidos, correo, password, telefono, g
     }
 }
 
-// 2. FUNCIÓN PARA INICIAR SESIÓN
 async function loginUsuario(correo, password) {
     if(!correo || !password) return alert("Por favor llena todos los campos");
 
@@ -49,14 +47,14 @@ async function loginUsuario(correo, password) {
         const nombreCompleto = data[0].nombre + " " + (data[0].apellidos || "");
         alert("¡Bienvenido, " + nombreCompleto + "!");
         
-        sessionStorage.setItem('userId', data[0].id); 
+        sessionStorage.setItem('userId', data[0].id);
+        sessionStorage.setItem('stepra_session', 'active'); 
         window.location.href = './app.html';
     }
 }
 
-// 3. FUNCIÓN PARA GUARDAR PREFERENCIAS DESDE EL PROBADOR
 async function guardarConfiguracionCalzado(modelo, color, talla) {
-    const userId = sessionStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId') || 'usr_utl_demo';
     if(!userId) return console.error("No se encontró un usuario activo en la sesión.");
 
     const { data, error } = await supabase
@@ -75,14 +73,15 @@ async function guardarConfiguracionCalzado(modelo, color, talla) {
     }
 }
 
-// 4. FUNCIÓN PARA CERRAR SESIÓN REAL (Elimina el ID y redirige)
 function cerrarSesionUsuario() {
-    console.log("Destruyendo token de sesión local...");
-    sessionStorage.removeItem('userId'); // Borra de verdad los datos del usuario
-    window.location.href = "login.html"; // Redirige al login de inmediato
+    console.log("Limpiando tokens de sesión...");
+    sessionStorage.clear();
+    localStorage.removeItem('user_modelo');
+    localStorage.removeItem('user_color');
+    localStorage.removeItem('user_talla');
+    window.location.href = "login.html";
 }
 
-// EXPONER LAS FUNCIONES AL ENTORNO GLOBAL (Importante para que convivan con el onclick del HTML)
 window.registrarUsuario = registrarUsuario;
 window.loginUsuario = loginUsuario;
 window.guardarConfiguracionCalzado = guardarConfiguracionCalzado;
