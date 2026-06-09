@@ -70,7 +70,7 @@ async function loginUsuario(correo, password) {
         // Redirige directo a la aplicación principal sincronizada
         window.location.href = './app.html';
     }
-}
+}   
 
 async function guardarConfiguracionCalzado(modelo, color, talla) {
     const userId = sessionStorage.getItem('userId') || 'usr_utl_demo';

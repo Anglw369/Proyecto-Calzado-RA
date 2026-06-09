@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=39">
+    <link rel="stylesheet" href="css/main.css?v=44">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -41,7 +41,7 @@
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
       x-data="{ subPage: sessionStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: sessionStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación' }"
-        // CORRECCIÓN 1: Interceptor inteligente de alertas para bloquear mensajes vacíos o fantasmas
+      x-init="
         window.dispararAlertaPremium = (mensaje, icono = 'info', titulo = 'Notificación') => {
             if (!mensaje || mensaje.trim() === '' || mensaje === 'undefined') return;
             alertText = mensaje;
@@ -50,19 +50,16 @@
             alertOpen = true;
         };
 
-        // Si la sesión está activa, cargamos el historial
         if(isLoggedIn) { 
             historial.modelo = localStorage.getItem('user_modelo') || 'Ninguno';
             historial.color = localStorage.getItem('user_color') || '#0A58CA';
             historial.talla = localStorage.getItem('user_talla') || '0.0';
         }
 
-        // CORRECCIÓN 3: Persistencia real al recargar la página estando en el probador
         if (subPage === 'ar_view') {
             const savedMod = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
             const savedCol = localStorage.getItem('user_color') || '#0A58CA';
             const savedTal = localStorage.getItem('user_talla') || '26.0';
-            
             const idProd = savedMod.includes('Bota') ? 'cilindro' : 'cubo';
             
             Alpine.nextTick(() => {
@@ -70,7 +67,6 @@
             });
         }
 
-        // Retorno automático tras iniciar sesión desde el modo invitado
         if (isLoggedIn && localStorage.getItem('temp_retorno') === 'true') {
             localStorage.removeItem('temp_retorno');
             subPage = 'ar_view';
@@ -97,6 +93,9 @@
         }
       ">
 
+  <!-- ==========================================================================
+       VISTA A: EL CATÁLOGO DE PRODUCTOS
+       ========================================================================== -->
   <div x-show="subPage === 'catalog'" x-cloak class="min-h-screen flex flex-col bg-background">
     <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50 px-4 py-4 flex items-center justify-between">
       <div class="text-xl font-bold"><a href="index.html"><span>Step</span><span class="text-primary">RA</span></a></div>
@@ -134,7 +133,7 @@
                 </div>
             </div>
             <div class="border-t pt-4">
-                <button x-show="isLoggedIn" onclick="localStorage.removeItem('stepra_session'); localStorage.removeItem('user_modelo'); sessionStorage.clear(); window.location.reload();" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
+                <button x-show="isLoggedIn" onclick="sessionStorage.clear(); localStorage.clear(); window.location.reload();" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
                 <button x-show="!isLoggedIn" onclick="window.location.href='login.html'" class="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Iniciar Sesión</button>
             </div>
         </div>
@@ -185,6 +184,9 @@
     </div>
   </div>
 
+  <!-- ==========================================================================
+       VISTA B: EL PROBADOR VIRTUAL INTEGRADO (AR VIEW)
+       ========================================================================== -->
   <div x-show="subPage === 'ar_view'" x-cloak class="ar-screen-fix">
     
     <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
@@ -268,6 +270,9 @@
     </div>
   </div>
 
+  <!-- ==========================================================================
+       MODAL DE ALERTA PREMIUM
+       ========================================================================== -->
   <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click="alertOpen = false">
       <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4 transform transition-all" @click.stop>
           <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto">
@@ -286,8 +291,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
- <script src="js/controllers.js?v=43"></script>
-  <script src="js/main.js?v=43"></script>
+  <script src="js/controllers.js?v=44"></script>
+  <script src="js/main.js?v=44"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
