@@ -24,13 +24,12 @@ function init3DSpace() {
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
     dirLight.position.set(0, 4, 2); 
-    scene.add(dirLight);
 
     const anchoReal = cameraContainer.clientWidth || window.innerWidth;
     const altoReal = cameraContainer.clientHeight || window.innerHeight;
 
     camera = new THREE.PerspectiveCamera(45, anchoReal / altoReal, 0.1, 1000);
-    camera.position.set(0, 0, 4); // Centramos la cámara sobre el origen visual
+    camera.position.set(0, 0, 4); 
 
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(anchoReal, altoReal);
@@ -69,8 +68,7 @@ function generarGeometriaSimulada(tipo, colorHex) {
 
     currentMesh = new THREE.Mesh(geometry, material);
     
-    // CALIBRACIÓN DE PRIMERA PERSONA: 
-    // Acostamos el modelo completamente plano sobre el piso y ajustamos el pivote central
+    // Acotamos el calzado plano en el suelo
     currentMesh.rotation.set(-Math.PI / 2, 0, 0); 
     currentMesh.position.set(0, -0.8, 0); 
 
@@ -121,7 +119,7 @@ async function iniciarCamaraNativa() {
 }
 
 // ==========================================================================
-// 6. MOTOR DE REALIDAD AUMENTADA EN PRIMERA PERSONA (VISTA RECALIBRADA)
+// 6. MOTOR DE REALIDAD AUMENTADA OPTIMIZADO (FILTRO DE PROXIMIDAD ANTI-RUIDO)
 // ==========================================================================
 function inicializarMediaPipePose() {
     poseTracker = new Pose({
@@ -131,8 +129,8 @@ function inicializarMediaPipePose() {
     poseTracker.setOptions({
         modelComplexity: 0, 
         smoothLandmarks: true,
-        minDetectionConfidence: 0.4, // Tolerancia alta para capturar el pie rápidamente desde arriba
-        minTrackingConfidence: 0.4
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
     });
 
     poseTracker.onResults((results) => {
@@ -143,35 +141,39 @@ function inicializarMediaPipePose() {
         const puntaPie = results.poseLandmarks[32];
         const talon = results.poseLandmarks[30];
 
-        // Validamos visibilidad utilizando la punta del pie como ancla de proximidad
-        if (puntaPie && puntaPie.visibility > 0.3) {
+        if (puntaPie && puntaPie.visibility > 0.4) {
             
-            // FÓRMULA DE CORRECCIÓN MATRICIAL: 
-            // Enfoque suavizado para centrar el objeto tridimensional sobre tu pie real
-            // reduciendo los multiplicadores para evitar que el calzado se escape a las esquinas.
-            const targetX = (puntaPie.x - 0.5) * -2.4; 
-            const targetY = (puntaPie.y - 0.5) * -2.2 - 0.4; 
+            // FILTRO RADICAL ANTI-INTERFERENCIAS:
+            // MediaPipe calcula la profundidad en el eje Z. Los objetos muy lejanos (como personas al fondo)
+            // tienen un valor Z significativamente mayor o desfasado. Si detecta que el pie está a más de 
+            // cierta distancia de la cámara en el espacio simulado, lo ignora para evitar saltos locos.
+            if (puntaPie.z > 0.2) {
+                console.log("Interferencia detectada al fondo del salón. Ignorando coordenadas.");
+                return; 
+            }
 
-            // Interpolación LERP fluida
-            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.35;
-            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.35;
-            
-            // Estabilización del eje Z (Profundidad en el suelo)
-            currentMesh.position.z = 1.5 + (puntaPie.z * -1.2);
+            // FÓRMULA DE POSICIÓN RECALIBRADA PARA EVITAR MOVIMIENTOS BRUSCOS
+            const targetX = (puntaPie.x - 0.5) * -2.2; 
+            const targetY = (puntaPie.y - 0.5) * -2.0 - 0.3; 
 
-            // Rotación automática inteligente para alinearse al giro natural de tu pierna
+            // Filtro LERP más suave (0.25) para amortiguar por completo el temblor de la mano
+            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.25;
+            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.25;
+            currentMesh.position.z = 1.5 + (puntaPie.z * -1.0);
+
+            // Rotación Z estable amarrada al talón local
             if (talon) {
                 const anguloGiro = Math.atan2(puntaPie.y - talon.y, puntaPie.x - talon.x);
                 currentMesh.rotation.z = -anguloGiro + (Math.PI / 2);
             }
 
-            // ESCANEO MÉTRICO ACTIVO AL PULSAR EL BOTÓN AMARILLO
+            // ESCANEO DE TALLA AUTOMÁTICA ACTIVO SÓLO DURANTE LA CALIBRACIÓN
             if (iaMidiendoActivamente && talon) {
                 const dx = puntaPie.x - talon.x;
                 const dy = puntaPie.y - talon.y;
                 const distanciaRelativa = Math.sqrt(dx * dx + dy * dy);
 
-                let tallaCalculada = 22.0 + (distanciaRelativa * 24);
+                let tallaCalculada = 22.0 + (distanciaRelativa * 23);
                 if (tallaCalculada < 22.0) tallaCalculada = 24.5;
                 if (tallaCalculada > 30.0) tallaCalculada = 28.0;
 
