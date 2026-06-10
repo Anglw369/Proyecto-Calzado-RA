@@ -6,6 +6,7 @@
     <title>StepRA - Bienvenidos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
+    <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -21,17 +22,25 @@
         }
     </script>
 </head>
-<body class="bg-background text-dark-calzado antialiased min-h-screen flex flex-col">
+<body class="bg-background text-dark-calzado antialiased min-h-screen flex flex-col"
+      x-data="{ isLoggedIn: localStorage.getItem('stepra_session') === 'active' }">
 
     <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="text-xl font-bold uppercase tracking-wider">
-                <span>Step</span><span class="text-primary">RA</span>
+                <a href="index.html"><span>Step</span><span class="text-primary">RA</span></a>
             </div>
-            <div>
-                <a href="login.html" class="bg-primary text-white px-6 py-2 rounded font-bold shadow hover:opacity-90 transition-all inline-block">
+            <div class="flex items-center gap-3">
+                <a x-show="!isLoggedIn" href="login.html" class="bg-primary text-white px-6 py-2 rounded font-bold shadow hover:opacity-90 transition-all inline-block">
                     Iniciar Sesión
                 </a>
+                
+                <a x-show="isLoggedIn" href="app.html" class="bg-green-700 text-white px-5 py-2 rounded font-bold shadow hover:opacity-90 transition-all inline-block text-sm">
+                    <i class="fa-solid fa-gauge mr-1"></i> Mi Panel
+                </a>
+                <button x-show="isLoggedIn" @click="localStorage.clear(); sessionStorage.clear(); window.location.reload();" class="border border-red-600 text-red-600 px-4 py-2 rounded font-bold text-sm hover:bg-red-50 transition-all">
+                    Salir
+                </button>
             </div>
         </div>
     </header>

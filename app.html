@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=44">
+    <link rel="stylesheet" href="css/main.css?v=50">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -28,7 +28,6 @@
     </script>
     <style>
         [x-cloak] { display: none !important; }
-        /* Forzar visualización del probador en pantalla completa fija */
         .ar-screen-fix {
             position: fixed; inset: 0; height: 100vh; height: 100dvh;
             width: 100%; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; background: #000;
@@ -40,7 +39,7 @@
     </style>
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
-      x-data="{ subPage: sessionStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: sessionStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación' }"
+      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openProfile: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación' }"
       x-init="
         window.dispararAlertaPremium = (mensaje, icono = 'info', titulo = 'Notificación') => {
             if (!mensaje || mensaje.trim() === '' || mensaje === 'undefined') return;
@@ -70,7 +69,7 @@
         if (isLoggedIn && localStorage.getItem('temp_retorno') === 'true') {
             localStorage.removeItem('temp_retorno');
             subPage = 'ar_view';
-            sessionStorage.setItem('stepra_subpage', 'ar_view');
+            localStorage.setItem('stepra_subpage', 'ar_view');
             
             window.modeloActual = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
             window.colorHexActual = localStorage.getItem('user_color') || '#0A58CA';
@@ -93,9 +92,6 @@
         }
       ">
 
-  <!-- ==========================================================================
-       VISTA A: EL CATÁLOGO DE PRODUCTOS
-       ========================================================================== -->
   <div x-show="subPage === 'catalog'" x-cloak class="min-h-screen flex flex-col bg-background">
     <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50 px-4 py-4 flex items-center justify-between">
       <div class="text-xl font-bold"><a href="index.html"><span>Step</span><span class="text-primary">RA</span></a></div>
@@ -133,7 +129,7 @@
                 </div>
             </div>
             <div class="border-t pt-4">
-                <button x-show="isLoggedIn" onclick="sessionStorage.clear(); localStorage.clear(); window.location.reload();" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
+                <button x-show="isLoggedIn" onclick="if(typeof window.cerrarSesionUsuario === 'function') { window.cerrarSesionUsuario(); } else { localStorage.clear(); window.location.reload(); }" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Cerrar Sesión</button>
                 <button x-show="!isLoggedIn" onclick="window.location.href='login.html'" class="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow">Iniciar Sesión</button>
             </div>
         </div>
@@ -176,7 +172,7 @@
             <button @click="selectedColor = '#198754'" :class="selectedColor === '#198754' ? 'ring-4 ring-primary' : ''" class="w-10 h-10 rounded-full bg-[#198754] border"></button>
           </div>
         </div>
-        <button @click="openProductModal = false; subPage = 'ar_view'; sessionStorage.setItem('stepra_subpage', 'ar_view'); encenderProbadorDesdeCatalogo(selectedProduct.id, selectedColor, selectedTalla);" 
+        <button @click="openProductModal = false; subPage = 'ar_view'; localStorage.setItem('stepra_subpage', 'ar_view'); encenderProbadorDesdeCatalogo(selectedProduct.id, selectedColor, selectedTalla);" 
                 class="w-full bg-primary text-white py-3 rounded font-bold text-lg shadow hover:opacity-90 transition-all">
           Probar en mi Pie 👟
         </button>
@@ -184,11 +180,7 @@
     </div>
   </div>
 
-  <!-- ==========================================================================
-       VISTA B: EL PROBADOR VIRTUAL INTEGRADO (AR VIEW)
-       ========================================================================== -->
   <div x-show="subPage === 'ar_view'" x-cloak class="ar-screen-fix">
-    
     <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
         <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
 
@@ -224,8 +216,7 @@
                 <span id="view-talla" class="font-bold text-blue-700">Por medir...</span>
             </div>
         </div>
-        
-        </div>
+    </div>
 
     <div class="bg-white flex flex-col z-40 w-full shrink-0">
         <div id="debug-tools-panel" style="display: none;" class="p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
@@ -240,11 +231,9 @@
                 <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-[11px] font-bold uppercase flex flex-col items-center justify-center transition-all active:scale-95" onclick="intercambiarModelo()">
                     <i class="fa-solid fa-shoe-prints mb-1 text-xs text-primary"></i> Modelo
                 </button>
-                
                 <button class="bg-[#ffd166] text-dark-calzado border border-[#e6bd55] py-2.5 rounded-xl text-[11px] font-black uppercase flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm" onclick="simularMedicionIA()">
                     <i class="fa-solid fa-ruler-combined mb-1 text-xs"></i> Calibrar
                 </button>
-
                 <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-[11px] font-bold uppercase flex flex-col items-center justify-center transition-all active:scale-95" onclick="intercambiarColor()">
                     <i class="fa-solid fa-palette mb-1 text-xs text-primary"></i> Color
                 </button>
@@ -269,14 +258,11 @@
                     ">
                 Guardar Configuración
             </button>
-            <button @click="sessionStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" class="col-span-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1">✕ Volver al Catálogo</button>
+            <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" class="col-span-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1">✕ Volver al Catálogo</button>
         </div>
     </div>
   </div>
 
-  <!-- ==========================================================================
-       MODAL DE ALERTA PREMIUM
-       ========================================================================== -->
   <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click="alertOpen = false">
       <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4 transform transition-all" @click.stop>
           <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto">
@@ -295,8 +281,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-<script src="js/controllers.js?v=49"></script>
-  <script src="js/main.js?v=49"></script>
+  <script src="js/controllers.js?v=50"></script>
+  <script src="js/main.js?v=50"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {

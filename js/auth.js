@@ -47,11 +47,11 @@ async function loginUsuario(correo, password) {
         const nombreCompleto = data[0].nombre + " " + (data[0].apellidos || "");
         alert("¡Bienvenido, " + nombreCompleto + "!");
         
-        // Inicializamos los tokens estrictos de sesión que busca app.html
-        sessionStorage.setItem('userId', data[0].id);
-        sessionStorage.setItem('stepra_session', 'active'); 
+        // GUARDADO PERSISTENTE EN LOCALSTORAGE (No se borra al cerrar pestañas)
+        localStorage.setItem('userId', data[0].id);
+        localStorage.setItem('stepra_session', 'active'); 
 
-        // Si venía de intentar guardar una configuración de invitado, recuperamos sus datos
+        // Recuperar configuraciones temporales si existen
         const tempModelo = localStorage.getItem('temp_modelo');
         const tempColor = localStorage.getItem('temp_color');
         const tempTalla = localStorage.getItem('temp_talla');
@@ -61,19 +61,17 @@ async function loginUsuario(correo, password) {
             localStorage.setItem('user_color', tempColor);
             localStorage.setItem('user_talla', tempTalla);
 
-            // Limpiamos los temporales de invitado
             localStorage.removeItem('temp_modelo');
             localStorage.removeItem('temp_color');
             localStorage.removeItem('temp_talla');
         }
         
-        // Redirige directo a la aplicación principal sincronizada
         window.location.href = './app.html';
     }
-}   
+}
 
 async function guardarConfiguracionCalzado(modelo, color, talla) {
-    const userId = sessionStorage.getItem('userId') || 'usr_utl_demo';
+    const userId = localStorage.getItem('userId') || 'usr_utl_demo';
     if(!userId) return console.error("No se encontró un usuario activo en la sesión.");
 
     const { data, error } = await supabase
@@ -93,11 +91,9 @@ async function guardarConfiguracionCalzado(modelo, color, talla) {
 }
 
 function cerrarSesionUsuario() {
-    console.log("Limpiando tokens de sesión...");
+    console.log("Destruyendo sesión de forma absoluta...");
+    localStorage.clear();
     sessionStorage.clear();
-    localStorage.removeItem('user_modelo');
-    localStorage.removeItem('user_color');
-    localStorage.removeItem('user_talla');
     window.location.href = "login.html";
 }
 
