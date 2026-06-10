@@ -19,11 +19,12 @@ function init3DSpace() {
 
     scene = new THREE.Scene();
 
-    // Luces equilibradas para el plano del suelo
+    // Luces equilibradas para dar realismo al material
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-    dirLight.position.set(0, 4, 2); 
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    dirLight.position.set(0, 5, 3); 
+    scene.add(dirLight);
 
     const anchoReal = cameraContainer.clientWidth || window.innerWidth;
     const altoReal = cameraContainer.clientHeight || window.innerHeight;
@@ -57,20 +58,22 @@ function generarGeometriaSimulada(tipo, colorHex) {
     if (tipo === "cilindro") {
         geometry = new THREE.CylinderGeometry(0.32, 0.38, 1.4, 32);
     } else {
-        geometry = new THREE.BoxGeometry(0.65, 0.4, 1.7); 
+        geometry = new THREE.BoxGeometry(0.68, 0.42, 1.75); 
     }
 
     const material = new THREE.MeshStandardMaterial({ 
         color: new THREE.Color(colorHex),
         roughness: 0.4,
-        metalness: 0.2
+        metalness: 0.15
     });
 
     currentMesh = new THREE.Mesh(geometry, material);
     
-    // Acotamos el calzado plano en el suelo
+    // Configuración base acostada sobre el piso
     currentMesh.rotation.set(-Math.PI / 2, 0, 0); 
-    currentMesh.position.set(0, -0.8, 0); 
+    
+    // ¡EL TRUCO CLAVE!: Arranca completamente INVISIBLE para que no se vea tieso en la pantalla
+    currentMesh.visible = false; 
 
     scene.add(currentMesh);
 }
@@ -119,7 +122,7 @@ async function iniciarCamaraNativa() {
 }
 
 // ==========================================================================
-// 6. MOTOR DE REALIDAD AUMENTADA OPTIMIZADO (FILTRO DE PROXIMIDAD ANTI-RUIDO)
+// 6. MOTOR DE REALIDAD AUMENTADA EN PRIMERA PERSONA RECALIBRADO
 // ==========================================================================
 function inicializarMediaPipePose() {
     poseTracker = new Pose({
@@ -141,33 +144,32 @@ function inicializarMediaPipePose() {
         const puntaPie = results.poseLandmarks[32];
         const talon = results.poseLandmarks[30];
 
-        if (puntaPie && puntaPie.visibility > 0.4) {
+        // Validamos visibilidad real con filtro de ruido para personas al fondo
+        if (puntaPie && puntaPie.visibility > 0.55 && (!tobilloDerecho || tobilloDerecho.z < 0.15)) {
             
-            // FILTRO RADICAL ANTI-INTERFERENCIAS:
-            // MediaPipe calcula la profundidad en el eje Z. Los objetos muy lejanos (como personas al fondo)
-            // tienen un valor Z significativamente mayor o desfasado. Si detecta que el pie está a más de 
-            // cierta distancia de la cámara en el espacio simulado, lo ignora para evitar saltos locos.
-            if (puntaPie.z > 0.2) {
-                console.log("Interferencia detectada al fondo del salón. Ignorando coordenadas.");
-                return; 
-            }
+            // ¡HACEMOS VISIBLE EL CALZADO SÓLO CUANDO YA DETECTÓ TU PIE DE VERDAD!
+            currentMesh.visible = true;
 
-            // FÓRMULA DE POSICIÓN RECALIBRADA PARA EVITAR MOVIMIENTOS BRUSCOS
-            const targetX = (puntaPie.x - 0.5) * -2.2; 
-            const targetY = (puntaPie.y - 0.5) * -2.0 - 0.3; 
+            // CORRECCIÓN DE EJES MATRICIALES EN PRIMERA PERSONA:
+            // Eliminamos la inversión loca de X y centramos el visor usando el punto medio real
+            const centroX = talon ? (puntaPie.x + talon.x) / 2 : puntaPie.x;
+            const centroY = talon ? (puntaPie.y + talon.y) / 2 : puntaPie.y;
 
-            // Filtro LERP más suave (0.25) para amortiguar por completo el temblor de la mano
-            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.25;
-            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.25;
-            currentMesh.position.z = 1.5 + (puntaPie.z * -1.0);
+            const targetX = (centroX - 0.5) * -3.2; 
+            const targetY = (centroY - 0.5) * -2.4 - 0.4; 
 
-            // Rotación Z estable amarrada al talón local
+            // Filtro de amortiguación (LERP 0.2) para que el calzado fluyá suave como seda sin vibrar
+            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.20;
+            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.20;
+            currentMesh.position.z = 1.4 + (puntaPie.z * -1.0);
+
+            // Alineación de rotación amarrada a tu orientación real en el suelo
             if (talon) {
                 const anguloGiro = Math.atan2(puntaPie.y - talon.y, puntaPie.x - talon.x);
                 currentMesh.rotation.z = -anguloGiro + (Math.PI / 2);
             }
 
-            // ESCANEO DE TALLA AUTOMÁTICA ACTIVO SÓLO DURANTE LA CALIBRACIÓN
+            // ESCANEO MÉTRICO ACTIVO AL PULSAR EL BOTÓN AMARILLO
             if (iaMidiendoActivamente && talon) {
                 const dx = puntaPie.x - talon.x;
                 const dy = puntaPie.y - talon.y;
@@ -190,6 +192,9 @@ function inicializarMediaPipePose() {
 
                 actualizarScaleConGarantia(tallaCalculada);
             }
+        } else {
+            // Si pierdes de vista el pie por completo, ocultamos el cubo sutilmente en lugar de dejarlo flotando tieso
+            currentMesh.visible = false;
         }
     });
 
