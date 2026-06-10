@@ -47,9 +47,11 @@ async function loginUsuario(correo, password) {
         const nombreCompleto = data[0].nombre + " " + (data[0].apellidos || "");
         alert("¡Bienvenido, " + nombreCompleto + "!");
         
-        // GUARDADO PERSISTENTE EN LOCALSTORAGE (No se borra al cerrar pestañas)
+        // GUARDADO PERSISTENTE EN LOCALSTORAGE (Datos de sesión y de usuario)
         localStorage.setItem('userId', data[0].id);
         localStorage.setItem('stepra_session', 'active'); 
+        localStorage.setItem('user_display_name', nombreCompleto);
+        localStorage.setItem('user_display_email', data[0].correo);
 
         // Recuperar configuraciones temporales si existen
         const tempModelo = localStorage.getItem('temp_modelo');
@@ -69,7 +71,6 @@ async function loginUsuario(correo, password) {
         window.location.href = './app.html';
     }
 }
-
 async function guardarConfiguracionCalzado(modelo, color, talla) {
     const userId = localStorage.getItem('userId') || 'usr_utl_demo';
     if(!userId) return console.error("No se encontró un usuario activo en la sesión.");
