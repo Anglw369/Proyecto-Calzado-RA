@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=52">
+    <link rel="stylesheet" href="css/main.css?v=54">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -92,7 +92,6 @@
         }
       }">
 
-  <!-- VISTA A: EL CATÁLOGO DE PRODUCTOS -->
   <div x-show="subPage === 'catalog'" x-cloak class="min-h-screen flex flex-col bg-background">
     <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50 px-4 py-4 flex items-center justify-between">
       <div class="text-xl font-bold"><a href="index.html"><span>Step</span><span class="text-primary">RA</span></a></div>
@@ -150,12 +149,10 @@
     </div>
   </div>
 
- <!-- VISTA B: EL PROBADOR VIRTUAL INTEGRADO (AR VIEW) CON MENÚ INDEPENDIENTE -->
   <div x-show="subPage === 'ar_view'" x-cloak class="ar-screen-fix">
     <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
         <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
 
-        <!-- Modal Cambio de Modelo Interno -->
         <div id="menu-modelos-visual" class="custom-modal" style="display: none;">
             <div class="bg-[#f8f5ee] p-6 rounded-2xl border-2 border-[#d2c7b5] text-center w-80 max-w-[90%] shadow-2xl flex flex-col gap-4">
                 <h4 class="font-black uppercase tracking-wider text-xs text-dark-calzado">Selecciona Tipo de Calzado</h4>
@@ -173,48 +170,48 @@
             </div>
         </div>
 
-        <!-- CORRECCIÓN DE INTERFAZ: Banner centrado con márgenes limpios -->
-        <div id="simulation-overlay" class="absolute top-3 left-3 right-16 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-xl z-30 grid grid-cols-3 gap-1 items-center">
-            <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-200">Escáner Pasarela</h3>
-            <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
-                <span class="text-[8px] text-gray-400 font-bold uppercase">Modelo</span>
-                <span id="view-modelo" class="font-bold text-dark-calzado truncate max-w-[75px]">Cubo 3D</span>
+        <div class="absolute top-3 left-3 right-3 z-30 bg-white/90 backdrop-blur pl-3 pr-2 py-1.5 rounded-xl shadow-xl flex items-center justify-between border border-white/20">
+            
+            <div class="flex-1 grid grid-cols-3 gap-1 items-center">
+                <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-100">Escáner Pasarela</h3>
+                <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
+                    <span class="text-[8px] text-gray-400 font-bold uppercase">Modelo</span>
+                    <span id="view-modelo" class="font-bold text-dark-calzado truncate max-w-[70px]">Cubo 3D</span>
+                </div>
+                <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
+                    <span class="text-[8px] text-gray-400 font-bold uppercase">Color</span>
+                    <span class="font-bold flex items-center gap-1 text-dark-calzado"><span id="view-color-name" class="truncate max-w-[35px]">Azul</span><div id="color-preview" class="w-2 h-2 rounded-full border border-black shrink-0" style="background-color: #0A58CA;"></div></span>
+                </div>
+                <div class="flex flex-col items-center text-[10px]">
+                    <span class="text-[8px] text-gray-400 font-bold uppercase">Talla</span>
+                    <span id="view-talla" class="font-bold text-blue-700">Medir...</span>
+                </div>
             </div>
-            <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
-                <span class="text-[8px] text-gray-400 font-bold uppercase">Color</span>
-                <span class="font-bold flex items-center gap-1 text-dark-calzado"><span id="view-color-name" class="truncate max-w-[35px]">Azul</span><div id="color-preview" class="w-2 h-2 rounded-full border border-black shrink-0" style="background-color: #0A58CA;"></div></span>
-            </div>
-            <div class="flex flex-col items-center text-[10px]">
-                <span class="text-[8px] text-gray-400 font-bold uppercase">Talla</span>
-                <span id="view-talla" class="font-bold text-blue-700">Medir...</span>
-            </div>
-        </div>
 
-        <!-- INTERFAZ CORREGIDA: El menú ahora flota de forma independiente de manera absoluta en la esquina superior derecha -->
-        <div class="absolute top-3 right-3 z-40">
-            <button @click="openDropdown = !openDropdown" 
-                    class="bg-white/90 backdrop-blur h-11 w-11 rounded-xl shadow-xl flex items-center justify-center text-dark-calzado active:scale-95 transition-all border border-gray-200">
-                <i class="fa-solid" :class="openDropdown ? 'fa-xmark text-lg text-red-600' : 'fa-bars text-base'"></i>
-            </button>
-
-            <!-- Menú Desplegable con posicionamiento corregido hacia abajo del botón -->
-            <div x-show="openDropdown" x-cloak 
-                 @click.away="openDropdown = false"
-                 class="absolute right-0 top-13 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 py-1.5 w-44 flex flex-col z-50">
-                
-                <a href="perfil.html" class="px-4 py-2.5 text-[11px] font-black uppercase text-dark-calzado hover:bg-gray-100 flex items-center gap-2 border-b border-gray-100 transition-colors">
-                    <i class="fa-solid fa-user-astronaut text-primary text-xs"></i> Mi Perfil Premium
-                </a>
-                
-                <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
-                        class="px-4 py-2.5 text-[11px] font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2 transition-colors">
-                    <i class="fa-solid fa-store text-emerald-600 text-xs"></i> Ir al Catálogo
+            <div class="relative ml-2 shrink-0">
+                <button @click="openDropdown = !openDropdown" 
+                        class="h-10 w-10 rounded-lg bg-gray-100 hover:bg-gray-200 shadow-sm flex items-center justify-center text-dark-calzado active:scale-95 transition-all border border-gray-300">
+                    <i class="fa-solid" :class="openDropdown ? 'fa-xmark text-base text-red-600' : 'fa-bars text-sm'"></i>
                 </button>
+
+                <div x-show="openDropdown" x-cloak 
+                     @click.away="openDropdown = false"
+                     class="absolute right-0 top-12 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 py-1.5 w-44 flex flex-col z-50">
+                    
+                    <a href="perfil.html" class="px-4 py-2.5 text-[11px] font-black uppercase text-dark-calzado hover:bg-gray-100 flex items-center gap-2 border-b border-gray-100 transition-colors">
+                        <i class="fa-solid fa-user-astronaut text-primary text-xs"></i> Mi Perfil Premium
+                    </a>
+                    
+                    <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
+                            class="px-4 py-2.5 text-[11px] font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-store text-emerald-600 text-xs"></i> Ir al Catálogo
+                    </button>
+                </div>
             </div>
+
         </div>
     </div>
 
-    <!-- Panel de Botonera Inferior Limpio (Sin el botón estorboso de Volver abajo) -->
     <div class="bg-white flex flex-col z-40 w-full shrink-0">
         <div id="debug-tools-panel" style="display: none;" class="p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
             <span class="text-[10px] font-black text-dark-calzado uppercase whitespace-nowrap">📏 Talla Manual:</span>
@@ -255,12 +252,10 @@
                     ">
                 Guardar Configuración
             </button>
-            <!-- EL BOTÓN VIEJO SE ELIMINÓ DE AQUÍ, LOGRANDO UNA INTERFAZ MUCHO MÁS LIMPIA -->
         </div>
     </div>
   </div>
 
-  <!-- MODAL DE ALERTA PREMIUM -->
   <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click="alertOpen = false">
       <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4 transform transition-all" @click.stop>
           <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto">
@@ -279,8 +274,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-  <script src="js/controllers.js?v=53"></script>
-  <script src="js/main.js?v=53"></script>
+  <script src="js/controllers.js?v=54"></script>
+  <script src="js/main.js?v=54"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
