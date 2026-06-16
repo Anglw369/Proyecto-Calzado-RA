@@ -19,7 +19,7 @@ function init3DSpace() {
 
     scene = new THREE.Scene();
 
-    // Luces equilibradas para dar realismo al material
+    // Luces equilibradas para el plano del suelo
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -68,11 +68,7 @@ function generarGeometriaSimulada(tipo, colorHex) {
     });
 
     currentMesh = new THREE.Mesh(geometry, material);
-    
-    // Configuración base acostada sobre el piso
     currentMesh.rotation.set(-Math.PI / 2, 0, 0); 
-    
-    // ¡EL TRUCO CLAVE!: Arranca completamente INVISIBLE para que no se vea tieso en la pantalla
     currentMesh.visible = false; 
 
     scene.add(currentMesh);
@@ -93,11 +89,24 @@ function actualizarEscalaPorTalla(talla) {
     currentMesh.scale.set(escalaAnchoAlt, escalaAnchoAlt, escalaLargo);
 }
 
-// 5. ENCENDIDO SEGURO DE LA CÁMARA TRASERA NATIVA
-async function iniciarCamaraNativa() {
+// 5. APAGADO SEGURO DE LA CÁMARA (LIBERACIÓN DE HARDWARE)
+function apagarCamaraLimpia() {
     if (localVideoStream) {
-        localVideoStream.getTracks().forEach(track => track.stop());
+        localVideoStream.getTracks().forEach(track => {
+            track.stop();
+            console.log("Canal de cámara liberado con éxito.");
+        });
+        localVideoStream = null;
     }
+    if (videoElement) {
+        videoElement.srcObject = null;
+    }
+}
+
+// 6. ENCENDIDO SEGURO DE LA CÁMARA TRASERA NATIVA
+async function iniciarCamaraNativa() {
+    // Apagamos cualquier flujo previo que haya quedado congelado o huérfano
+    apagarCamaraLimpia();
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -116,15 +125,17 @@ async function iniciarCamaraNativa() {
             await videoElement.play();
             inicializarMediaPipePose();
         } catch (cameraErr) {
-            alert("Error de hardware: Por favor otorga permisos de cámara.");
+            console.error("Error al acceder a la cámara:", cameraErr);
         }
     }
 }
 
-// ==========================================================================
-// 6. MOTOR DE REALIDAD AUMENTADA EN PRIMERA PERSONA RECALIBRADO
-// ==========================================================================
+// 7. MOTOR DE REALIDAD AUMENTADA EN PRIMERA PERSONA
 function inicializarMediaPipePose() {
+    if (poseTracker) {
+        try { poseTracker.close(); } catch(e){}
+    }
+
     poseTracker = new Pose({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
     });
@@ -139,37 +150,28 @@ function inicializarMediaPipePose() {
     poseTracker.onResults((results) => {
         if (!results.poseLandmarks || !currentMesh) return;
 
-        // PUNTOS CLAVE: 28 = Tobillo Derecho, 32 = Punta del Pie Derecho, 30 = Talón Derecho
         const tobilloDerecho = results.poseLandmarks[28];
         const puntaPie = results.poseLandmarks[32];
         const talon = results.poseLandmarks[30];
 
-        // Validamos visibilidad real con filtro de ruido para personas al fondo
         if (puntaPie && puntaPie.visibility > 0.55 && (!tobilloDerecho || tobilloDerecho.z < 0.15)) {
-            
-            // ¡HACEMOS VISIBLE EL CALZADO SÓLO CUANDO YA DETECTÓ TU PIE DE VERDAD!
             currentMesh.visible = true;
 
-            // CORRECCIÓN DE EJES MATRICIALES EN PRIMERA PERSONA:
-            // Eliminamos la inversión loca de X y centramos el visor usando el punto medio real
             const centroX = talon ? (puntaPie.x + talon.x) / 2 : puntaPie.x;
             const centroY = talon ? (puntaPie.y + talon.y) / 2 : puntaPie.y;
 
             const targetX = (centroX - 0.5) * -3.2; 
             const targetY = (centroY - 0.5) * -2.4 - 0.4; 
 
-            // Filtro de amortiguación (LERP 0.2) para que el calzado fluyá suave como seda sin vibrar
             currentMesh.position.x += (targetX - currentMesh.position.x) * 0.20;
             currentMesh.position.y += (targetY - currentMesh.position.y) * 0.20;
             currentMesh.position.z = 1.4 + (puntaPie.z * -1.0);
 
-            // Alineación de rotación amarrada a tu orientación real en el suelo
             if (talon) {
                 const anguloGiro = Math.atan2(puntaPie.y - talon.y, puntaPie.x - talon.x);
                 currentMesh.rotation.z = -anguloGiro + (Math.PI / 2);
             }
 
-            // ESCANEO MÉTRICO ACTIVO AL PULSAR EL BOTÓN AMARILLO
             if (iaMidiendoActivamente && talon) {
                 const dx = puntaPie.x - talon.x;
                 const dy = puntaPie.y - talon.y;
@@ -187,21 +189,26 @@ function inicializarMediaPipePose() {
 
                 const viewTalla = document.getElementById("view-talla");
                 if (viewTalla) {
-                    viewTalla.innerText = tallaCalculada.toFixed(1) + " MX (Auto)";
+                    viewTalla.innerText = tallaCalculada.toFixed(1) + " MX";
                 }
 
                 actualizarScaleConGarantia(tallaCalculada);
             }
         } else {
-            // Si pierdes de vista el pie por completo, ocultamos el cubo sutilmente en lugar de dejarlo flotando tieso
             currentMesh.visible = false;
         }
     });
 
     async function procesarCuadroVideo() {
-        if (videoElement && !videoElement.paused && !videoElement.ended) {
+        // Detener el bucle de procesamiento si el flujo fue destruido o pausado
+        if (!localVideoStream || !videoElement || videoElement.paused || videoElement.ended) return;
+        
+        try {
             await poseTracker.send({ image: videoElement });
+        } catch(e) {
+            console.log("Espera de cuadro...");
         }
+
         if (videoElement && videoElement.requestVideoFrameCallback) {
             videoElement.requestVideoFrameCallback(procesarCuadroVideo);
         } else {
@@ -221,6 +228,29 @@ function iniciarMotoresManuales() {
     init3DSpace();
     iniciarCamaraNativa();
 }
+
+// ==========================================================================
+// 8. ESCUCHADORES DE CICLO DE VIDA AVANZADO (SOLUCIÓN AL CONGELAMIENTO)
+// ==========================================================================
+
+// Control 1: Al recargar o salir de la página de golpe, liberamos la cámara limpiamente
+window.addEventListener('beforeunload', () => {
+    apagarCamaraLimpia();
+});
+
+// Control 2: Al cambiar de app y regresar, reactivamos de forma inteligente el sensor
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        console.log("El usuario regresó a la pestaña. Reiniciando hardware de forma segura...");
+        const savedSubpage = localStorage.getItem('stepra_subpage');
+        if (savedSubpage === 'ar_view') {
+            iniciarCamaraNativa();
+        }
+    } else {
+        console.log("Aplicación en segundo plano. Pausando flujos de video.");
+        apagarCamaraLimpia();
+    }
+});
 
 window.setIaMidiendoActivamente = (valor) => { iaMidiendoActivamente = valor; };
 window.iniciarMotoresManuales = iniciarMotoresManuales;
