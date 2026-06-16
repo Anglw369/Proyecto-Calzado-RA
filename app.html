@@ -39,7 +39,7 @@
     </style>
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
-      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación' }"
+      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación', fotoTomada: false }"
       x-init="
         window.dispararAlertaPremium = (mensaje, icono = 'info', titulo = 'Notificación') => {
             if (!mensaje || mensaje.trim() === '' || mensaje === 'undefined') return;
@@ -55,7 +55,6 @@
             historial.talla = localStorage.getItem('user_talla') || '0.0';
         }
 
-        // CORRECCIÓN DE RECONEXIÓN: Al refrescar, disparamos una única llamada controlada a través de Alpine
         if (subPage === 'ar_view') {
             const savedMod = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
             const savedCol = localStorage.getItem('user_color') || '#0A58CA';
@@ -91,7 +90,7 @@
                 }
             });
         }
-      }">
+      ">
 
   <div x-show="subPage === 'catalog'" x-cloak class="min-h-screen flex flex-col bg-background">
     <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50 px-4 py-4 flex items-center justify-between">
@@ -150,7 +149,7 @@
     </div>
   </div>
 
-  <div x-show="subPage === 'ar_view'" x-cloak class="ar-screen-fix">
+  <div x-show="subPage === 'ar_view'" x-cloak class="ar-screen-fix" :class="fotoTomada ? 'animate-ping duration-75' : ''">
     <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
         <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
 
@@ -209,6 +208,12 @@
                 </div>
             </div>
         </div>
+
+        <button onclick="if(typeof window.capturarFotoProbador === 'function') { window.capturarFotoProbador(); } else { alert('El motor de foto se está cargando...'); }" 
+                @click="fotoTomada = true; setTimeout(() => fotoTomada = false, 150)"
+                class="absolute bottom-4 right-4 bg-white/90 text-dark-calzado border-2 border-gray-300 h-12 w-12 rounded-full shadow-2xl z-45 flex items-center justify-center active:scale-90 transition-all hover:bg-white">
+            <i class="fa-solid fa-camera text-base text-primary"></i>
+        </button>
     </div>
 
     <div class="bg-white flex flex-col z-40 w-full shrink-0">
@@ -273,8 +278,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-  <script src="js/controllers.js?v=58"></script>
-  <script src="js/main.js?v=58"></script>
+  <script src="js/controllers.js?v=59"></script>
+  <script src="js/main.js?v=59"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
@@ -290,7 +295,6 @@
           const slider = document.getElementById("size-slider");
           if (slider) slider.value = window.tallaActual;
 
-          // ÚNICO PUNTO DE CONEXIÓN CON MAIN.JS AL ENTRAR O REFRESCAR
           Alpine.nextTick(() => {
               if (typeof window.iniciarMotoresManuales === 'function') {
                   window.iniciarMotoresManuales();

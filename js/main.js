@@ -246,10 +246,64 @@ document.addEventListener('visibilitychange', () => {
     } else {
         apagarCamaraLimpia();
     }
-});
+}
+
+);
 
 window.setIaMidiendoActivamente = (valor) => { iaMidiendoActivamente = valor; };
 window.iniciarMotoresManuales = iniciarMotoresManuales;
 window.generarGeometriaSimulada = generarGeometriaSimulada;
 window.actualizarColorGeometria = actualizarColorGeometria;
 window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
+
+// ==========================================================================
+// 9. MOTOR DE CAPTURA DE PANTALLA COMBINADA (FOTO DEL PROBADOR)
+// ==========================================================================
+function capturarFotoProbador() {
+    if (!renderer || !videoElement) return alert("Error: Los motores no están listos.");
+
+    // 1. Creamos un canvas fantasma temporal con el tamaño exacto del visor
+    const anchoCaptura = videoElement.videoWidth || 640;
+    const altoCaptura = videoElement.videoHeight || 480;
+
+    const canvasDestino = document.createElement('canvas');
+    canvasDestino.width = anchoCaptura;
+    canvasDestura = altoCaptura;
+    canvasDestino.height = altoCaptura;
+    const ctx = canvasDestino.getContext('2d');
+
+    // 2. Pintamos primero el cuadro actual de la cámara de video de fondo
+    ctx.drawImage(videoElement, 0, 0, anchoCaptura, altoCaptura);
+
+    // 3. Forzamos a Three.js a renderizar un cuadro inmediato
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+        // Dibujamos el canvas 3D encima de la foto de la cámara
+        ctx.drawImage(renderer.domElement, 0, 0, anchoCaptura, altoCaptura);
+    }
+
+    // 4. Convertimos la mezcla a un archivo binario PNG descargable
+    try {
+        const linkDescarga = document.createElement('a');
+        
+        // Generamos un nombre dinámico único estilo StepRA con folio del momento
+        const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g, "-");
+        linkDescarga.download = `StepRA-Capture-${timestamp}.png`;
+        
+        // Convertimos el Canvas a URL de imagen
+        linkDescarga.href = canvasDestino.toDataURL('image/png');
+        
+        // Disparamos la descarga automática en el celular
+        document.body.appendChild(linkDescarga);
+        linkDescarga.click();
+        document.body.removeChild(linkDescarga);
+        
+        console.log("¡Captura de Realidad Aumentada descargada con éxito!");
+    } catch (error) {
+        console.error("Error al procesar la imagen compuesta:", error);
+        alert("Ocurrió un detalle al compilar la foto. Revisa tus permisos.");
+    }
+}
+
+// Exponemos la función al entorno global para que app.html la pueda llamar desde el botón
+window.capturarFotoProbador = capturarFotoProbador;
