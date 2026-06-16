@@ -150,7 +150,7 @@
     </div>
   </div>
 
-  <!-- VISTA B: EL PROBADOR VIRTUAL INTEGRADO (AR VIEW) CON MENÚ DE NAVEGACIÓN SUPERIOR -->
+ <!-- VISTA B: EL PROBADOR VIRTUAL INTEGRADO (AR VIEW) CON MENÚ INDEPENDIENTE -->
   <div x-show="subPage === 'ar_view'" x-cloak class="ar-screen-fix">
     <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
         <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
@@ -173,49 +173,43 @@
             </div>
         </div>
 
-        <!-- CONTENEDOR INTEGRADO SUPERIOR (BANNER + BOTÓN HAMBURGUESA) -->
-        <div class="absolute top-3 left-3 right-3 z-30 flex items-stretch gap-2">
-            
-            <!-- Banner de Datos -->
-            <div id="simulation-overlay" class="bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-xl flex-1 grid grid-cols-3 gap-1 items-center">
-                <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-200">Escáner Pasarela</h3>
-                <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">Modelo</span>
-                    <span id="view-modelo" class="font-bold text-dark-calzado truncate max-w-[80px]">Cubo 3D</span>
-                </div>
-                <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">Color</span>
-                    <span class="font-bold flex items-center gap-1 text-dark-calzado"><span id="view-color-name" class="truncate max-w-[40px]">Azul</span><div id="color-preview" class="w-2 h-2 rounded-full border border-black shrink-0" style="background-color: #0A58CA;"></div></span>
-                </div>
-                <div class="flex flex-col items-center text-[10px]">
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">Talla</span>
-                    <span id="view-talla" class="font-bold text-blue-700">Medir...</span>
-                </div>
+        <!-- CORRECCIÓN DE INTERFAZ: Banner centrado con márgenes limpios -->
+        <div id="simulation-overlay" class="absolute top-3 left-3 right-16 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-xl z-30 grid grid-cols-3 gap-1 items-center">
+            <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-200">Escáner Pasarela</h3>
+            <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
+                <span class="text-[8px] text-gray-400 font-bold uppercase">Modelo</span>
+                <span id="view-modelo" class="font-bold text-dark-calzado truncate max-w-[75px]">Cubo 3D</span>
             </div>
+            <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
+                <span class="text-[8px] text-gray-400 font-bold uppercase">Color</span>
+                <span class="font-bold flex items-center gap-1 text-dark-calzado"><span id="view-color-name" class="truncate max-w-[35px]">Azul</span><div id="color-preview" class="w-2 h-2 rounded-full border border-black shrink-0" style="background-color: #0A58CA;"></div></span>
+            </div>
+            <div class="flex flex-col items-center text-[10px]">
+                <span class="text-[8px] text-gray-400 font-bold uppercase">Talla</span>
+                <span id="view-talla" class="font-bold text-blue-700">Medir...</span>
+            </div>
+        </div>
 
-            <!-- NUEVO COMPONENTE: Botón e Interfaz de Menú Desplegable -->
-            <div class="relative flex items-center">
-                <button @click="openDropdown = !openDropdown" 
-                        class="bg-white/90 backdrop-blur h-full w-12 rounded-xl shadow-xl flex items-center justify-center text-dark-calzado active:scale-95 transition-all border border-gray-200">
-                    <i class="fa-solid" :class="openDropdown ? 'fa-xmark text-lg text-red-600' : 'fa-bars text-base'"></i>
+        <!-- INTERFAZ CORREGIDA: El menú ahora flota de forma independiente de manera absoluta en la esquina superior derecha -->
+        <div class="absolute top-3 right-3 z-40">
+            <button @click="openDropdown = !openDropdown" 
+                    class="bg-white/90 backdrop-blur h-11 w-11 rounded-xl shadow-xl flex items-center justify-center text-dark-calzado active:scale-95 transition-all border border-gray-200">
+                <i class="fa-solid" :class="openDropdown ? 'fa-xmark text-lg text-red-600' : 'fa-bars text-base'"></i>
+            </button>
+
+            <!-- Menú Desplegable con posicionamiento corregido hacia abajo del botón -->
+            <div x-show="openDropdown" x-cloak 
+                 @click.away="openDropdown = false"
+                 class="absolute right-0 top-13 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 py-1.5 w-44 flex flex-col z-50">
+                
+                <a href="perfil.html" class="px-4 py-2.5 text-[11px] font-black uppercase text-dark-calzado hover:bg-gray-100 flex items-center gap-2 border-b border-gray-100 transition-colors">
+                    <i class="fa-solid fa-user-astronaut text-primary text-xs"></i> Mi Perfil Premium
+                </a>
+                
+                <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
+                        class="px-4 py-2.5 text-[11px] font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-store text-emerald-600 text-xs"></i> Ir al Catálogo
                 </button>
-
-                <!-- Menú de Opciones Superior Flotante -->
-                <div x-show="openDropdown" x-cloak 
-                     @click.away="openDropdown = false"
-                     class="absolute right-0 top-14 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 py-2 w-48 flex flex-col z-50 transform transition-all">
-                    
-                    <!-- Opción 1: Ver Perfil -->
-                    <a href="perfil.html" class="px-4 py-3 text-xs font-black uppercase text-dark-calzado hover:bg-gray-100 flex items-center gap-2.5 border-b border-gray-100 transition-colors">
-                        <i class="fa-solid fa-user-astronaut text-primary text-sm"></i> Mi Perfil Premium
-                    </a>
-                    
-                    <!-- Opción 2: Ir al Catálogo -->
-                    <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
-                            class="px-4 py-3 text-xs font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2.5 transition-colors">
-                        <i class="fa-solid fa-store text-emerald-600 text-sm"></i> Ir al Catálogo
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -285,8 +279,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-  <script src="js/controllers.js?v=52"></script>
-  <script src="js/main.js?v=52"></script>
+  <script src="js/controllers.js?v=53"></script>
+  <script src="js/main.js?v=53"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
