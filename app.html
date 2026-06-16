@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=55">
+    <link rel="stylesheet" href="css/main.css?v=58">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -55,7 +55,7 @@
             historial.talla = localStorage.getItem('user_talla') || '0.0';
         }
 
-        // CONTROL DE RECONEXIÓN CRÍTICO: Si entra al probador, forzamos el encendido manual ordenado
+        // CORRECCIÓN DE RECONEXIÓN: Al refrescar, disparamos una única llamada controlada a través de Alpine
         if (subPage === 'ar_view') {
             const savedMod = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
             const savedCol = localStorage.getItem('user_color') || '#0A58CA';
@@ -64,10 +64,6 @@
             
             Alpine.nextTick(() => {
                 encenderProbadorDesdeCatalogo(idProd, savedCol, savedTal);
-                // Aseguramos encendido del hardware de la cámara
-                if (typeof window.iniciarMotoresManuales === 'function') {
-                    window.iniciarMotoresManuales();
-                }
             });
         }
 
@@ -176,7 +172,6 @@
         </div>
 
         <div class="absolute top-3 left-3 right-3 z-30 bg-white/90 backdrop-blur pl-3 pr-2 py-1.5 rounded-xl shadow-xl flex items-center justify-between border border-white/25">
-            
             <div class="flex-1 grid grid-cols-3 gap-1 items-center">
                 <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-100">Escáner Pasarela</h3>
                 <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
@@ -278,8 +273,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-<script src="js/controllers.js?v=57"></script>
-  <script src="js/main.js?v=57"></script>
+  <script src="js/controllers.js?v=58"></script>
+  <script src="js/main.js?v=58"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
@@ -295,7 +290,7 @@
           const slider = document.getElementById("size-slider");
           if (slider) slider.value = window.tallaActual;
 
-          // GARANTÍA DE ACTIVACIÓN: Forzamos la llamada al script js/main.js nada más cargar
+          // ÚNICO PUNTO DE CONEXIÓN CON MAIN.JS AL ENTRAR O REFRESCAR
           Alpine.nextTick(() => {
               if (typeof window.iniciarMotoresManuales === 'function') {
                   window.iniciarMotoresManuales();

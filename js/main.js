@@ -9,8 +9,9 @@ let scene, camera, renderer, currentMesh;
 let poseTracker;
 let localVideoStream = null; 
 
-// Candados de control de calibración
+// Candados de control de calibración y rebote de hardware
 let iaMidiendoActivamente = false; 
+let yaIniciado = false; 
 
 // 1. INICIALIZAR EL ESCENARIO 3D TRANSPARENTE
 function init3DSpace() {
@@ -19,7 +20,6 @@ function init3DSpace() {
 
     scene = new THREE.Scene();
 
-    // Luces equilibradas para el plano del suelo
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -89,7 +89,7 @@ function actualizarEscalaPorTalla(talla) {
     currentMesh.scale.set(escalaAnchoAlt, escalaAnchoAlt, escalaLargo);
 }
 
-// 5. APAGADO SEGURO DE LA CÁMARA (LIBERACIÓN DE HARDWARE)
+// 5. APAGADO SEGURO DE LA CÁMARA
 function apagarCamaraLimpia() {
     if (localVideoStream) {
         localVideoStream.getTracks().forEach(track => {
@@ -100,18 +100,12 @@ function apagarCamaraLimpia() {
     if (videoElement) {
         videoElement.srcObject = null;
     }
+    yaIniciado = false;
     console.log("Canal de cámara liberado de forma absoluta.");
 }
 
-// 6. ENCENDIDO SEGURO DE LA CÁMARA CON MANEJADOR DE REINTENTOS PARA REFRESH (F5)
-async function iniciarCamaraNativa(intento = 1) {
-    apagarCamaraLimpia();
-
-    // Pequeño delay inicial en el primer intento tras recargar para dar tiempo al OS de respirar
-    if (intento === 1) {
-        await new Promise(resolve => setTimeout(resolve, 250));
-    }
-
+// 6. ENCENDIDO SEGURO DE LA CÁMARA TRASERA NATIVA
+async function iniciarCamaraNativa() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } }
@@ -121,28 +115,16 @@ async function iniciarCamaraNativa(intento = 1) {
         videoElement.setAttribute("playsinline", true);
         await videoElement.play();
         inicializarMediaPipePose();
-        console.log("Cámara trasera encendida con éxito en el intento: " + intento);
+        console.log("Cámara trasera encendida con éxito.");
     } catch (err) {
-        console.warn(`Intento ${intento} fallido para abrir cámara (Recurso posiblemente retenido).`);
-        
-        // ESTRATEGIA MAESTRA: Si falla por culpa del refresh rápido, reintentamos un par de veces con más delay
-        if (intento < 3) {
-            console.log(`Reintentando inicializar hardware en 600ms... (Intento ${intento + 1}/3)`);
-            setTimeout(() => {
-                iniciarCamaraNativa(intento + 1);
-            }, 600);
-        } else {
-            // Caída de respaldo por si de verdad fallaron los permisos globales
-            try {
-                console.log("Intentando caída de respaldo con cámara genérica...");
-                const streamGen = await navigator.mediaDevices.getUserMedia({ video: true });
-                localVideoStream = streamGen;
-                videoElement.srcObject = streamGen;
-                await videoElement.play();
-                inicializarMediaPipePose();
-            } catch (cameraErr) {
-                console.error("Hardware completamente bloqueado por el sistema operativo:", cameraErr);
-            }
+        try {
+            const streamGen = await navigator.mediaDevices.getUserMedia({ video: true });
+            localVideoStream = streamGen;
+            videoElement.srcObject = streamGen;
+            await videoElement.play();
+            inicializarMediaPipePose();
+        } catch (cameraErr) {
+            console.error("Hardware bloqueado por el sistema operativo:", cameraErr);
         }
     }
 }
@@ -238,12 +220,18 @@ function actualizarScaleConGarantia(t) {
     }
 }
 
+// CANDADO ANTI-REBOTES INTEGRADO: Evita el doble disparo simultáneo tras refrescar
 function iniciarMotoresManuales() {
+    if (yaIniciado) {
+        console.log("Llamada duplicada bloqueada con éxito.");
+        return;
+    }
+    yaIniciado = true;
     init3DSpace();
     iniciarCamaraNativa();
 }
 
-// 8. ESCUCHADORES DE CICLO DE VIDA AVANZADO
+// 8. ESCUCHADORES DE CICLO DE VIDA
 window.addEventListener('beforeunload', () => {
     apagarCamaraLimpia();
 });
@@ -252,7 +240,8 @@ document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
         const savedSubpage = localStorage.getItem('stepra_subpage');
         if (savedSubpage === 'ar_view') {
-            iniciarCamaraNativa();
+            yaIniciado = false;
+            iniciarMotoresManuales();
         }
     } else {
         apagarCamaraLimpia();
