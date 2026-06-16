@@ -94,19 +94,23 @@ function apagarCamaraLimpia() {
     if (localVideoStream) {
         localVideoStream.getTracks().forEach(track => {
             track.stop();
-            console.log("Canal de cámara liberado con éxito.");
         });
         localVideoStream = null;
     }
     if (videoElement) {
         videoElement.srcObject = null;
     }
+    console.log("Canal de cámara liberado de forma absoluta.");
 }
 
-// 6. ENCENDIDO SEGURO DE LA CÁMARA TRASERA NATIVA
-async function iniciarCamaraNativa() {
-    // Apagamos cualquier flujo previo que haya quedado congelado o huérfano
+// 6. ENCENDIDO SEGURO DE LA CÁMARA CON MANEJADOR DE REINTENTOS PARA REFRESH (F5)
+async function iniciarCamaraNativa(intento = 1) {
     apagarCamaraLimpia();
+
+    // Pequeño delay inicial en el primer intento tras recargar para dar tiempo al OS de respirar
+    if (intento === 1) {
+        await new Promise(resolve => setTimeout(resolve, 250));
+    }
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -117,15 +121,28 @@ async function iniciarCamaraNativa() {
         videoElement.setAttribute("playsinline", true);
         await videoElement.play();
         inicializarMediaPipePose();
+        console.log("Cámara trasera encendida con éxito en el intento: " + intento);
     } catch (err) {
-        try {
-            const streamGen = await navigator.mediaDevices.getUserMedia({ video: true });
-            localVideoStream = streamGen;
-            videoElement.srcObject = streamGen;
-            await videoElement.play();
-            inicializarMediaPipePose();
-        } catch (cameraErr) {
-            console.error("Error al acceder a la cámara:", cameraErr);
+        console.warn(`Intento ${intento} fallido para abrir cámara (Recurso posiblemente retenido).`);
+        
+        // ESTRATEGIA MAESTRA: Si falla por culpa del refresh rápido, reintentamos un par de veces con más delay
+        if (intento < 3) {
+            console.log(`Reintentando inicializar hardware en 600ms... (Intento ${intento + 1}/3)`);
+            setTimeout(() => {
+                iniciarCamaraNativa(intento + 1);
+            }, 600);
+        } else {
+            // Caída de respaldo por si de verdad fallaron los permisos globales
+            try {
+                console.log("Intentando caída de respaldo con cámara genérica...");
+                const streamGen = await navigator.mediaDevices.getUserMedia({ video: true });
+                localVideoStream = streamGen;
+                videoElement.srcObject = streamGen;
+                await videoElement.play();
+                inicializarMediaPipePose();
+            } catch (cameraErr) {
+                console.error("Hardware completamente bloqueado por el sistema operativo:", cameraErr);
+            }
         }
     }
 }
@@ -200,14 +217,11 @@ function inicializarMediaPipePose() {
     });
 
     async function procesarCuadroVideo() {
-        // Detener el bucle de procesamiento si el flujo fue destruido o pausado
         if (!localVideoStream || !videoElement || videoElement.paused || videoElement.ended) return;
         
         try {
             await poseTracker.send({ image: videoElement });
-        } catch(e) {
-            console.log("Espera de cuadro...");
-        }
+        } catch(e) {}
 
         if (videoElement && videoElement.requestVideoFrameCallback) {
             videoElement.requestVideoFrameCallback(procesarCuadroVideo);
@@ -229,25 +243,18 @@ function iniciarMotoresManuales() {
     iniciarCamaraNativa();
 }
 
-// ==========================================================================
-// 8. ESCUCHADORES DE CICLO DE VIDA AVANZADO (SOLUCIÓN AL CONGELAMIENTO)
-// ==========================================================================
-
-// Control 1: Al recargar o salir de la página de golpe, liberamos la cámara limpiamente
+// 8. ESCUCHADORES DE CICLO DE VIDA AVANZADO
 window.addEventListener('beforeunload', () => {
     apagarCamaraLimpia();
 });
 
-// Control 2: Al cambiar de app y regresar, reactivamos de forma inteligente el sensor
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-        console.log("El usuario regresó a la pestaña. Reiniciando hardware de forma segura...");
         const savedSubpage = localStorage.getItem('stepra_subpage');
         if (savedSubpage === 'ar_view') {
             iniciarCamaraNativa();
         }
     } else {
-        console.log("Aplicación en segundo plano. Pausando flujos de video.");
         apagarCamaraLimpia();
     }
 });
