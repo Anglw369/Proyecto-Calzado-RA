@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=58">
+    <link rel="stylesheet" href="css/main.css?v=60">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -39,7 +39,7 @@
     </style>
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
-      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', historial: { modelo: 'Ninguno', color: 'Ninguno', talla: '0.0' }, alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación', fotoTomada: false }"
+      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', selectedColor: '#0A58CA', currentTemporada: 'pri', currentVariante: '1', alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación', fotoTomada: false }"
       x-init="
         window.dispararAlertaPremium = (mensaje, icono = 'info', titulo = 'Notificación') => {
             if (!mensaje || mensaje.trim() === '' || mensaje === 'undefined') return;
@@ -49,45 +49,13 @@
             alertOpen = true;
         };
 
-        if(isLoggedIn) { 
-            historial.modelo = localStorage.getItem('user_modelo') || 'Ninguno';
-            historial.color = localStorage.getItem('user_color') || '#0A58CA';
-            historial.talla = localStorage.getItem('user_talla') || '0.0';
-        }
-
         if (subPage === 'ar_view') {
-            const savedMod = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
+            const savedMod = localStorage.getItem('user_modelo') || 'z01';
             const savedCol = localStorage.getItem('user_color') || '#0A58CA';
             const savedTal = localStorage.getItem('user_talla') || '26.0';
-            const idProd = savedMod.includes('Bota') ? 'cilindro' : 'cubo';
             
             Alpine.nextTick(() => {
-                encenderProbadorDesdeCatalogo(idProd, savedCol, savedTal);
-            });
-        }
-
-        if (isLoggedIn && localStorage.getItem('temp_retorno') === 'true') {
-            localStorage.removeItem('temp_retorno');
-            subPage = 'ar_view';
-            localStorage.setItem('stepra_subpage', 'ar_view');
-            
-            window.modeloActual = localStorage.getItem('user_modelo') || 'Cubo 3D (Tenis)';
-            window.colorHexActual = localStorage.getItem('user_color') || '#0A58CA';
-            window.tallaActual = parseFloat(localStorage.getItem('user_talla') || '26.0');
-
-            Alpine.nextTick(() => {
-                document.getElementById('view-modelo').innerText = window.modeloActual;
-                document.getElementById('view-color-name').innerText = window.colorHexActual.toUpperCase();
-                document.getElementById('color-preview').style.backgroundColor = window.colorHexActual;
-                document.getElementById('view-talla').innerText = window.tallaActual.toFixed(1) + ' MX';
-                
-                const idProd = window.modeloActual.includes('Bota') ? 'cilindro' : 'cubo';
-                if (typeof window.iniciarMotoresManuales === 'function') {
-                    window.iniciarMotoresManuales();
-                    window.generarGeometriaSimulada(idProd, window.colorHexActual);
-                    window.actualizarEscalaPorTalla(window.tallaActual);
-                    guardarConfiguracionActual(); 
-                }
+                encenderProbadorDesdeCatalogo(savedMod, savedCol, savedTal);
             });
         }
       ">
@@ -105,15 +73,15 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
-      <h2 class="text-2xl font-bold mb-6 text-center">Modelados Disponibles</h2>
+      <h2 class="text-2xl font-bold mb-6 text-center">Catálogo de Temporadas</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-items-center">
-        <div class="bg-white rounded-lg shadow border border-gray-300 overflow-hidden flex flex-col w-full max-w-sm cursor-pointer hover:shadow-md" @click="selectedProduct = { id: 'cubo', name: 'Cubo 3D (Tenis)', desc: 'Modelado plano calibrado para tenis deportivo.' }; openProductModal = true">
-          <div class="h-44 bg-blue-50 flex items-center justify-center text-5xl">📦</div>
-          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Cubo 3D (Tenis)</h3><span class="text-lg font-bold text-primary mt-2 block">$150.00 MXN</span></div>
+        <div class="bg-white rounded-lg shadow border border-gray-300 overflow-hidden flex flex-col w-full max-w-sm cursor-pointer hover:shadow-md" @click="selectedProduct = { id: 'z01', name: 'Zapato Casual Z01', desc: 'Modelo ergonómico optimizado para colecciones de temporada.' }; openProductModal = true">
+          <div class="h-44 bg-blue-50 flex items-center justify-center text-5xl">👟</div>
+          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Zapato Casual Z01</h3><span class="text-lg font-bold text-primary mt-2 block">$1,299.00 MXN</span></div>
         </div>
-        <div class="bg-white rounded-lg shadow border border-gray-300 overflow-hidden flex flex-col w-full max-w-sm cursor-pointer hover:shadow-md" @click="selectedProduct = { id: 'cilindro', name: 'Cilindro 3D (Bota)', desc: 'Modelado alto calibrado para botas.' }; openProductModal = true">
-          <div class="h-44 bg-amber-50 flex items-center justify-center text-5xl">🛢️</div>
-          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Cilindro 3D (Bota)</h3><span class="text-lg font-bold text-primary mt-2 block">$180.00 MXN</span></div>
+        <div class="bg-white rounded-lg shadow border border-gray-300 overflow-hidden flex flex-col w-full max-w-sm cursor-pointer hover:shadow-md" @click="selectedProduct = { id: 'z02', name: 'Zapato Ejecutivo Z02', desc: 'Línea premium estilizada con variantes adaptativas.' }; openProductModal = true">
+          <div class="h-44 bg-amber-50 flex items-center justify-center text-5xl">👞</div>
+          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Zapato Ejecutivo Z02</h3><span class="text-lg font-bold text-primary mt-2 block">$1,450.00 MXN</span></div>
         </div>
       </div>
     </main>
@@ -123,8 +91,9 @@
         <button class="absolute top-4 right-4 text-gray-500 font-bold" @click="openProductModal = false">✕</button>
         <h3 class="text-2xl font-bold" x-text="selectedProduct?.name"></h3>
         <p class="text-sm text-gray-600" x-text="selectedProduct?.desc"></p>
+        
         <div>
-          <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Talla base:</label>
+          <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Talla Base:</label>
           <select x-model="selectedTalla" class="w-full border p-2 rounded bg-gray-50 font-bold text-primary">
             <option value="24.0">24.0 MX</option>
             <option value="25.0">25.0 MX</option>
@@ -133,17 +102,10 @@
             <option value="28.0">28.0 MX</option>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Color Inicial:</label>
-          <div class="flex gap-4 justify-center">
-            <button @click="selectedColor = '#0A58CA'" :class="selectedColor === '#0A58CA' ? 'ring-4 ring-primary' : ''" class="w-10 h-10 rounded-full bg-[#0A58CA] border"></button>
-            <button @click="selectedColor = '#DC3545'" :class="selectedColor === '#DC3545' ? 'ring-4 ring-primary' : ''" class="w-10 h-10 rounded-full bg-[#DC3545] border"></button>
-            <button @click="selectedColor = '#198754'" :class="selectedColor === '#198754' ? 'ring-4 ring-primary' : ''" class="w-10 h-10 rounded-full bg-[#198754] border"></button>
-          </div>
-        </div>
+
         <button @click="openProductModal = false; subPage = 'ar_view'; localStorage.setItem('stepra_subpage', 'ar_view'); encenderProbadorDesdeCatalogo(selectedProduct.id, selectedColor, selectedTalla);" 
                 class="w-full bg-primary text-white py-3 rounded font-bold text-lg shadow hover:opacity-90 transition-all">
-          Probar en mi Pie 👟
+          Abrir Probador Real 📸
         </button>
       </div>
     </div>
@@ -153,157 +115,130 @@
     <div id="camera-container" class="relative flex-1 w-full bg-black overflow-hidden">
         <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
 
-        <div id="menu-modelos-visual" class="custom-modal" style="display: none;">
-            <div class="bg-[#f8f5ee] p-6 rounded-2xl border-2 border-[#d2c7b5] text-center w-80 max-w-[90%] shadow-2xl flex flex-col gap-4">
-                <h4 class="font-black uppercase tracking-wider text-xs text-dark-calzado">Selecciona Tipo de Calzado</h4>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-[#e6dfd3] p-4 rounded-xl border cursor-pointer flex flex-col items-center gap-2" onclick="cambiarGeometriaTacto('cubo', 'Cubo 3D (Tenis)')">
-                        <i class="fa-solid fa-shoe-prints text-2xl text-primary"></i>
-                        <span class="text-[10px] font-black uppercase text-dark-calzado">Cubo 3D (Tenis)</span>
-                    </div>
-                    <div class="bg-[#e6dfd3] p-4 rounded-xl border cursor-pointer flex flex-col items-center gap-2" onclick="cambiarGeometriaTacto('cilindro', 'Cilindro 3D (Bota)')">
-                        <i class="fa-solid fa-boot text-2xl text-primary"></i>
-                        <span class="text-[10px] font-black uppercase text-dark-calzado">Cilindro 3D (Bota)</span>
-                    </div>
-                </div>
-                <button onclick="document.getElementById('menu-modelos-visual').style.display='none'" class="text-xs text-gray-400 uppercase font-bold mt-2">Cancelar</button>
-            </div>
-        </div>
-
         <div class="absolute top-3 left-3 right-3 z-30 bg-white/90 backdrop-blur pl-3 pr-2 py-1.5 rounded-xl shadow-xl flex items-center justify-between border border-white/25">
             <div class="flex-1 grid grid-cols-3 gap-1 items-center">
-                <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-100">Escáner Pasarela</h3>
+                <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-100">Visor de Modelos Reales FBX</h3>
                 <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">Modelo</span>
-                    <span id="view-modelo" class="font-bold text-dark-calzado truncate max-w-[70px]">Cubo 3D</span>
+                    <span class="text-[8px] text-gray-400 font-bold uppercase">Calzado</span>
+                    <span id="view-modelo" class="font-bold text-dark-calzado uppercase">Z01</span>
                 </div>
                 <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">Color</span>
-                    <span class="font-bold flex items-center gap-1 text-dark-calzado"><span id="view-color-name" class="truncate max-w-[35px]">Azul</span><div id="color-preview" class="w-2 h-2 rounded-full border border-black shrink-0" style="background-color: #0A58CA;"></div></span>
+                    <span class="text-[8px] text-gray-400 font-bold uppercase">Archivo Carga</span>
+                    <span id="view-archivo-fbx" class="font-bold text-emerald-700 text-[9px] lowercase">z01_pri1.fbx</span>
                 </div>
                 <div class="flex flex-col items-center text-[10px]">
                     <span class="text-[8px] text-gray-400 font-bold uppercase">Talla</span>
-                    <span id="view-talla" class="font-bold text-blue-700">Medir...</span>
+                    <span id="view-talla" class="font-bold text-blue-700">26.0 MX</span>
                 </div>
             </div>
 
             <div class="relative ml-2 shrink-0">
-                <button @click="openDropdown = !openDropdown" 
-                        class="h-10 w-10 rounded-lg bg-gray-100 hover:bg-gray-200 shadow-sm flex items-center justify-center text-dark-calzado active:scale-95 transition-all border border-gray-300">
+                <button @click="openDropdown = !openDropdown" class="h-10 w-10 rounded-lg bg-gray-100 hover:bg-gray-200 shadow-sm flex items-center justify-center text-dark-calzado border border-gray-300">
                     <i class="fa-solid" :class="openDropdown ? 'fa-xmark text-base text-red-600' : 'fa-bars text-sm'"></i>
                 </button>
-
-                <div x-show="openDropdown" x-cloak 
-                     @click.away="openDropdown = false"
-                     class="absolute right-0 top-12 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 py-1.5 w-44 flex flex-col z-50">
-                    
-                    <a href="perfil.html" class="px-4 py-2.5 text-[11px] font-black uppercase text-dark-calzado hover:bg-gray-100 flex items-center gap-2 border-b border-gray-100 transition-colors">
-                        <i class="fa-solid fa-user-astronaut text-primary text-xs"></i> Mi Perfil Premium
+                <div x-show="openDropdown" x-cloak @click.away="openDropdown = false" class="absolute right-0 top-12 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 py-1.5 w-44 flex flex-col z-50">
+                    <a href="perfil.html" class="px-4 py-2.5 text-[11px] font-black uppercase text-dark-calzado hover:bg-gray-100 flex items-center gap-2 border-b border-gray-100">
+                        <i class="fa-solid fa-user-astronaut text-primary text-xs"></i> Mi Perfil
                     </a>
-                    
-                    <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
-                            class="px-4 py-2.5 text-[11px] font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2 transition-colors">
-                        <i class="fa-solid fa-store text-emerald-600 text-xs"></i> Ir al Catálogo
+                    <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" class="px-4 py-2.5 text-[11px] font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2">
+                        <i class="fa-solid fa-store text-emerald-600 text-xs"></i> Ver Catálogo
                     </button>
                 </div>
             </div>
         </div>
 
-        <button onclick="if(typeof window.capturarFotoProbador === 'function') { window.capturarFotoProbador(); } else { alert('El motor de foto se está cargando...'); }" 
-                @click="fotoTomada = true; setTimeout(() => fotoTomada = false, 150)"
-                class="absolute bottom-4 right-4 bg-white/90 text-dark-calzado border-2 border-gray-300 h-12 w-12 rounded-full shadow-2xl z-45 flex items-center justify-center active:scale-90 transition-all hover:bg-white">
+        <button onclick="window.capturarFotoProbador()" @click="fotoTomada = true; setTimeout(() => fotoTomada = false, 150)"
+                class="absolute bottom-4 right-4 bg-white/90 text-dark-calzado border-2 border-gray-300 h-12 w-12 rounded-full shadow-2xl z-45 flex items-center justify-center active:scale-90 transition-all">
             <i class="fa-solid fa-camera text-base text-primary"></i>
         </button>
     </div>
 
-    <div class="bg-white flex flex-col z-40 w-full shrink-0">
-        <div id="debug-tools-panel" style="display: none;" class="p-3 bg-gray-50 border-t border-gray-200 items-center gap-3">
-            <span class="text-[10px] font-black text-dark-calzado uppercase whitespace-nowrap">📏 Talla Manual:</span>
-            <input type="range" id="size-slider" min="22.0" max="30.0" step="0.5" value="26.0" class="flex-1 accent-primary h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="ajustarTallaManual(this.value)">
-        </div>
-
-        <input type="color" id="color-picker" value="#0A58CA" class="hidden" onchange="seleccionarColorManual(this.value)">
-
-        <div class="p-4 flex flex-col gap-3 border-t border-gray-300 bg-white">
-            <div class="grid grid-cols-3 gap-2">
-                <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-[11px] font-bold uppercase flex flex-col items-center justify-center transition-all active:scale-95" onclick="intercambiarModelo()">
-                    <i class="fa-solid fa-shoe-prints mb-1 text-xs text-primary"></i> Modelo
-                </button>
-                <button class="bg-[#ffd166] text-dark-calzado border border-[#e6bd55] py-2.5 rounded-xl text-[11px] font-black uppercase flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm" onclick="simularMedicionIA()">
-                    <i class="fa-solid fa-ruler-combined mb-1 text-xs"></i> Calibrar
-                </button>
-                <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-[11px] font-bold uppercase flex flex-col items-center justify-center transition-all active:scale-95" onclick="intercambiarColor()">
-                    <i class="fa-solid fa-palette mb-1 text-xs text-primary"></i> Color
-                </button>
+    <div class="bg-white flex flex-col z-40 w-full shrink-0 border-t border-gray-300 shadow-2xl p-4 gap-3">
+        
+        <div class="grid grid-cols-3 gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
+            <div class="flex flex-col gap-1 col-span-2">
+                <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Estación / Temporada:</span>
+                <div class="grid grid-cols-4 gap-1">
+                    <button @click="currentTemporada = 'pri'; actualizarModeloFBXDynamico(currentTemporada, currentVariante);" :class="currentTemporada === 'pri' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'" class="text-[10px] font-black uppercase py-1 rounded-md transition-all">Pri</button>
+                    <button @click="currentTemporada = 've'; actualizarModeloFBXDynamico(currentTemporada, currentVariante);" :class="currentTemporada === 've' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'" class="text-[10px] font-black uppercase py-1 rounded-md transition-all">Ver</button>
+                    <button @click="currentTemporada = 'ot'; actualizarModeloFBXDynamico(currentTemporada, currentVariante);" :class="currentTemporada === 'ot' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'" class="text-[10px] font-black uppercase py-1 rounded-md transition-all">Oto</button>
+                    <button @click="currentTemporada = 'in'; actualizarModeloFBXDynamico(currentTemporada, currentVariante);" :class="currentTemporada === 'in' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'" class="text-[10px] font-black uppercase py-1 rounded-md transition-all">Inv</button>
+                </div>
             </div>
             
-            <button class="w-full bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md active:bg-[#08449E] transition-all" 
-                    @click="
-                        localStorage.setItem('user_modelo', window.modeloActual);
-                        localStorage.setItem('user_color', window.colorHexActual);
-                        localStorage.setItem('user_talla', window.tallaActual);
+            <div class="flex flex-col gap-1">
+                <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Variante:</span>
+                <select x-model="currentVariante" @change="actualizarModeloFBXDynamico(currentTemporada, currentVariante)" class="w-full bg-white border rounded-md p-1 font-black text-xs text-center text-primary h-[26px]">
+                    <option value="1">Mod 1</option>
+                    <option value="2">Mod 2</option>
+                    <option value="3">Mod 3</option>
+                </select>
+            </div>
+        </div>
 
-                        if(!isLoggedIn) { 
-                            dispararAlertaPremium('🔒 [AUTENTICACIÓN REQUERIDA]\n\nGuardaremos tu configuración temporalmente. Inicia sesión para subirla a Supabase.', 'lock', 'Seguridad'); 
-                            localStorage.setItem('temp_modelo', window.modeloActual);
-                            localStorage.setItem('temp_color', window.colorHexActual);
-                            localStorage.setItem('temp_talla', window.tallaActual);
-                            localStorage.setItem('temp_retorno', 'true');
-                            setTimeout(() => { window.location.href = 'login.html'; }, 2200); 
-                        } else { 
-                            guardarConfiguracionActual(); 
-                        }
-                    ">
-                Guardar Configuración
+        <div class="grid grid-cols-2 gap-2">
+            <button class="bg-[#f3ede0] border border-gray-300 py-2.5 rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-2 transition-all active:scale-95" onclick="intercambiarEntreZ01yZ02()">
+                <i class="fa-solid fa-arrows-rotate text-primary"></i> Cambiar Silueta (<span id="btn-label-silueta">Z01</span>)
+            </button>
+            <button class="bg-[#ffd166] text-dark-calzado border border-[#e6bd55] py-2.5 rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm" onclick="simularMedicionIA()">
+                <i class="fa-solid fa-ruler-combined"></i> Calibrar Talla
             </button>
         </div>
+        
+        <button class="w-full bg-primary text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-wider shadow-md active:opacity-90 transition-all" 
+                @click="
+                    localStorage.setItem('user_modelo', window.modeloActual);
+                    localStorage.setItem('user_color', 'Archivo: ' + document.getElementById('view-archivo-fbx').innerText);
+                    localStorage.setItem('user_talla', window.tallaActual);
+                    guardarConfiguracionActual();
+                ">
+            Guardar Configuración Real
+        </button>
     </div>
   </div>
 
-  <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click="alertOpen = false">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4 transform transition-all" @click.stop>
-          <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto">
-              <span class="material-symbols-outlined text-2xl" x-text="alertIcon">info</span>
-          </div>
+  <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm border-2 border-[#d2c7b5] shadow-2xl text-center flex flex-col gap-4" @click.stop>
+          <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto"><span class="material-symbols-outlined text-2xl" x-text="alertIcon">info</span></div>
           <h4 class="text-xs font-black uppercase tracking-widest text-gray-400" x-text="alertTitle">Notificación</h4>
           <p class="text-sm font-medium text-dark-calzado whitespace-pre-line" x-text="alertText"></p>
-          <button @click="alertOpen = false" class="w-full bg-primary text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow hover:opacity-95 transition-all">
-              Entendido
-          </button>
+          <button @click="alertOpen = false" class="w-full bg-primary text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-wider">Entendido</button>
       </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+  
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-  <script src="js/controllers.js?v=59"></script>
-  <script src="js/main.js?v=59"></script>
+  <script src="js/controllers.js?v=60"></script>
+  <script src="js/main.js?v=60"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, hexColor, tallaBase) {
           window.tallaActual = parseFloat(tallaBase);
-          window.colorHexActual = hexColor;
-          window.modeloActual = idModelo === 'cilindro' ? 'Cilindro 3D (Bota)' : 'Cubo 3D (Tenis)';
-
-          document.getElementById('view-modelo').innerText = window.modeloActual;
-          document.getElementById('view-color-name').innerText = hexColor.toUpperCase();
-          document.getElementById('color-preview').style.backgroundColor = hexColor;
+          window.modeloActual = idModelo; // z01 o z02
+          
+          document.getElementById('view-modelo').innerText = idModelo.toUpperCase();
+          document.getElementById('btn-label-silueta').innerText = idModelo.toUpperCase();
           document.getElementById('view-talla').innerText = window.tallaActual.toFixed(1) + ' MX';
-
-          const slider = document.getElementById("size-slider");
-          if (slider) slider.value = window.tallaActual;
 
           Alpine.nextTick(() => {
               if (typeof window.iniciarMotoresManuales === 'function') {
                   window.iniciarMotoresManuales();
-              }
-              if (typeof window.generarGeometriaSimulada === 'function') {
-                  window.generarGeometriaSimulada(idModelo, hexColor);
-                  window.actualizarEscalaPorTalla(window.tallaActual);
+                  // Forzamos la carga del fbx inicial: z01_pri1.fbx o z02_pri1.fbx
+                  window.actualizarModeloFBXDynamico('pri', '1');
               }
           });
+      }
+
+      function actualizarModeloFBXDynamico(temp, varNum) {
+          if (typeof window.cargarArchivoFBXReal === 'function') {
+              window.cargarArchivoFBXReal(window.modeloActual, temp, varNum);
+          }
       }
   </script>
 </body>

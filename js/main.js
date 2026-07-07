@@ -1,309 +1,188 @@
-// Elementos del DOM
-const videoElement = document.getElementById('webcam');
-const cameraContainer = document.getElementById('camera-container');
+// ==========================================================================
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (SOPORTE MODELOS REALES .FBX)
+// ==========================================================================
+let scene, camera, renderer, videoElement;
+let objetoCalzadoActual = null; // Guardará el mesh .fbx que esté cargado en pantalla
 
-// Variables del Motor 3D (Three.js)
-let scene, camera, renderer, currentMesh;
+window.modeloActual = "z01"; 
+window.tallaActual = 26.0;
 
-// Variables de Inteligencia Artificial (MediaPipe Pose)
-let poseTracker;
-let localVideoStream = null; 
+// Inicialización de la escena gráfica de Realidad Aumentada
+function iniciarMotoresManuales() {
+    if (renderer) return; // Si ya está corriendo, no duplicar
 
-// Candados de control de calibración y rebote de hardware
-let iaMidiendoActivamente = false; 
-let yaIniciado = false; 
+    videoElement = document.getElementById('webcam');
+    const container = document.getElementById('camera-container');
 
-// 1. INICIALIZAR EL ESCENARIO 3D TRANSPARENTE
-function init3DSpace() {
-    const canvasViejo = cameraContainer.querySelector('canvas');
-    if (canvasViejo) canvasViejo.remove();
-
+    // Crear Escena 3D
     scene = new THREE.Scene();
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    dirLight.position.set(0, 5, 3); 
-    scene.add(dirLight);
+    // Crear Iluminación para que el calzado luzca realista
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(luzAmbiental);
+    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.6);
+    luzDireccional.position.set(0, 5, 5);
+    scene.add(luzDireccional);
 
-    const anchoReal = cameraContainer.clientWidth || window.innerWidth;
-    const altoReal = cameraContainer.clientHeight || window.innerHeight;
+    // Crear Cámara Matemática Proporcional
+    camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 0, 5);
 
-    camera = new THREE.PerspectiveCamera(45, anchoReal / altoReal, 0.1, 1000);
-    camera.position.set(0, 0, 4); 
-
-    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(anchoReal, altoReal);
+    // Configurar Renderizador con soporte de transparencia y preservación de pixeles para foto
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
-    renderer.domElement.style.zIndex = '5'; 
-    cameraContainer.appendChild(renderer.domElement);
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.pointerEvents = 'none';
+    container.appendChild(renderer.domElement);
 
-    function animate() {
-        requestAnimationFrame(animate);
-        if (renderer && scene && camera) {
-            renderer.render(scene, camera);
+    // Iniciar bucle de dibujo continuo
+    function animarEcosistema() {
+        requestAnimationFrame(animarEcosistema);
+        if (objetoCalzadoActual) {
+            // Le damos una leve rotación estética automática para simular flotado sobre el pie
+            objetoCalzadoActual.rotation.y = Math.sin(Date.now() * 0.001) * 0.15;
         }
+        renderer.render(scene, camera);
     }
-    animate();
-}
+    animarEcosistema();
 
-// 2. FUNCIÓN PARA GENERAR EL CUBO O CILINDRO DINÁMICAMENTE
-function generarGeometriaSimulada(tipo, colorHex) {
-    if (currentMesh) scene.remove(currentMesh);
-
-    let geometry;
-    if (tipo === "cilindro") {
-        geometry = new THREE.CylinderGeometry(0.32, 0.38, 1.4, 32);
-    } else {
-        geometry = new THREE.BoxGeometry(0.68, 0.42, 1.75); 
-    }
-
-    const material = new THREE.MeshStandardMaterial({ 
-        color: new THREE.Color(colorHex),
-        roughness: 0.4,
-        metalness: 0.15
-    });
-
-    currentMesh = new THREE.Mesh(geometry, material);
-    currentMesh.rotation.set(-Math.PI / 2, 0, 0); 
-    currentMesh.visible = false; 
-
-    scene.add(currentMesh);
-}
-
-// 3. ACTUALIZAR COLOR DE LA GEOMETRÍA
-function actualizarColorGeometria(colorHex) {
-    if (currentMesh && currentMesh.material) {
-        currentMesh.material.color.set(colorHex);
-    }
-}
-
-// 4. ACTUALIZAR LA ESCALA ANATÓMICA
-function actualizarEscalaPorTalla(talla) {
-    if (!currentMesh) return;
-    const escalaLargo = 1 + (talla - 26.0) * 0.15; 
-    const escalaAnchoAlt = 1 + (talla - 26.0) * 0.07; 
-    currentMesh.scale.set(escalaAnchoAlt, escalaAnchoAlt, escalaLargo);
-}
-
-// 5. APAGADO SEGURO DE LA CÁMARA
-function apagarCamaraLimpia() {
-    if (localVideoStream) {
-        localVideoStream.getTracks().forEach(track => {
-            track.stop();
+    // Encender Cámara Web Física de forma segura
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+        .then(function(stream) {
+            videoElement.srcObject = stream;
+        })
+        .catch(function(error) {
+            console.warn("Cámara bloqueada o no disponible:", error);
         });
-        localVideoStream = null;
-    }
-    if (videoElement) {
-        videoElement.srcObject = null;
-    }
-    yaIniciado = false;
-    console.log("Canal de cámara liberado de forma absoluta.");
-}
-
-// 6. ENCENDIDO SEGURO DE LA CÁMARA TRASERA NATIVA
-async function iniciarCamaraNativa() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } }
-        });
-        localVideoStream = stream;
-        videoElement.srcObject = stream;
-        videoElement.setAttribute("playsinline", true);
-        await videoElement.play();
-        inicializarMediaPipePose();
-        console.log("Cámara trasera encendida con éxito.");
-    } catch (err) {
-        try {
-            const streamGen = await navigator.mediaDevices.getUserMedia({ video: true });
-            localVideoStream = streamGen;
-            videoElement.srcObject = streamGen;
-            await videoElement.play();
-            inicializarMediaPipePose();
-        } catch (cameraErr) {
-            console.error("Hardware bloqueado por el sistema operativo:", cameraErr);
-        }
     }
 }
-
-// 7. MOTOR DE REALIDAD AUMENTADA EN PRIMERA PERSONA
-function inicializarMediaPipePose() {
-    if (poseTracker) {
-        try { poseTracker.close(); } catch(e){}
-    }
-
-    poseTracker = new Pose({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-    });
-
-    poseTracker.setOptions({
-        modelComplexity: 0, 
-        smoothLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-
-    poseTracker.onResults((results) => {
-        if (!results.poseLandmarks || !currentMesh) return;
-
-        const tobilloDerecho = results.poseLandmarks[28];
-        const puntaPie = results.poseLandmarks[32];
-        const talon = results.poseLandmarks[30];
-
-        if (puntaPie && puntaPie.visibility > 0.55 && (!tobilloDerecho || tobilloDerecho.z < 0.15)) {
-            currentMesh.visible = true;
-
-            const centroX = talon ? (puntaPie.x + talon.x) / 2 : puntaPie.x;
-            const centroY = talon ? (puntaPie.y + talon.y) / 2 : puntaPie.y;
-
-            const targetX = (centroX - 0.5) * -3.2; 
-            const targetY = (centroY - 0.5) * -2.4 - 0.4; 
-
-            currentMesh.position.x += (targetX - currentMesh.position.x) * 0.20;
-            currentMesh.position.y += (targetY - currentMesh.position.y) * 0.20;
-            currentMesh.position.z = 1.4 + (puntaPie.z * -1.0);
-
-            if (talon) {
-                const anguloGiro = Math.atan2(puntaPie.y - talon.y, puntaPie.x - talon.x);
-                currentMesh.rotation.z = -anguloGiro + (Math.PI / 2);
-            }
-
-            if (iaMidiendoActivamente && talon) {
-                const dx = puntaPie.x - talon.x;
-                const dy = puntaPie.y - talon.y;
-                const distanciaRelativa = Math.sqrt(dx * dx + dy * dy);
-
-                let tallaCalculada = 22.0 + (distanciaRelativa * 23);
-                if (tallaCalculada < 22.0) tallaCalculada = 24.5;
-                if (tallaCalculada > 30.0) tallaCalculada = 28.0;
-
-                tallaCalculada = Math.round(tallaCalculada * 2) / 2;
-
-                window.tallaActual = tallaCalculada;
-                const slider = document.getElementById("size-slider");
-                if (slider) slider.value = tallaCalculada;
-
-                const viewTalla = document.getElementById("view-talla");
-                if (viewTalla) {
-                    viewTalla.innerText = tallaCalculada.toFixed(1) + " MX";
-                }
-
-                actualizarScaleConGarantia(tallaCalculada);
-            }
-        } else {
-            currentMesh.visible = false;
-        }
-    });
-
-    async function procesarCuadroVideo() {
-        if (!localVideoStream || !videoElement || videoElement.paused || videoElement.ended) return;
-        
-        try {
-            await poseTracker.send({ image: videoElement });
-        } catch(e) {}
-
-        if (videoElement && videoElement.requestVideoFrameCallback) {
-            videoElement.requestVideoFrameCallback(procesarCuadroVideo);
-        } else {
-            setTimeout(procesarCuadroVideo, 40);
-        }
-    }
-    procesarCuadroVideo();
-}
-
-function actualizarScaleConGarantia(t) {
-    if (typeof window.actualizarEscalaPorTalla === 'function') {
-        window.actualizarEscalaPorTalla(t);
-    }
-}
-
-// CANDADO ANTI-REBOTES INTEGRADO: Evita el doble disparo simultáneo tras refrescar
-function iniciarMotoresManuales() {
-    if (yaIniciado) {
-        console.log("Llamada duplicada bloqueada con éxito.");
-        return;
-    }
-    yaIniciado = true;
-    init3DSpace();
-    iniciarCamaraNativa();
-}
-
-// 8. ESCUCHADORES DE CICLO DE VIDA
-window.addEventListener('beforeunload', () => {
-    apagarCamaraLimpia();
-});
-
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        const savedSubpage = localStorage.getItem('stepra_subpage');
-        if (savedSubpage === 'ar_view') {
-            yaIniciado = false;
-            iniciarMotoresManuales();
-        }
-    } else {
-        apagarCamaraLimpia();
-    }
-}
-
-);
-
-window.setIaMidiendoActivamente = (valor) => { iaMidiendoActivamente = valor; };
-window.iniciarMotoresManuales = iniciarMotoresManuales;
-window.generarGeometriaSimulada = generarGeometriaSimulada;
-window.actualizarColorGeometria = actualizarColorGeometria;
-window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
 
 // ==========================================================================
-// 9. MOTOR DE CAPTURA DE PANTALLA COMBINADA (FOTO DEL PROBADOR)
+// FUNCIÓN ESTRELLA: CARGADOR DINÁMICO DE ARCHIVOS .FBX REALES
+// ==========================================================================
+function cargarArchivoFBXReal(modeloBase, temporada, variante) {
+    // 1. Construimos el nombre exacto basado en la nomenclatura de tu compañero
+    const nombreArchivo = `${modeloBase.toLowerCase()}_${temporada.toLowerCase()}${variante}.fbx`;
+    const rutaCompleta = `modelos/${nombreArchivo}`;
+    
+    // Actualizamos los letreros visuales en la interfaz superior
+    const bannerArchivo = document.getElementById('view-archivo-fbx');
+    if (bannerArchivo) bannerArchivo.innerText = nombreArchivo;
+
+    // 2. Si ya había un zapato en pantalla, lo removemos de la memoria para que no se encimen
+    if (objetoCalzadoActual) {
+        scene.remove(objetoCalzadoActual);
+        objetoCalzadoActual = null;
+    }
+
+    console.log("Intentando cargar modelo real:", rutaCompleta);
+
+    // 3. Instanciamos el cargador oficial de FBX de Three.js
+    const cargador = new THREE.FBXLoader();
+    
+    cargador.load(
+        rutaCompleta,
+        function (fbx) {
+            objetoCalzadoActual = fbx;
+
+            // Centramos el calzado en el origen de coordenadas AR
+            objetoCalzadoActual.position.set(0, -0.8, 0); 
+            
+            // Re-escalamos de forma segura. Los archivos FBX de software como Blender
+            // suelen venir gigantes o muy milimétricos. Ajustamos un multiplicador base.
+            objetoCalzadoActual.scale.set(0.02, 0.02, 0.02);
+
+            // Ajustamos la escala final basándonos en la talla actual calibrada
+            actualizarEscalaPorTalla(window.tallaActual);
+
+            // Añadimos el calzado real a la escena visible de la cámara
+            scene.add(objetoCalzadoActual);
+            console.log(`¡Archivo ${nombreArchivo} cargado y enlazado con éxito!`);
+        },
+        function (progreso) {
+            console.log("Cargando bytes del FBX: ", (progreso.loaded / progreso.total * 100) + "%");
+        },
+        function (error) {
+            console.error("Detalle al cargar el archivo .fbx en caliente:", error);
+            // Si el archivo no existe o falla, ponemos un cubo de respaldo temporal para que no se quede vacío
+            console.log("Colocando geometría de respaldo...");
+            const geometry = new THREE.BoxGeometry(1.2, 0.6, 2);
+            const material = new THREE.MeshStandardMaterial({ color: 0x0a58ca, wireframe: true });
+            objetoCalzadoActual = new THREE.Mesh(geometry, material);
+            objetoCalzadoActual.position.set(0, -0.5, 0);
+            scene.add(objetoCalzadoActual);
+        }
+    );
+}
+
+// Control de escala paramétrica según la talla mexicana
+function actualizarEscalaPorTalla(talla) {
+    if (!objetoCalzadoActual) return;
+    // Factor matemático base para amoldar la escala tridimensional a centímetros reales
+    const factorEscala = (talla / 26.0) * 0.02; 
+    objetoCalzadoActual.scale.set(factorEscala, factorEscala, factorEscala);
+}
+
+// Botón para alternar rápido entre el zapato Z01 y Z02
+function intercambiarEntreZ01yZ02() {
+    window.modeloActual = window.modeloActual === 'z01' ? 'z02' : 'z01';
+    document.getElementById('view-modelo').innerText = window.modeloActual.toUpperCase();
+    document.getElementById('btn-label-silueta').innerText = window.modeloActual.toUpperCase();
+    
+    // Obtenemos los filtros activos en la pantalla desde Alpine para refrescar el FBX instantáneo
+    const deTemporada = document.getElementById('view-archivo-fbx').innerText.split('_')[1].substring(0,3).replace(/[0-9]/g, '');
+    let temporadaLimpia = "pri";
+    if(deTemporada.includes("ve")) temporadaLimpia = "ve";
+    if(deTemporada.includes("ot")) temporadaLimpia = "ot";
+    if(deTemporada.includes("in")) temporadaLimpia = "in";
+
+    cargarArchivoFBXReal(window.modeloActual, temporadaLimpia, '1');
+}
+
+// ==========================================================================
+// MOTOR DE CAPTURA DE PANTALLA COMBINADA (FOTO REAL)
 // ==========================================================================
 function capturarFotoProbador() {
-    if (!renderer || !videoElement) return alert("Error: Los motores no están listos.");
+    if (!renderer || !videoElement) return alert("Los motores no están listos.");
 
-    // 1. Creamos un canvas fantasma temporal con el tamaño exacto del visor
     const anchoCaptura = videoElement.videoWidth || 640;
     const altoCaptura = videoElement.videoHeight || 480;
 
     const canvasDestino = document.createElement('canvas');
     canvasDestino.width = anchoCaptura;
-    canvasDestura = altoCaptura;
     canvasDestino.height = altoCaptura;
     const ctx = canvasDestino.getContext('2d');
 
-    // 2. Pintamos primero el cuadro actual de la cámara de video de fondo
     ctx.drawImage(videoElement, 0, 0, anchoCaptura, altoCaptura);
 
-    // 3. Forzamos a Three.js a renderizar un cuadro inmediato
     if (renderer && scene && camera) {
         renderer.render(scene, camera);
-        // Dibujamos el canvas 3D encima de la foto de la cámara
         ctx.drawImage(renderer.domElement, 0, 0, anchoCaptura, altoCaptura);
     }
 
-    // 4. Convertimos la mezcla a un archivo binario PNG descargable
     try {
         const linkDescarga = document.createElement('a');
-        
-        // Generamos un nombre dinámico único estilo StepRA con folio del momento
         const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g, "-");
-        linkDescarga.download = `StepRA-Capture-${timestamp}.png`;
-        
-        // Convertimos el Canvas a URL de imagen
+        linkDescarga.download = `StepRA-${window.modeloActual}-Capture-${timestamp}.png`;
         linkDescarga.href = canvasDestino.toDataURL('image/png');
-        
-        // Disparamos la descarga automática en el celular
         document.body.appendChild(linkDescarga);
         linkDescarga.click();
         document.body.removeChild(linkDescarga);
-        
-        console.log("¡Captura de Realidad Aumentada descargada con éxito!");
     } catch (error) {
-        console.error("Error al procesar la imagen compuesta:", error);
-        alert("Ocurrió un detalle al compilar la foto. Revisa tus permisos.");
+        console.error("Error capturando matriz:", error);
     }
 }
 
-// Exponemos la función al entorno global para que app.html la pueda llamar desde el botón
+// Exponer funciones globales
+window.iniciarMotoresManuales = iniciarMotoresManuales;
+window.cargarArchivoFBXReal = cargarArchivoFBXReal;
+window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
+window.intercambiarEntreZ01yZ02 = intercambiarEntreZ01yZ02;
 window.capturarFotoProbador = capturarFotoProbador;
+window.actualizarModeloFBXDynamico = cargarArchivoFBXReal;
