@@ -1,5 +1,5 @@
 // ==========================================================================
-// MOTOR DE RENDERIZADO STEPRA - CONTROL DE ESCALA MÉTRICA Y SEGUIMIENTO AI
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (COMPLETA CON CONTROL MULTI-VARIANTE)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoCalzadoActual = null; 
@@ -15,10 +15,9 @@ function iniciarMotoresManuales() {
 
     scene = new THREE.Scene();
 
-    // Iluminación ambiental intensa para resaltar las texturas del calzado fbx
     const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(luzAmbiental);
-    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.8);
+    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.7);
     luzDireccional.position.set(0, 4, 4);
     scene.add(luzDireccional);
 
@@ -41,7 +40,6 @@ function iniciarMotoresManuales() {
     }
     animarEcosistema();
 
-    // Arrancamos el estimador esquelético en paralelo
     inicializarRastreadorAI();
 }
 
@@ -60,14 +58,13 @@ function inicializarRastreadorAI() {
     poseTracker.onResults((results) => {
         if (!objetoCalzadoActual || !results.poseLandmarks) return;
 
-        // Rastreamos la muñeca o el tobillo para darte soporte inmediato en la prueba
+        // Detección de extremidades (tobillo 28, o muñeca de prueba 16)
         const puntoDeteccion = results.poseLandmarks[28] || results.poseLandmarks[16]; 
         const talon = results.poseLandmarks[30];
 
         if (puntoDeteccion && puntoDeteccion.visibility > 0.45) {
             objetoCalzadoActual.visible = true;
 
-            // Interpolación de coordenadas en el lienzo web
             const targetX = (puntoDeteccion.x - 0.5) * -3.2;
             const targetY = (puntoDeteccion.y - 0.5) * -2.4 - 0.3;
 
@@ -75,13 +72,11 @@ function inicializarRastreadorAI() {
             objetoCalzadoActual.position.y += (targetY - objetoCalzadoActual.position.y) * 0.30;
             objetoCalzadoActual.position.z = 1.2;
 
-            // Si hay rotación de articulación inclinamos el fbx de forma armónica
             if (talon) {
                 const angulo = Math.atan2(puntoDeteccion.y - talon.y, puntoDeteccion.x - talon.x);
                 objetoCalzadoActual.rotation.y = -angulo;
             }
         } else {
-            // El zapato se oculta de forma limpia si no hay ninguna extremidad en pantalla
             objetoCalzadoActual.visible = false;
         }
     });
@@ -103,13 +98,12 @@ function inicializarRastreadorAI() {
 }
 
 // ==========================================================================
-// ENRUTADOR DINÁMICO DE FILTRADO CON LOGÍSTICA DE ESCALA REDUCIDA
+// CARGADOR INTEGRAL MULTI-VARIANTE CON MAPEO DE STRINGS DE DISCO
 // ==========================================================================
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
-    // Formateamos el string exacto que tienes en tu carpeta de VS Code
     let nombreArchivoFinal = `${modeloBase}${temporada}${variante}.fbx`;
     
-    // Validamos el espacio del nombre del archivo za2pri1 1.fbx y za2in1 1.fbx de tu disco
+    // Mapeo específico de nombres con espacio en blanco del Zapato 2
     if (modeloBase === "za2" && (temporada === "pri" || temporada === "in") && variante === "1") {
         nombreArchivoFinal = `${modeloBase}${temporada}${variante} 1.fbx`;
     }
@@ -126,7 +120,7 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
         objetoCalzadoActual = null;
     }
 
-    console.log("Invocando archivo:", rutaCompleta);
+    console.log("Invocando archivo desde:", rutaCompleta);
 
     const cargador = new THREE.FBXLoader();
     cargador.load(
@@ -135,18 +129,17 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
             objetoCalzadoActual = fbx;
             objetoCalzadoActual.visible = false; 
 
-            // CORRECCIÓN MAGNA DE ESCALA: Bajamos a 0.0003 para achicar el modelo gigante de metros a centímetros reales
+            // ESCALA CORREGIDA: Reducción de metros a escala humana centimétrica
             objetoCalzadoActual.scale.set(0.0003, 0.0003, 0.0003);
             objetoCalzadoActual.rotation.set(0, Math.PI, 0); 
 
             actualizarEscalaPorTalla(window.tallaActual);
             scene.add(objetoCalzadoActual);
-            console.log("¡Archivo FBX Real redimensionado con éxito!");
+            console.log("¡Modelo real enlazado al pie correctamente!");
         },
         null,
         function (err) {
-            console.error("Fallo de mapeo de archivo:", err);
-            // Fallback transitorio en caso de error de ruta
+            console.error("Fallo de enrutamiento, activando wireframe:", err);
             const geometry = new THREE.BoxGeometry(0.8, 0.4, 1.5);
             const material = new THREE.MeshStandardMaterial({ color: 0x0a58ca, wireframe: true });
             objetoCalzadoActual = new THREE.Mesh(geometry, material);
@@ -158,9 +151,21 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
 
 function actualizarEscalaPorTalla(talla) {
     if (!objetoCalzadoActual) return;
-    // Escalación sutil basada en la proporción mexicana
     const factor = (talla / 26.0) * 0.0003;
     objetoCalzadoActual.scale.set(factor, factor, factor);
+}
+
+function intercambiarEntreZ01yZ02() {
+    window.modeloActual = window.modeloActual === 'za1' ? 'za2' : 'za1';
+    
+    // Sincronizamos los cambios de vuelta hacia los selectores de Alpine
+    const appBody = document.body;
+    if(appBody.__x_data) {
+        appBody.__x_data.currentZapato = window.modeloActual;
+        const temp = appBody.__x_data.currentTemporada;
+        const varNum = appBody.__x_data.currentVariante;
+        cargarArchivoFBXReal(window.modeloActual, temp, varNum);
+    }
 }
 
 function capturarFotoProbador() {
@@ -183,5 +188,6 @@ function capturarFotoProbador() {
 window.iniciarMotoresManuales = iniciarMotoresManuales;
 window.cargarArchivoFBXReal = cargarArchivoFBXReal;
 window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
+window.intercambiarEntreZ01yZ02 = intercambiarEntreZ01yZ02;
 window.capturarFotoProbador = capturarFotoProbador;
 window.actualizarModeloFBXDynamico = cargarArchivoFBXReal;
