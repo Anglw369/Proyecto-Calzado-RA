@@ -3,11 +3,11 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-    <title>StepRA - Panel de Aplicación</title>
+    <title>StepRA - Panel de Calzado Real</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/main.css?v=61">
+    <link rel="stylesheet" href="css/main.css?v=62">
 
     <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
     <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
@@ -19,8 +19,7 @@
                         "primary": "#0a58ca",
                         "dark-calzado": "#0b1b3d",
                         "background": "#f3ede0",
-                        "surface": "#f8f5ee",
-                        "accent-light": "#ffd166"
+                        "surface": "#f8f5ee"
                     }
                 }
             }
@@ -35,7 +34,7 @@
     </style>
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
-      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', currentZapato: 'za1', currentTemporada: 'pri', currentVariante: '1', alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación', fotoTomada: false }"
+      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', currentZapato: 'za1', currentTemporada: 'pri', alertOpen: false, alertText: '', fotoTomada: false }"
       x-init="
         if (subPage === 'ar_view') {
             currentZapato = localStorage.getItem('user_modelo') || 'za1';
@@ -45,31 +44,29 @@
 
   <div x-show="subPage === 'catalog'" x-cloak class="min-h-screen flex flex-col bg-background">
     <header class="w-full bg-white border-b border-gray-300 sticky top-0 z-50 px-4 py-4 flex items-center justify-between">
-      <div class="text-xl font-bold"><a href="index.html"><span>Step</span><span class="text-primary">RA</span></a></div>
-      <button onclick="window.location.href='perfil.html'" class="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-300">
-          <span class="material-symbols-outlined text-xl">account_circle</span> <span class="text-xs font-bold hidden sm:inline">Mi Perfil</span>
-      </button>
+      <div class="text-xl font-bold"><span>Step</span><span class="text-primary">RA</span></div>
+      <button onclick="window.location.href='perfil.html'" class="bg-gray-100 px-3 py-1.5 rounded-lg border text-xs font-bold">Mi Perfil</button>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
-      <h2 class="text-2xl font-bold mb-6 text-center">Modelados Disponibles</h2>
+      <h2 class="text-2xl font-bold mb-6 text-center">Modelos de Calzado Disponibles</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-items-center">
-        <div class="bg-white rounded-lg shadow border overflow-hidden w-full max-w-sm cursor-pointer" @click="selectedProduct = { id: 'za1', name: 'Línea Casual - Zapato 1' }; openProductModal = true">
-          <div class="h-44 bg-blue-50 flex items-center justify-center text-5xl">👟</div>
-          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Línea Casual - Zapato 1</h3></div>
+        <div class="bg-white rounded-lg shadow border w-full max-w-sm cursor-pointer" @click="selectedProduct = { id: 'za1', name: 'Línea Deportiva - Zapato 1' }; openProductModal = true">
+          <div class="h-44 bg-blue-50 flex items-center justify-center text-5xl">跑</div>
+          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Línea Deportiva - Zapato 1</h3></div>
         </div>
-        <div class="bg-white rounded-lg shadow border overflow-hidden w-full max-w-sm cursor-pointer" @click="selectedProduct = { id: 'za2', name: 'Línea Ejecutiva - Zapato 2' }; openProductModal = true">
+        <div class="bg-white rounded-lg shadow border w-full max-w-sm cursor-pointer" @click="selectedProduct = { id: 'za2', name: 'Línea Casual - Zapato 2' }; openProductModal = true">
           <div class="h-44 bg-amber-50 flex items-center justify-center text-5xl">👞</div>
-          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Línea Ejecutiva - Zapato 2</h3></div>
+          <div class="p-6 bg-surface"><h3 class="text-xl font-bold">Línea Casual - Zapato 2</h3></div>
         </div>
       </div>
     </main>
 
     <div x-show="openProductModal" x-cloak class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
-      <div class="bg-white rounded-lg p-6 w-full max-w-md border border-gray-400 relative flex flex-col gap-4">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md border relative flex flex-col gap-4">
         <h3 class="text-2xl font-bold" x-text="selectedProduct?.name"></h3>
         <div>
-          <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Talla Base:</label>
+          <label class="block text-xs font-bold text-gray-500 mb-1">TALLA BASE (MX):</label>
           <select x-model="selectedTalla" class="w-full border p-2 rounded bg-gray-50 font-bold text-primary">
             <option value="25.0">25.0 MX</option>
             <option value="26.0">26.0 MX</option>
@@ -77,7 +74,7 @@
           </select>
         </div>
         <button @click="openProductModal = false; subPage = 'ar_view'; currentZapato = selectedProduct.id; localStorage.setItem('stepra_subpage', 'ar_view'); localStorage.setItem('user_modelo', currentZapato); encenderProbadorDesdeCatalogo(currentZapato, selectedTalla);" class="w-full bg-primary text-white py-3 rounded font-bold">
-          Abrir Probador Real 📸
+          Probar en Tiempo Real 📸
         </button>
       </div>
     </div>
@@ -89,12 +86,12 @@
 
         <div class="absolute top-3 left-3 right-3 z-30 bg-white/90 backdrop-blur pl-3 pr-2 py-1.5 rounded-xl shadow-xl flex items-center justify-between border border-white/25">
             <div class="flex-1 grid grid-cols-3 gap-1 items-center">
-                <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-100">Visor de Modelos Activos FBX</h3>
-                <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">Silueta</span>
+                <h3 class="col-span-3 text-[9px] font-black tracking-wider uppercase text-primary text-center border-b pb-0.5 border-blue-100">Visor de Modelos Activos</h3>
+                <div class="flex flex-col items-center text-[10px] border-r pr-1">
+                    <span class="text-[8px] text-gray-400 font-bold uppercase">Calzado Base</span>
                     <span class="font-bold text-dark-calzado uppercase" x-text="currentZapato === 'za1' ? 'Zapato 1' : 'Zapato 2'"></span>
                 </div>
-                <div class="flex flex-col items-center text-[10px] border-r border-gray-300 pr-1">
+                <div class="flex flex-col items-center text-[10px] border-r pr-1">
                     <span class="text-[8px] text-gray-400 font-bold uppercase">Archivo Carga</span>
                     <span id="view-archivo-fbx" class="font-bold text-emerald-700 text-[10px] lowercase">cargando...</span>
                 </div>
@@ -104,61 +101,45 @@
                 </div>
             </div>
 
-            <div class="relative ml-2 shrink-0">
-                <button @click="openDropdown = !openDropdown" class="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center border">
-                    <i class="fa-solid" :class="openDropdown ? 'fa-xmark text-red-600' : 'fa-bars'"></i>
+            <button @click="openDropdown = !openDropdown" class="ml-2 h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center border">
+                <i class="fa-solid" :class="openDropdown ? 'fa-xmark text-red-600' : 'fa-bars'"></i>
+            </button>
+            
+            <div x-show="openDropdown" x-cloak @click.away="openDropdown = false" class="absolute right-0 top-12 bg-white rounded-xl shadow-2xl border py-1.5 w-44 flex flex-col z-50">
+                <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" class="px-4 py-2.5 text-[11px] font-black text-left uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-store text-emerald-600"></i> Ir al Catálogo
                 </button>
-                <div x-show="openDropdown" x-cloak @click.away="openDropdown = false" class="absolute right-0 top-12 bg-white rounded-xl shadow-2xl border py-1.5 w-44 flex flex-col z-50">
-                    <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" class="px-4 py-2.5 text-[11px] font-black text-left uppercase flex items-center gap-2">
-                        <i class="fa-solid fa-store text-emerald-600"></i> Catálogo
-                    </button>
-                </div>
             </div>
         </div>
 
-        <button onclick="window.capturarFotoProbador()" @click="fotoTomada = true; setTimeout(() => fotoTomada = false, 150)" class="absolute bottom-4 right-4 bg-white border-2 h-12 w-12 rounded-full shadow-2xl z-45 flex items-center justify-center">
+        <button onclick="window.capturarFotoProbador()" @click="fotoTomada = true; setTimeout(() => fotoTomada = false, 150)" class="absolute bottom-4 right-4 bg-white h-12 w-12 rounded-full shadow-2xl z-45 flex items-center justify-center">
             <i class="fa-solid fa-camera text-primary"></i>
         </button>
     </div>
 
     <div class="bg-white flex flex-col z-40 w-full shrink-0 border-t p-4 gap-3">
         <div class="grid grid-cols-3 gap-3">
-            <div class="flex flex-col gap-1">
-                <span class="text-[9px] font-black uppercase text-gray-400">Calzado Base:</span>
-                <select x-model="currentZapato" @change="localStorage.setItem('user_modelo', currentZapato); actualizarModeloFBXDynamico(currentZapato, currentTemporada, currentVariante);" class="w-full bg-white border rounded-md p-1 font-black text-[11px] text-primary h-[32px]">
+            <div class="flex flex-col gap-1 col-span-1">
+                <span class="text-[9px] font-black uppercase text-gray-400">Silueta:</span>
+                <select x-model="currentZapato" @change="localStorage.setItem('user_modelo', currentZapato); actualizarModeloFBXDynamico(currentZapato, currentTemporada);" class="w-full bg-white border rounded-md p-1 font-black text-[11px] text-primary h-[34px]">
                     <option value="za1">Zapato 1</option>
                     <option value="za2">Zapato 2</option>
                 </select>
             </div>
 
             <div class="flex flex-col gap-1 col-span-2">
-                <span class="text-[9px] font-black uppercase text-gray-400">Estación del Año:</span>
+                <span class="text-[9px] font-black uppercase text-gray-400">Colección de Temporada:</span>
                 <div class="grid grid-cols-4 gap-1">
-                    <button @click="currentTemporada = 'pri'; actualizarModeloFBXDynamico(currentZapato, currentTemporada, currentVariante);" :class="currentTemporada === 'pri' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Pri</button>
-                    <button @click="currentTemporada = 've'; actualizarModeloFBXDynamico(currentZapato, currentTemporada, currentVariante);" :class="currentTemporada === 've' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Ver</button>
-                    <button @click="currentTemporada = 'ot'; actualizarModeloFBXDynamico(currentZapato, currentTemporada, currentVariante);" :class="currentTemporada === 'ot' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Oto</button>
-                    <button @click="currentTemporada = 'in'; actualizarModeloFBXDynamico(currentZapato, currentTemporada, currentVariante);" :class="currentTemporada === 'in' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Inv</button>
+                    <button @click="currentTemporada = 'pri'; actualizarModeloFBXDynamico(currentZapato, currentTemporada);" :class="currentTemporada === 'pri' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Pri</button>
+                    <button @click="currentTemporada = 've'; actualizarModeloFBXDynamico(currentZapato, currentTemporada);" :class="currentTemporada === 've' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Ver</button>
+                    <button @click="currentTemporada = 'ot'; actualizarModeloFBXDynamico(currentZapato, currentTemporada);" :class="currentTemporada === 'ot' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Oto</button>
+                    <button @click="currentTemporada = 'in'; actualizarModeloFBXDynamico(currentZapato, currentTemporada);" :class="currentTemporada === 'in' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'" class="text-[10px] font-black uppercase py-1.5 rounded-md">Inv</button>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 items-center">
-            <div class="flex flex-col gap-1 col-span-1">
-                <span class="text-[9px] font-black uppercase text-gray-400">Diseño:</span>
-                <select x-model="currentVariante" @change="actualizarModeloFBXDynamico(currentZapato, currentTemporada, currentVariante)" class="w-full bg-white border rounded-md p-1 font-black text-[11px] text-gray-700 h-[32px]">
-                    <option value="1">Var 1</option>
-                    <option value="2">Var 2</option>
-                    <option value="3">Var 3</option>
-                </select>
-            </div>
-
-            <button class="col-span-2 bg-[#ffd166] text-dark-calzado font-black uppercase py-2 rounded-xl text-xs flex items-center justify-center gap-1 shadow-sm h-[34px] mt-3.5" onclick="simularMedicionIA()">
-                <i class="fa-solid fa-ruler-combined"></i> Calibrar Talla
-            </button>
-        </div>
-        
-        <button class="w-full bg-primary text-white py-3 rounded-xl font-black text-xs uppercase tracking-wider shadow-md" @click="localStorage.setItem('user_talla', window.tallaActual); guardarConfiguracionActual();">
-            Guardar Configuración de Calzado
+        <button class="w-full bg-primary text-white py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-md" @click="localStorage.setItem('user_talla', window.tallaActual); guardarConfiguracionActual();">
+            Guardar Configuración Seleccionada
         </button>
     </div>
   </div>
@@ -171,27 +152,27 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
-  <script src="js/controllers.js?v=61"></script>
-  <script src="js/main.js?v=61"></script>
+  <script src="js/controllers.js?v=62"></script>
+  <script src="js/main.js?v=62"></script>
 
   <script>
       function encenderProbadorDesdeCatalogo(idModelo, tallaBase) {
           window.tallaActual = parseFloat(tallaBase);
           window.modeloActual = idModelo; 
-          
           document.getElementById('view-talla').innerText = window.tallaActual.toFixed(1) + ' MX';
 
           Alpine.nextTick(() => {
               if (typeof window.iniciarMotoresManuales === 'function') {
                   window.iniciarMotoresManuales();
-                  window.actualizarModeloFBXDynamico(idModelo, 'pri', '1');
+                  window.actualizarModeloFBXDynamico(idModelo, 'pri');
               }
           });
       }
 
-      function actualizarModeloFBXDynamico(zap, temp, varNum) {
+      function actualizarModeloFBXDynamico(zap, temp) {
           if (typeof window.cargarArchivoFBXReal === 'function') {
-              window.cargarArchivoFBXReal(zap, temp, varNum);
+              // Por defecto forzamos a que busque la variante principal "1" que coincide con tus archivos
+              window.cargarArchivoFBXReal(zap, temp, '1');
           }
       }
   </script>

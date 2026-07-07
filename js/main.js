@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (MAPPING DE ARCHIVOS REALES FBX)
+// MOTOR DE RENDERIZADO STEPRA - CONTROL DE ESCALA MÉTRICA Y SEGUIMIENTO AI
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoCalzadoActual = null; 
@@ -15,14 +15,15 @@ function iniciarMotoresManuales() {
 
     scene = new THREE.Scene();
 
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.2);
+    // Iluminación ambiental intensa para resaltar las texturas del calzado fbx
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(luzAmbiental);
-    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.6);
+    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.8);
     luzDireccional.position.set(0, 4, 4);
     scene.add(luzDireccional);
 
     camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 0, 4.5);
+    camera.position.set(0, 0, 4);
 
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -40,7 +41,7 @@ function iniciarMotoresManuales() {
     }
     animarEcosistema();
 
-    // Levantar Inteligencia Artificial de MediaPipe de forma paralela y limpia
+    // Arrancamos el estimador esquelético en paralelo
     inicializarRastreadorAI();
 }
 
@@ -52,34 +53,35 @@ function inicializarRastreadorAI() {
     poseTracker.setOptions({
         modelComplexity: 0,
         smoothLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
+        minDetectionConfidence: 0.45,
+        minTrackingConfidence: 0.45
     });
 
     poseTracker.onResults((results) => {
         if (!objetoCalzadoActual || !results.poseLandmarks) return;
 
-        const tobilloDerecho = results.poseLandmarks[28];
-        const puntaPie = results.poseLandmarks[32];
+        // Rastreamos la muñeca o el tobillo para darte soporte inmediato en la prueba
+        const puntoDeteccion = results.poseLandmarks[28] || results.poseLandmarks[16]; 
         const talon = results.poseLandmarks[30];
 
-        // Cambiamos la visibilidad si detecta tu pie en el visor de la cámara
-        if (puntaPie && puntaPie.visibility > 0.5) {
+        if (puntoDeteccion && puntoDeteccion.visibility > 0.45) {
             objetoCalzadoActual.visible = true;
 
-            const targetX = (puntaPie.x - 0.5) * -3.4;
-            const targetY = (puntaPie.y - 0.5) * -2.6 - 0.5;
+            // Interpolación de coordenadas en el lienzo web
+            const targetX = (puntoDeteccion.x - 0.5) * -3.2;
+            const targetY = (puntoDeteccion.y - 0.5) * -2.4 - 0.3;
 
-            objetoCalzadoActual.position.x += (targetX - objetoCalzadoActual.position.x) * 0.25;
-            objetoCalzadoActual.position.y += (targetY - objetoCalzadoActual.position.y) * 0.25;
-            objetoCalzadoActual.position.z = 1.0 + (puntaPie.z * -0.8);
+            objetoCalzadoActual.position.x += (targetX - objetoCalzadoActual.position.x) * 0.30;
+            objetoCalzadoActual.position.y += (targetY - objetoCalzadoActual.position.y) * 0.30;
+            objetoCalzadoActual.position.z = 1.2;
 
+            // Si hay rotación de articulación inclinamos el fbx de forma armónica
             if (talon) {
-                const angulo = Math.atan2(puntaPie.y - talon.y, puntaPie.x - talon.x);
-                objetoCalzadoActual.rotation.z = -angulo + (Math.PI / 2);
+                const angulo = Math.atan2(puntoDeteccion.y - talon.y, puntoDeteccion.x - talon.x);
+                objetoCalzadoActual.rotation.y = -angulo;
             }
         } else {
-            // Si ocultas tu pie, el modelo real se esconde en lugar de quedarse flotando fijo
+            // El zapato se oculta de forma limpia si no hay ninguna extremidad en pantalla
             objetoCalzadoActual.visible = false;
         }
     });
@@ -101,14 +103,14 @@ function inicializarRastreadorAI() {
 }
 
 // ==========================================================================
-// TRADUCTOR INTELIGENTE DE NOMENCLATURA DE ARCHIVOS .FBX REALES
+// ENRUTADOR DINÁMICO DE FILTRADO CON LOGÍSTICA DE ESCALA REDUCIDA
 // ==========================================================================
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
-    // CORRECCIÓN CLAVE: Mapeamos los nombres reales de tus archivos de disco
+    // Formateamos el string exacto que tienes en tu carpeta de VS Code
     let nombreArchivoFinal = `${modeloBase}${temporada}${variante}.fbx`;
     
-    // Tu compañero guardó la variante 1 del Zapato 2 con espacio en blanco: "za2pri1 1.fbx"
-    if (modeloBase === "za2" && variante === "1") {
+    // Validamos el espacio del nombre del archivo za2pri1 1.fbx y za2in1 1.fbx de tu disco
+    if (modeloBase === "za2" && (temporada === "pri" || temporada === "in") && variante === "1") {
         nombreArchivoFinal = `${modeloBase}${temporada}${variante} 1.fbx`;
     }
 
@@ -124,28 +126,28 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
         objetoCalzadoActual = null;
     }
 
-    console.log("Cargando ruta de disco unificada:", rutaCompleta);
+    console.log("Invocando archivo:", rutaCompleta);
 
     const cargador = new THREE.FBXLoader();
     cargador.load(
         rutaCompleta,
         function (fbx) {
             objetoCalzadoActual = fbx;
-            objetoCalzadoActual.visible = false; // Se oculta inicialmente hasta mapear tu pie
-            
-            // Factor de escala uniforme para archivos FBX nativos de Blender
-            objetoCalzadoActual.scale.set(0.012, 0.012, 0.012);
-            objetoCalzadoActual.rotation.set(-Math.PI / 2, 0, 0); 
+            objetoCalzadoActual.visible = false; 
+
+            // CORRECCIÓN MAGNA DE ESCALA: Bajamos a 0.0003 para achicar el modelo gigante de metros a centímetros reales
+            objetoCalzadoActual.scale.set(0.0003, 0.0003, 0.0003);
+            objetoCalzadoActual.rotation.set(0, Math.PI, 0); 
 
             actualizarEscalaPorTalla(window.tallaActual);
             scene.add(objetoCalzadoActual);
-            console.log("¡Modelo real cargado de forma absoluta!");
+            console.log("¡Archivo FBX Real redimensionado con éxito!");
         },
         null,
         function (err) {
-            console.error("Archivo no encontrado en servidor, usando fallback wireframe:", err);
-            // Cubo de previsualización estilizado transitorio
-            const geometry = new THREE.BoxGeometry(0.7, 0.4, 1.6);
+            console.error("Fallo de mapeo de archivo:", err);
+            // Fallback transitorio en caso de error de ruta
+            const geometry = new THREE.BoxGeometry(0.8, 0.4, 1.5);
             const material = new THREE.MeshStandardMaterial({ color: 0x0a58ca, wireframe: true });
             objetoCalzadoActual = new THREE.Mesh(geometry, material);
             objetoCalzadoActual.visible = true;
@@ -156,7 +158,8 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
 
 function actualizarEscalaPorTalla(talla) {
     if (!objetoCalzadoActual) return;
-    const factor = (talla / 26.0) * 0.012;
+    // Escalación sutil basada en la proporción mexicana
+    const factor = (talla / 26.0) * 0.0003;
     objetoCalzadoActual.scale.set(factor, factor, factor);
 }
 
