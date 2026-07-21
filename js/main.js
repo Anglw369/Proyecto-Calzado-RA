@@ -14,6 +14,13 @@ function iniciarMotoresManuales() {
     videoElement = document.getElementById('webcam');
     const container = document.getElementById('camera-container');
 
+    // SEGURO DE CONTROL: Si el DOM aún no renderiza el contenedor, posponer
+    if (!container || !videoElement) {
+        console.warn("Esperando renderizado de elementos de cámara en el DOM...");
+        setTimeout(iniciarMotoresManuales, 100);
+        return;
+    }
+
     scene = new THREE.Scene();
 
     const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.4);
@@ -45,6 +52,8 @@ function iniciarMotoresManuales() {
 }
 
 function inicializarRastreadorAI() {
+    if (!videoElement) return;
+
     poseTracker = new Pose({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
     });
@@ -59,14 +68,14 @@ function inicializarRastreadorAI() {
     poseTracker.onResults((results) => {
         if (!results.poseLandmarks) return;
 
-        // Detección de puntos corporales de MediaPipe
+        // Puntos anatómicos específicos de tobillo MediaPipe (27 Izquierdo, 28 Derecho)
         const tobilloDerecho = results.poseLandmarks[28];
         const tobilloIzquierdo = results.poseLandmarks[27];
 
-        // Actualizar Pie Izquierdo
+        // RASTREO PIE IZQUIERDO
         if (objetoIzquierdoActual && tobilloIzquierdo && tobilloIzquierdo.visibility > 0.45) {
             objetoIzquierdoActual.visible = true;
-            const targetX = (tobilloIzquierdo.x - 0.5) * -3.2 - 0.3;
+            const targetX = (tobilloIzquierdo.x - 0.5) * -3.2 - 0.2;
             const targetY = (tobilloIzquierdo.y - 0.5) * -2.4 - 0.3;
 
             objetoIzquierdoActual.position.x += (targetX - objetoIzquierdoActual.position.x) * 0.30;
@@ -76,10 +85,10 @@ function inicializarRastreadorAI() {
             objetoIzquierdoActual.visible = false;
         }
 
-        // Actualizar Pie Derecho
+        // RASTREO PIE DERECHO
         if (objetoDerechoActual && tobilloDerecho && tobilloDerecho.visibility > 0.45) {
             objetoDerechoActual.visible = true;
-            const targetX = (tobilloDerecho.x - 0.5) * -3.2 + 0.3;
+            const targetX = (tobilloDerecho.x - 0.5) * -3.2 + 0.2;
             const targetY = (tobilloDerecho.y - 0.5) * -2.4 - 0.3;
 
             objetoDerechoActual.position.x += (targetX - objetoDerechoActual.position.x) * 0.30;
@@ -96,13 +105,17 @@ function inicializarRastreadorAI() {
             videoElement.srcObject = stream;
             
             async function bucleIA() {
-                if (!videoElement.paused && !videoElement.ended) {
+                if (!videoElement.paused && !videoElement.ended && poseTracker) {
                     await poseTracker.send({ image: videoElement });
                 }
-                videoElement.requestVideoFrameCallback ? videoElement.requestVideoFrameCallback(bucleIA) : setTimeout(bucleIA, 40);
+                if (videoElement.requestVideoFrameCallback) {
+                    videoElement.requestVideoFrameCallback(bucleIA);
+                } else {
+                    setTimeout(bucleIA, 40);
+                }
             }
             bucleIA();
-        });
+        }).catch(err => console.error("Error al acceder a la cámara:", err));
     }
 }
 
@@ -110,6 +123,12 @@ function inicializarRastreadorAI() {
 // CARGADOR INTEGRAL GLTF PARA ARCHIVOS .GLB (IZQUIERDO Y DERECHO)
 // ==========================================================================
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
+    if (!scene) {
+        console.warn("La escena Three.js no está lista. Reintentando carga en breve...");
+        setTimeout(() => cargarArchivoFBXReal(modeloBase, temporada, variante), 200);
+        return;
+    }
+
     let nombreArchivoIzquierdo = `${modeloBase}${temporada}${variante}izquierdo.glb`;
     let nombreArchivoDerecho = `${modeloBase}${temporada}${variante}derecho.glb`;
 
@@ -121,55 +140,33 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     const banner = document.getElementById('view-archivo-fbx');
     if (banner) banner.innerText = `${modeloBase}_${temporada}${variante}.glb`;
 
-    // Limpieza de objetos previos en memoria de la escena
-    if (objetoIzquierdoActual) {
-        scene.remove(objetoIzquierdoActual);
-        objetoIzquierdoActual = null;
-    }
-    if (objetoDerechoActual) {
-        scene.remove(objetoDerechoActual);
-        objetoDerechoActual = null;
-    }
+    // Limpieza estricta de instancias anteriores en escena
+    if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
+    if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
-    console.log("Invocando modelos GLB:", rutaCompletaIzq, rutaCompletaDer);
+    console.log("Cargando nuevos componentes GLB:", nombreArchivoIzquierdo, nombreArchivoDerecho);
 
     const cargador = new THREE.GLTFLoader();
 
-    // 1. Cargar Pie Izquierdo
-    cargador.load(
-        rutaCompletaIzq,
-        function (gltf) {
-            objetoIzquierdoActual = gltf.scene;
-            objetoIzquierdoActual.visible = false; 
-            objetoIzquierdoActual.scale.set(0.0003, 0.0003, 0.0003);
-            objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
-            actualizarEscalaPorTalla(window.tallaActual);
-            scene.add(objetoIzquierdoActual);
-            console.log("¡Pie izquierdo GLB cargado con éxito!");
-        },
-        null,
-        function (err) {
-            console.error("Error cargando izquierdo:", err);
-        }
-    );
+    // Cargar Pie Izquierdo
+    cargador.load(rutaCompletaIzq, function (gltf) {
+        objetoIzquierdoActual = gltf.scene;
+        objetoIzquierdoActual.visible = false; 
+        objetoIzquierdoActual.scale.set(0.0003, 0.0003, 0.0003);
+        objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
+        actualizarEscalaPorTalla(window.tallaActual);
+        scene.add(objetoIzquierdoActual);
+    }, null, err => console.error("Fallo al encontrar calzado izquierdo:", err));
 
-    // 2. Cargar Pie Derecho
-    cargador.load(
-        rutaCompletaDer,
-        function (gltf) {
-            objetoDerechoActual = gltf.scene;
-            objetoDerechoActual.visible = false; 
-            objetoDerechoActual.scale.set(0.0003, 0.0003, 0.0003);
-            objetoDerechoActual.rotation.set(0, Math.PI, 0); 
-            actualizarEscalaPorTalla(window.tallaActual);
-            scene.add(objetoDerechoActual);
-            console.log("¡Pie derecho GLB cargado con éxito!");
-        },
-        null,
-        function (err) {
-            console.error("Error cargando derecho:", err);
-        }
-    );
+    // Cargar Pie Derecho
+    cargador.load(rutaCompletaDer, function (gltf) {
+        objetoDerechoActual = gltf.scene;
+        objetoDerechoActual.visible = false; 
+        objetoDerechoActual.scale.set(0.0003, 0.0003, 0.0003);
+        objetoDerechoActual.rotation.set(0, Math.PI, 0); 
+        actualizarEscalaPorTalla(window.tallaActual);
+        scene.add(objetoDerechoActual);
+    }, null, err => console.error("Fallo al encontrar calzado derecho:", err));
 }
 
 function actualizarEscalaPorTalla(talla) {
@@ -182,7 +179,7 @@ function intercambiarEntreZ01yZ02() {
     window.modeloActual = window.modeloActual === 'za1' ? 'za2' : 'za1';
     
     const appBody = document.body;
-    if(appBody.__x_data) {
+    if(appBody && appBody.__x_data) {
         appBody.__x_data.currentZapato = window.modeloActual;
         const temp = appBody.__x_data.currentTemporada;
         const varNum = appBody.__x_data.currentVariante;
@@ -207,6 +204,7 @@ function capturarFotoProbador() {
     link.click();
 }
 
+// Exposición global absoluta
 window.iniciarMotoresManuales = iniciarMotoresManuales;
 window.cargarArchivoFBXReal = cargarArchivoFBXReal;
 window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
