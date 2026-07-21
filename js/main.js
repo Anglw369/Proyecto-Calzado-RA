@@ -38,20 +38,23 @@ function iniciarMotoresManuales() {
     renderer.domElement.style.zIndex = '10';
     container.appendChild(renderer.domElement);
 
+    // Forzar la creación e inyección inmediata de los cubos de simulación al iniciar
+    cargarArchivoFBXReal("za1", "pr", "1");
+
     function animarEcosistema() {
         if (!renderer) return;
         requestAnimationFrame(animarEcosistema);
 
-        // MODO PASARELA FIJA: Si la IA no detecta el pie, flotan al frente como plantilla
+        // MODO PASARELA FIJA: Posicionamiento corregido para que los cubos nativos sean visibles al frente
         if (modoFijo) {
             if (objetoIzquierdoActual) {
                 objetoIzquierdoActual.visible = true;
-                objetoIzquierdoActual.position.set(-0.38, -0.65, 1.3);
+                objetoIzquierdoActual.position.set(-0.25, -0.3, 1.5);
                 objetoIzquierdoActual.rotation.set(0, Math.PI, 0);
             }
             if (objetoDerechoActual) {
                 objetoDerechoActual.visible = true;
-                objetoDerechoActual.position.set(0.38, -0.65, 1.3);
+                objetoDerechoActual.position.set(0.25, -0.3, 1.5);
                 objetoDerechoActual.rotation.set(0, Math.PI, 0);
             }
         }
@@ -88,6 +91,7 @@ function inicializarRastreadorAI() {
         const dedoIzq = results.poseLandmarks[31];
         const dedoDer = results.poseLandmarks[32];
 
+        // Tolerancia de visibilidad de MediaPipe Pose
         const detectadoIzq = tobilloIzq && tobilloIzq.visibility > 0.35;
         const detectadoDer = tobilloDer && tobilloDer.visibility > 0.35;
 
@@ -179,14 +183,14 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     const banner = document.getElementById('view-archivo-fbx');
     if (banner) banner.innerText = `MODO SIMULACIÓN (CUBOS PRUEBA)`;
 
-    // Limpieza de capas tridimensionales previas
+    // Limpieza física estricta de mallas previas antes de inyectar
     if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
     if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
     modoFijo = true; 
 
-    // Geometría base escalada para simular las proporciones de un tenis (Ancho, Alto, Largo)
-    const geometriaCubo = new THREE.BoxGeometry(0.12, 0.08, 0.25); 
+    // Geometría escalada aumentada para que salten a la vista de inmediato (Ancho, Alto, Largo)
+    const geometriaCubo = new THREE.BoxGeometry(0.2, 0.15, 0.45); 
 
     // --- ENTORNO VIRTUAL SIMULADO IZQUIERDO (Morado Neon) ---
     const materialIzquierdo = new THREE.MeshStandardMaterial({ 
@@ -211,11 +215,11 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     scene.add(objetoDerechoActual);
 
     actualizarEscalaPorTalla(window.tallaActual);
-    console.log("Simulador StepRA: Entorno inyectado con primitivos geométricos.");
+    console.log("Simulador StepRA: Entorno inyectado con primitivos geométricos estables.");
 }
 
 function actualizarEscalaPorTalla(talla) {
-    const factor = (talla / 26.0) * 1.0; // Primitivos usan una escala base directa
+    const factor = (talla / 26.0) * 1.0; 
     if (objetoIzquierdoActual) objetoIzquierdoActual.scale.set(factor, factor, factor);
     if (objetoDerechoActual) objetoDerechoActual.scale.set(factor, factor, factor);
 }
