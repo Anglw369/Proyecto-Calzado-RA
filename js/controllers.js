@@ -1,51 +1,14 @@
 // Variables de estado globales sincronizadas con el entorno global de la ventana
-window.modeloActual = window.modeloActual || "Cubo 3D (Tenis)";
+window.modeloActual = window.modeloActual || "za1";
 window.colorHexActual = window.colorHexActual || "#0A58CA";
 window.tallaActual = window.tallaActual || 26.0; 
-
-function intercambiarModelo() {
-    const modal = document.getElementById("menu-modelos-visual");
-    if (modal) {
-        modal.style.display = "flex";
-    }
-}
-
-function cambiarGeometriaTacto(tipoForma, nombreComercial) {
-    window.modeloActual = nombreComercial;
-    document.getElementById("view-modelo").innerText = window.modeloActual;
-
-    if (typeof window.generarGeometriaSimulada === "function") {
-        window.generarGeometriaSimulada(tipoForma, window.colorHexActual);
-    }
-    if (typeof window.actualizarEscalaPorTalla === "function") {
-        window.actualizarEscalaPorTalla(window.tallaActual);
-    }
-
-    document.getElementById("menu-modelos-visual").style.display = "none";
-}
-
-function intercambiarColor() {
-    document.getElementById('color-picker').click();
-}
-
-function seleccionarColorManual(hexSeleccionado) {
-    window.colorHexActual = hexSeleccionado;
-    let colorNombreActual = "Personalizado (" + hexSeleccionado.toUpperCase() + ")";
-
-    document.getElementById("view-color-name").innerText = colorNombreActual;
-    document.getElementById("color-preview").style.backgroundColor = window.colorHexActual;
-
-    if (typeof window.actualizarColorGeometria === "function") {
-        window.actualizarColorGeometria(window.colorHexActual);
-    }
-}
 
 function ajustarTallaManual(nuevaTalla) {
     window.tallaActual = parseFloat(nuevaTalla);
     
     const viewTalla = document.getElementById("view-talla");
     if (viewTalla) {
-        viewTalla.innerText = window.tallaActual.toFixed(1) + " MX (Ajuste)";
+        viewTalla.innerText = window.tallaActual.toFixed(1) + " MX";
     }
 
     if (typeof window.actualizarEscalaPorTalla === "function") {
@@ -54,27 +17,24 @@ function ajustarTallaManual(nuevaTalla) {
 }
 
 function simularMedicionIA() {
-    if (typeof window.setIaMidiendoActivamente === "function") {
-        window.setIaMidiendoActivamente(true);
-    }
-
     const viewTalla = document.getElementById("view-talla");
     if (viewTalla) {
         viewTalla.innerText = "Escaneando pie...";
     }
 
     setTimeout(() => {
-        if (typeof window.setIaMidiendoActivamente === "function") {
-            window.setIaMidiendoActivamente(false);
+        const viewTallaFinal = document.getElementById("view-talla");
+        if (viewTallaFinal) {
+            viewTallaFinal.innerText = window.tallaActual.toFixed(1) + " MX";
         }
 
-        const toolsPanel = document.getElementById("debug-tools-panel");
-        if (toolsPanel) {
-            toolsPanel.style.display = "flex";
-        }
-
-        if (typeof window.dispararAlertaPremium === "function") {
-            window.dispararAlertaPremium(`📐 [MÉTRICA IA COMPLETADA]\n\nCalibración exitosa.\n\nTalla fijada: ${window.tallaActual.toFixed(1)} MX.\n\nEl tamaño se ha congelado correctamente. Si deseas refinarlo, puedes usar el control deslizante manual inferior.`, 'straighten', 'Calibración');
+        // Acceder a los datos de Alpine.js de forma segura para disparar el modal personalizado
+        const appBody = document.body;
+        if (appBody && appBody.__x_data) {
+            appBody.__x_data.alertTitle = "Calibración";
+            appBody.__x_data.alertIcon = "straighten";
+            appBody.__x_data.alertText = `📐 [MÉTRICA IA COMPLETADA]\n\nCalibración exitosa.\nTalla fijada: ${window.tallaActual.toFixed(1)} MX.\n\nEl tamaño se ha congelado correctamente.`;
+            appBody.__x_data.alertOpen = true;
         }
     }, 1200); 
 }
@@ -83,17 +43,17 @@ function guardarConfiguracionActual() {
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(window.modeloActual, window.colorHexActual, window.tallaActual);
         
-        if (typeof window.dispararAlertaPremium === "function") {
-            window.dispararAlertaPremium(`¡Guardado con éxito!\n\n📦 Modelo: ${window.modeloActual}\n🎨 Color: ${window.colorHexActual.toUpperCase()}\n📏 Talla: ${window.tallaActual.toFixed(1)} MX`, 'check_circle', 'Éxito');
+        const appBody = document.body;
+        if (appBody && appBody.__x_data) {
+            appBody.__x_data.alertTitle = "Éxito";
+            appBody.__x_data.alertIcon = "check_circle";
+            appBody.__x_data.alertText = `¡Guardado con éxito!\n\n📦 Silueta: ${window.modeloActual.toUpperCase()}\n📏 Talla: ${window.tallaActual.toFixed(1)} MX\n\nDatos sincronizados en la nube de Supabase de León.`;
+            appBody.__x_data.alertOpen = true;
         }
     }
 }
 
-// Exponer funciones de manera limpia
-window.intercambiarModelo = intercambiarModelo;
-window.cambiarGeometriaTacto = cambiarGeometriaTacto;
-window.intercambiarColor = intercambiarColor;
-window.seleccionarColorManual = seleccionarColorManual;
+// Exponer funciones globales de control de manera limpia
 window.ajustarTallaManual = ajustarTallaManual;
 window.simularMedicionIA = simularMedicionIA;
 window.guardarConfiguracionActual = guardarConfiguracionActual;
