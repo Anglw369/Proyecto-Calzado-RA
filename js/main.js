@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (HÍBRIDO CON AUTO-CENTRADO Y PARCHE DE ESCALA)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (MODO SIMULACIÓN CON CUBOS GEOMÉTRICOS)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
@@ -176,76 +176,46 @@ function apagarCamara() {
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     if (!scene) return;
 
-    // Saneado automático del nombre de archivo erróneo detectado en invierno
-    let varianteSaneada = variante;
-    if (modeloBase === "za1" && temporada === "in" && variante === "1") {
-        varianteSaneada = "1.1"; 
-    }
-
-    let nombreArchivoIzquierdo = `${modeloBase}${temporada}${varianteSaneada}izquierdo.glb`;
-    let nombreArchivoDerecho = `${modeloBase}${temporada}${varianteSaneada}derecho.glb`;
-
-    const esGitHubPages = window.location.hostname.includes('github.io');
-    const rutaRaiz = esGitHubPages ? `/${window.location.pathname.split('/')[1]}/` : '';
-    
     const banner = document.getElementById('view-archivo-fbx');
-    if (banner) banner.innerText = `${modeloBase}${temporada}${varianteSaneada}.glb`;
+    if (banner) banner.innerText = `MODO SIMULACIÓN (CUBOS PRUEBA)`;
 
+    // Limpieza de capas tridimensionales previas
     if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
     if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
-    const cargador = new THREE.GLTFLoader();
     modoFijo = true; 
 
-    // --- CARGA Y ARREGLO AUTOMÁTICO DEL MODELO IZQUIERDO ---
-    cargador.load(`${rutaRaiz}models/${nombreArchivoIzquierdo}`, function (gltf) {
-        objetoIzquierdoActual = gltf.scene;
-        
-        // 🛠️ HACK 1: Fuerza el origen al centro geométrico ignorando el desvío de Blender
-        const box = new THREE.Box3().setFromObject(objetoIzquierdoActual);
-        const center = box.getCenter(new THREE.Vector3());
-        objetoIzquierdoActual.position.sub(center); 
+    // Geometría base escalada para simular las proporciones de un tenis (Ancho, Alto, Largo)
+    const geometriaCubo = new THREE.BoxGeometry(0.12, 0.08, 0.25); 
 
-        // 🛠️ HACK 2: Corrige la escala negativa forzando renderizado en ambos lados de los polígonos
-        objetoIzquierdoActual.traverse((child) => {
-            if (child.isMesh) {
-                child.material.side = THREE.DoubleSide;
-            }
-        });
+    // --- ENTORNO VIRTUAL SIMULADO IZQUIERDO (Morado Neon) ---
+    const materialIzquierdo = new THREE.MeshStandardMaterial({ 
+        color: 0x8a2be2, 
+        roughness: 0.4,
+        metalness: 0.3
+    });
+    objetoIzquierdoActual = new THREE.Mesh(geometriaCubo, materialIzquierdo);
+    objetoIzquierdoActual.visible = true;
+    objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
+    scene.add(objetoIzquierdoActual);
 
-        objetoIzquierdoActual.visible = true; 
-        objetoIzquierdoActual.scale.set(0.012, 0.012, 0.012);
-        objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
-        actualizarEscalaPorTalla(window.tallaActual);
-        scene.add(objetoIzquierdoActual);
-    }, null, (err) => console.error("Error cargando calzado izquierdo en ruta:", err));
+    // --- ENTORNO VIRTUAL SIMULADO DERECHO (Azul Eléctrico) ---
+    const materialDerecho = new THREE.MeshStandardMaterial({ 
+        color: 0x1e90ff, 
+        roughness: 0.4,
+        metalness: 0.3
+    });
+    objetoDerechoActual = new THREE.Mesh(geometriaCubo, materialDerecho);
+    objetoDerechoActual.visible = true;
+    objetoDerechoActual.rotation.set(0, Math.PI, 0); 
+    scene.add(objetoDerechoActual);
 
-    // --- CARGA Y ARREGLO AUTOMÁTICO DEL MODELO DERECHO ---
-    cargador.load(`${rutaRaiz}models/${nombreArchivoDerecho}`, function (gltf) {
-        objetoDerechoActual = gltf.scene;
-        
-        // 🛠️ HACK 1: Fuerza el origen al centro geométrico
-        const box = new THREE.Box3().setFromObject(objetoDerechoActual);
-        const center = box.getCenter(new THREE.Vector3());
-        objetoDerechoActual.position.sub(center);
-
-        // 🛠️ HACK 2: Corrige la escala negativa
-        objetoDerechoActual.traverse((child) => {
-            if (child.isMesh) {
-                child.material.side = THREE.DoubleSide;
-            }
-        });
-
-        objetoDerechoActual.visible = true; 
-        objetoDerechoActual.scale.set(0.012, 0.012, 0.012);
-        objetoDerechoActual.rotation.set(0, Math.PI, 0); 
-        actualizarEscalaPorTalla(window.tallaActual);
-        scene.add(objetoDerechoActual);
-    }, null, (err) => console.error("Error cargando calzado derecho en ruta:", err));
+    actualizarEscalaPorTalla(window.tallaActual);
+    console.log("Simulador StepRA: Entorno inyectado con primitivos geométricos.");
 }
 
 function actualizarEscalaPorTalla(talla) {
-    const factor = (talla / 26.0) * 0.012;
+    const factor = (talla / 26.0) * 1.0; // Primitivos usan una escala base directa
     if (objetoIzquierdoActual) objetoIzquierdoActual.scale.set(factor, factor, factor);
     if (objetoDerechoActual) objetoDerechoActual.scale.set(factor, factor, factor);
 }
