@@ -19,48 +19,52 @@ function iniciarMotoresManuales() {
 
     scene = new THREE.Scene();
 
-    // Luz ambiental de respaldo
+    // Luz ambiental de respaldo general
     const luzAmbiental = new THREE.AmbientLight(0xffffff, 2.0);
     scene.add(luzAmbiental);
 
-    // Detección robusta de dimensiones para evitar lienzos en 0px en móviles
+    // Detección robusta del tamaño físico del contenedor
     const anchoCanvas = container.clientWidth || window.innerWidth;
     const altoCanvas = container.clientHeight || window.innerHeight;
 
-    // Configuración de cámara en matriz segura
+    // Configuración de la cámara virtual con una matriz de profundidad estable
     camera = new THREE.PerspectiveCamera(45, anchoCanvas / altoCanvas, 0.1, 1000);
-    camera.position.set(0, 0, 3.2); 
+    camera.position.set(0, 0, 3.2); // Posición segura en eje Z
 
-    // Inicialización del renderizador tridimensional con búfer transparente
+    // Renderizador con canal Alfa transparente activado para superponer sobre el video
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
     renderer.setSize(anchoCanvas, altoCanvas);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    // Inyección de estilos estrictos para pasar al frente del hardware móvil
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
     renderer.domElement.style.pointerEvents = 'none';
-    renderer.domElement.style.zIndex = '100'; // Posicionado firmemente sobre el nodo de video
+    renderer.domElement.style.zIndex = '9999'; // Forzamos el plano superior absoluto
     container.appendChild(renderer.domElement);
 
-    // Inyección inmediata de los bloques primitivos al ecosistema
+    // Inyectar mallas básicas de simulación al cargar los motores gráficos
     cargarArchivoFBXReal("za1", "pri", "1");
 
     function animarEcosistema() {
         if (!renderer) return;
         requestAnimationFrame(animarEcosistema);
 
-        // MODO PASARELA FIJA: Los bloques flotan estables y rotan para demostrar actividad tridimensional
+        // MODO PASARELA FIJA: Los cubos flotan estables y rotan para certificar renderizado
         if (modoFijo) {
             if (objetoIzquierdoActual) {
                 objetoIzquierdoActual.visible = true;
-                objetoIzquierdoActual.position.set(-0.35, -0.3, 0); 
-                objetoIzquierdoActual.rotation.y += 0.015; 
+                objetoIzquierdoActual.position.set(-0.35, -0.3, 0); // Posicionamiento seguro en Z = 0
+                objetoIzquierdoActual.rotation.y += 0.02; 
                 objetoIzquierdoActual.rotation.x = 0.2;
             }
             if (objetoDerechoActual) {
                 objetoDerechoActual.visible = true;
-                objetoDerechoActual.position.set(0.35, -0.3, 0); 
-                objetoDerechoActual.rotation.y += 0.015;
+                objetoDerechoActual.position.set(0.35, -0.3, 0); // Posicionamiento seguro en Z = 0
+                objetoDerechoActual.rotation.y += 0.02;
                 objetoDerechoActual.rotation.x = 0.2;
             }
         }
@@ -105,7 +109,7 @@ function inicializarRastreadorAI() {
 
             if (objetoIzquierdoActual && tobilloIzq) {
                 objetoIzquierdoActual.visible = tobilloIzq.visibility > 0.35;
-                // Mapeo adaptativo cinemático a la zona segura Z = 0
+                // Mapeo adaptativo cinemático directo al plano Z = 0
                 const targetX = (tobilloIzq.x - 0.5) * -2.4;
                 const targetY = (tobilloIzq.y - 0.5) * -1.8 - 0.2;
                 
@@ -194,16 +198,16 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
 
     modoFijo = true; 
 
-    // Geometría calibrada con proporciones físicas exactas de un zapato
+    // Proporciones estables de caja de calzado (22cm x 14cm x 45cm)
     const geometriaCubo = new THREE.BoxGeometry(0.22, 0.14, 0.45); 
 
-    // 🔴 Bloque Izquierdo: Rojo Neón Auto-iluminado (Descarte total de errores de luces)
+    // 🔴 Bloque Izquierdo: Rojo Puro Auto-iluminado (Independiente de mapas de luz externos)
     const materialIzquierdo = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     objetoIzquierdoActual = new THREE.Mesh(geometriaCubo, materialIzquierdo);
     objetoIzquierdoActual.visible = true;
     scene.add(objetoIzquierdoActual);
 
-    // 🟢 Bloque Derecho: Verde Neón Auto-iluminado
+    // Green Bloque Derecho: Verde Puro Auto-iluminado
     const materialDerecho = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     objetoDerechoActual = new THREE.Mesh(geometriaCubo, materialDerecho);
     objetoDerechoActual.visible = true;
