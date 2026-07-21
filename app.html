@@ -196,24 +196,35 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <!-- MODIFICADO: Cambiado de hands.js al CDN definitivo de pose.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
   <script src="js/controllers.js?v=63"></script>
   <script src="js/main.js?v=63"></script>
 
   <script>
-      // ÚNICO PUNTO DE ENTRADA SEGURO Y ORDENADO PARA EL PROBADOR
-      document.addEventListener("DOMContentLoaded", () => {
-          setTimeout(() => {
-              const appBody = document.body;
-              if (appBody && appBody.__x_data && appBody.__x_data.subPage === 'ar_view') {
-                  const mod = localStorage.getItem('user_modelo') || appBody.__x_data.currentZapato || 'za1';
-                  const talla = appBody.__x_data.selectedTalla || '26.0';
-                  encenderProbadorDesdeCatalogo(mod, talla);
+      // CONTROL ASÍNCRONO DEL CICLO DE VIDA CONTRA DUPLICACIÓN DE STREAM
+      function verificarYArrancar() {
+          const appBody = document.body;
+          if (appBody && appBody.__x_data && appBody.__x_data.subPage === 'ar_view') {
+              const contenedor = document.getElementById('camera-container');
+              const video = document.getElementById('webcam');
+              
+              // Evita arrancar si Alpine aún no renderiza la caja de la cámara en pantalla
+              if (!contenedor || !video || contenedor.clientWidth === 0) {
+                  setTimeout(verificarYArrancar, 50);
+                  return;
               }
-          }, 350);
-      });
+              
+              const mod = localStorage.getItem('user_modelo') || appBody.__x_data.currentZapato || 'za1';
+              const talla = appBody.__x_data.selectedTalla || '26.0';
+              encenderProbadorDesdeCatalogo(mod, talla);
+          }
+      }
+
+      document.addEventListener("DOMContentLoaded", verificarYArrancar);
+      window.addEventListener("pageshow", verificarYArrancar);
 
       function encenderProbadorDesdeCatalogo(idModelo, tallaBase) {
           window.tallaActual = parseFloat(tallaBase);

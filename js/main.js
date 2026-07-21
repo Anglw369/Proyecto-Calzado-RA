@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (GLB - TOTALMENTE RESPONSIVO)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (RA - ENTORNO REAL DE PIE)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
@@ -14,14 +14,14 @@ function iniciarMotoresManuales() {
     const container = document.getElementById('camera-container');
 
     if (!container || !videoElement) return;
-    if (renderer) return; // Evita inicializaciones dobles
+    if (renderer) return; 
 
     scene = new THREE.Scene();
 
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.6);
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.8);
     scene.add(luzAmbiental);
-    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.9);
-    luzDireccional.position.set(0, 5, 5);
+    const luzDireccional = new THREE.DirectionalLight(0xffffff, 1.0);
+    luzDireccional.position.set(0, 6, 6);
     scene.add(luzDireccional);
 
     camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -50,55 +50,71 @@ function iniciarMotoresManuales() {
 function inicializarRastreadorAI() {
     if (!videoElement) return;
 
-    trackerAI = new Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    // Regresamos al estimador de Pose pero configurando tolerancia cero a la visibilidad del cuerpo
+    trackerAI = new Pose({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
     });
 
     trackerAI.setOptions({
-        maxNumHands: 2,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.70,
-        minTrackingConfidence: 0.70
+        modelComplexity: 0,
+        smoothLandmarks: true,
+        minDetectionConfidence: 0.30, // Tolerancia baja para que detecte en planos cercanos
+        minTrackingConfidence: 0.30
     });
 
     trackerAI.onResults((results) => {
-        if (objetoIzquierdoActual) objetoIzquierdoActual.visible = false;
-        if (objetoDerechoActual) objetoDerechoActual.visible = false;
+        // Si no hay landmarks, ocultamos por seguridad
+        if (!results.poseLandmarks) {
+            if (objetoIzquierdoActual) objetoIzquierdoActual.visible = false;
+            if (objetoDerechoActual) objetoDerechoActual.visible = false;
+            return;
+        }
 
-        if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+        // Puntos específicos del pie: 27 (Ankle Izquierdo), 28 (Ankle Derecho), 31/32 (Dedos del pie)
+        const tobilloIzq = results.poseLandmarks[27];
+        const tobilloDer = results.poseLandmarks[28];
+        const dedoIzq = results.poseLandmarks[31];
+        const dedoDer = results.poseLandmarks[32];
 
-        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-            const puntosAnatomicos = results.multiHandLandmarks[i];
-            const tipoExtremidad = results.multiHandedness[i].label; 
-
-            const puntoBase = puntosAnatomicos[0];  
-            const puntoMedio = puntosAnatomicos[9]; 
-
-            if (!puntoBase) continue;
-
-            const targetX = (puntoBase.x - 0.5) * -3.5;
-            const targetY = (puntoBase.y - 0.5) * -2.7 - 0.2;
-            const profundidadZ = 1.0 + (puntoBase.z * -1.5);
-
-            let anguloRotacion = 0;
-            if (puntoMedio) {
-                anguloRotacion = Math.atan2(puntoMedio.y - puntoBase.y, puntoMedio.x - puntoBase.x) + (Math.PI / 2);
-            }
-
-            if (tipoExtremidad === "Left" && objetoIzquierdoActual) {
-                objetoIzquierdoActual.visible = true; 
-                objetoIzquierdoActual.position.set(targetX - 0.12, targetY, profundidadZ);
-                objetoIzquierdoActual.rotation.y = Math.PI - anguloRotacion;
-            } 
+        // RENDERIZADO PIE IZQUIERDO (Se activa sin importar que no vea el resto del cuerpo)
+        if (objetoIzquierdoActual && tobilloIzq) {
+            objetoIzquierdoActual.visible = true;
+            const targetX = (tobilloIzq.x - 0.5) * -3.4;
+            const targetY = (tobilloIzq.y - 0.5) * -2.6 - 0.3;
             
-            if (tipoExtremidad === "Right" && objetoDerechoActual) {
-                objetoDerechoActual.visible = true; 
-                objetoDerechoActual.position.set(targetX + 0.12, targetY, profundidadZ);
-                objetoDerechoActual.rotation.y = Math.PI - anguloRotacion;
+            objetoIzquierdoActual.position.x += (targetX - objetoIzquierdoActual.position.x) * 0.35;
+            objetoIzquierdoActual.position.y += (targetY - objetoIzquierdoActual.position.y) * 0.35;
+            objetoIzquierdoActual.position.z = 1.3;
+
+            if (dedoIzq) {
+                const angulo = Math.atan2(dedoIzq.y - tobilloIzq.y, dedoIzq.x - tobilloIzq.x);
+                objetoIzquierdoActual.rotation.y = -angulo + Math.PI / 2;
+            }
+        }
+
+        // RENDERIZADO PIE DERECHO
+        if (objetoDerechoActual && tobilloDer) {
+            objetoDerechoActual.visible = true;
+            const targetX = (tobilloDer.x - 0.5) * -3.4;
+            const targetY = (tobilloDer.y - 0.5) * -2.6 - 0.3;
+            
+            objetoDerechoActual.position.x += (targetX - objetoDerechoActual.position.x) * 0.35;
+            objetoDerechoActual.position.y += (targetY - objetoDerechoActual.position.y) * 0.35;
+            objetoDerechoActual.position.z = 1.3;
+
+            if (dedoDer) {
+                const angulo = Math.atan2(dedoDer.y - tobilloDer.y, dedoDer.x - tobilloDer.x);
+                objetoDerechoActual.rotation.y = -angulo + Math.PI / 2;
             }
         }
     });
 
+    arrancarHardwareCamara();
+}
+
+function arrancarHardwareCamara() {
+    if (!videoElement) return;
+    
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
         .then(function(stream) {
@@ -107,14 +123,16 @@ function inicializarRastreadorAI() {
             
             async function bucleIA() {
                 if (videoElement && !videoElement.paused && !videoElement.ended && trackerAI) {
-                    await trackerAI.send({ image: videoElement });
+                    try {
+                        await trackerAI.send({ image: videoElement });
+                    } catch(e) { console.warn("Frame omitido secuencialmente."); }
                 }
                 if (videoElement && videoElement.srcObject) {
                     videoElement.requestVideoFrameCallback ? videoElement.requestVideoFrameCallback(bucleIA) : setTimeout(bucleIA, 40);
                 }
             }
             bucleIA();
-        }).catch(err => console.error("Error de hardware en cámara:", err));
+        }).catch(err => console.error("Error al arrancar stream de video:", err));
     }
 }
 
@@ -123,9 +141,7 @@ function apagarCamara() {
         camaraStream.getTracks().forEach(track => track.stop());
         camaraStream = null;
     }
-    if (videoElement) {
-        videoElement.srcObject = null;
-    }
+    if (videoElement) videoElement.srcObject = null;
     if (renderer) {
         renderer.dispose();
         if (renderer.domElement && renderer.domElement.parentNode) {
@@ -137,6 +153,20 @@ function apagarCamara() {
     scene = null;
     camera = null;
 }
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        const appBody = document.body;
+        if (appBody && appBody.__x_data && appBody.__x_data.subPage === 'ar_view' && !camaraStream) {
+            arrancarHardwareCamara();
+        }
+    } else {
+        if (camaraStream) {
+            camaraStream.getTracks().forEach(track => track.stop());
+            camaraStream = null;
+        }
+    }
+});
 
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     if (!scene) return;
@@ -180,6 +210,10 @@ function actualizarEscalaPorTalla(talla) {
     if (objetoDerechoActual) objetoDerechoActual.scale.set(factor, factor, factor);
 }
 
+function calibrarTallaManual() {
+    alert("Re-calibrando sensores de la pasarela virtual StepRA.");
+}
+
 function intercambiarEntreZ01yZ02() {
     window.modeloActual = window.modeloActual === 'za1' ? 'za2' : 'za1';
     const appBody = document.body;
@@ -213,3 +247,4 @@ window.intercambiarEntreZ01yZ02 = intercambiarEntreZ01yZ02;
 window.capturarFotoProbador = capturarFotoProbador;
 window.actualizarModeloFBXDynamico = cargarArchivoFBXReal;
 window.apagarCamara = apagarCamara;
+window.calibrarTallaManual = calibrarTallaManual;
