@@ -1,12 +1,12 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (HÍBRIDO: FIJO EN PANTALLA -> ANCLAJE IA)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (HÍBRIDO CON SANEADO DE RUTAS GLB)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
 let objetoDerechoActual = null; 
 let trackerAI = null;
 let camaraStream = null;
-let modoFijo = true; // Controla si el calzado está en modo plantilla o amarrado a la IA
+let modoFijo = true; 
 
 window.tallaActual = 26.0;
 
@@ -42,16 +42,16 @@ function iniciarMotoresManuales() {
         if (!renderer) return;
         requestAnimationFrame(animarEcosistema);
 
-        // LÓGICA HÍBRIDA: Si la IA no detecta el pie, mantener los tenis flotando al frente en una posición fija de guía
+        // MODO PASARELA FIJA CONCENTRADOR: Si la IA no detecta el pie, los tenis flotan al frente guiándote
         if (modoFijo) {
             if (objetoIzquierdoActual) {
                 objetoIzquierdoActual.visible = true;
-                objetoIzquierdoActual.position.set(-0.35, -0.65, 1.3);
+                objetoIzquierdoActual.position.set(-0.38, -0.65, 1.3);
                 objetoIzquierdoActual.rotation.set(0, Math.PI, 0);
             }
             if (objetoDerechoActual) {
                 objetoDerechoActual.visible = true;
-                objetoDerechoActual.position.set(0.35, -0.65, 1.3);
+                objetoDerechoActual.position.set(0.38, -0.65, 1.3);
                 objetoDerechoActual.rotation.set(0, Math.PI, 0);
             }
         }
@@ -78,26 +78,22 @@ function inicializarRastreadorAI() {
     });
 
     trackerAI.onResults((results) => {
-        // Si no hay landmarks válidos detectados en pantalla, regresamos al modo plantilla fija
         if (!results.poseLandmarks) {
             modoFijo = true;
             return;
         }
 
-        // Puntos específicos del pie de MediaPipe Pose
         const tobilloIzq = results.poseLandmarks[27];
         const tobilloDer = results.poseLandmarks[28];
         const dedoIzq = results.poseLandmarks[31];
         const dedoDer = results.poseLandmarks[32];
 
-        // Validamos si al menos uno de los dos tobillos es visible en la cámara
         const detectadoIzq = tobilloIzq && tobilloIzq.visibility > 0.35;
         const detectadoDer = tobilloDer && tobilloDer.visibility > 0.35;
 
         if (detectadoIzq || detectadoDer) {
-            modoFijo = false; // La Inteligencia Artificial toma el control inmediato y ancla los modelos
+            modoFijo = false; // La IA toma el control y los acopla sobre tus pies reales
 
-            // PROCESAR ENTRADA PIE IZQUIERDO
             if (objetoIzquierdoActual && tobilloIzq) {
                 objetoIzquierdoActual.visible = tobilloIzq.visibility > 0.35;
                 const targetX = (tobilloIzq.x - 0.5) * -3.4;
@@ -113,7 +109,6 @@ function inicializarRastreadorAI() {
                 }
             }
 
-            // PROCESAR ENTRADA PIE DERECHO
             if (objetoDerechoActual && tobilloDer) {
                 objetoDerechoActual.visible = tobilloDer.visibility > 0.35;
                 const targetX = (tobilloDer.x - 0.5) * -3.4;
@@ -129,7 +124,7 @@ function inicializarRastreadorAI() {
                 }
             }
         } else {
-            modoFijo = true; // Si se pierde el pie, vuelve a flotar fijo para no dejar la pantalla vacía
+            modoFijo = true; 
         }
     });
 
@@ -178,38 +173,31 @@ function apagarCamara() {
     camera = null;
 }
 
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-        const appBody = document.body;
-        if (appBody && appBody.__x_data && appBody.__x_data.subPage === 'ar_view' && !camaraStream) {
-            arrancarHardwareCamara();
-        }
-    } else {
-        if (camaraStream) {
-            camaraStream.getTracks().forEach(track => track.stop());
-            camaraStream = null;
-        }
-    }
-});
-
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     if (!scene) return;
 
-    let nombreArchivoIzquierdo = `${modeloBase}${temporada}${variante}izquierdo.glb`;
-    let nombreArchivoDerecho = `${modeloBase}${temporada}${variante}derecho.glb`;
+    // PARCHE MAPEO DE CONTINGENCIA: Sanea las variantes anómalas detectadas en tus archivos físicos
+    let varianteSaneada = variante;
+    if (modeloBase === "za1" && temporada === "in" && variante === "1") {
+        varianteSaneada = "1.1"; // Corrige el za1in1.1 de tu carpeta de forma automática
+    }
+
+    let nombreArchivoIzquierdo = `${modeloBase}${temporada}${varianteSaneada}izquierdo.glb`;
+    let nombreArchivoDerecho = `${modeloBase}${temporada}${varianteSaneada}derecho.glb`;
 
     const esGitHubPages = window.location.hostname.includes('github.io');
     const rutaRaiz = esGitHubPages ? `/${window.location.pathname.split('/')[1]}/` : '';
     
     const banner = document.getElementById('view-archivo-fbx');
-    if (banner) banner.innerText = `${modeloBase}${temporada}${variante}.glb`;
+    if (banner) banner.innerText = `${modeloBase}${temporada}${varianteSaneada}.glb`;
 
     if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
     if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
     const cargador = new THREE.GLTFLoader();
-    modoFijo = true; // Reinicia al modo plantilla fija mientras cargan los nuevos archivos
+    modoFijo = true; 
 
+    // Carga de componentes con la ruta saneada de contingencia
     cargador.load(`${rutaRaiz}models/${nombreArchivoIzquierdo}`, function (gltf) {
         objetoIzquierdoActual = gltf.scene;
         objetoIzquierdoActual.visible = true; 
@@ -217,7 +205,7 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
         objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
         actualizarEscalaPorTalla(window.tallaActual);
         scene.add(objetoIzquierdoActual);
-    });
+    }, null, (err) => console.error("Error cargando calzado izquierdo en ruta:", err));
 
     cargador.load(`${rutaRaiz}models/${nombreArchivoDerecho}`, function (gltf) {
         objetoDerechoActual = gltf.scene;
@@ -226,7 +214,7 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
         objetoDerechoActual.rotation.set(0, Math.PI, 0); 
         actualizarEscalaPorTalla(window.tallaActual);
         scene.add(objetoDerechoActual);
-    });
+    }, null, (err) => console.error("Error cargando calzado derecho en ruta:", err));
 }
 
 function actualizarEscalaPorTalla(talla) {
@@ -256,7 +244,7 @@ function capturarFotoProbador() {
         ctx.drawImage(renderer.domElement, 0, 0, canvasDestino.width, canvasDestino.height);
     }
     const link = document.createElement('a');
-    link.download = `StepRA-${Date.now()}.png`;
+    link.download = `StepRA capture.png`;
     link.href = canvasDestino.toDataURL('image/png');
     link.click();
 }
