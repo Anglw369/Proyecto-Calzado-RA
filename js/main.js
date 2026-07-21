@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (RA - ENTORNO REAL DE PIE)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (GLB - TOTALMENTE RESPONSIVO)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
@@ -45,12 +45,47 @@ function iniciarMotoresManuales() {
     animarEcosistema();
 
     inicializarRastreadorAI();
+    configurarInteraccionManual();
+}
+
+function configurarInteraccionManual() {
+    const container = document.getElementById('camera-container');
+    if (!container) return;
+
+    const procesarPosicionamiento = (clientX, clientY) => {
+        const rect = container.getBoundingClientRect();
+        const xNormalizado = (clientX - rect.left) / rect.width;
+        const yNormalizado = (clientY - rect.top) / rect.height;
+
+        const mundoX = (xNormalizado - 0.5) * 3.2;
+        const mundoY = -(yNormalizado - 0.5) * 2.4 - 0.3;
+
+        if (objetoIzquierdoActual) {
+            objetoIzquierdoActual.visible = true;
+            objetoIzquierdoActual.position.set(mundoX - 0.18, mundoY, 1.5);
+        }
+        if (objetoDerechoActual) {
+            objetoDerechoActual.visible = true;
+            objetoDerechoActual.position.set(mundoX + 0.18, mundoY, 1.5);
+        }
+    };
+
+    container.addEventListener('touchstart', (e) => {
+        if(e.touches.length > 0) procesarPosicionamiento(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if(e.touches.length > 0) procesarPosicionamiento(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    container.addEventListener('mousedown', (e) => {
+        procesarPosicionamiento(e.clientX, e.clientY);
+    });
 }
 
 function inicializarRastreadorAI() {
     if (!videoElement) return;
 
-    // Regresamos al estimador de Pose pero configurando tolerancia cero a la visibilidad del cuerpo
     trackerAI = new Pose({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
     });
@@ -58,25 +93,18 @@ function inicializarRastreadorAI() {
     trackerAI.setOptions({
         modelComplexity: 0,
         smoothLandmarks: true,
-        minDetectionConfidence: 0.30, // Tolerancia baja para que detecte en planos cercanos
+        minDetectionConfidence: 0.30, 
         minTrackingConfidence: 0.30
     });
 
     trackerAI.onResults((results) => {
-        // Si no hay landmarks, ocultamos por seguridad
-        if (!results.poseLandmarks) {
-            if (objetoIzquierdoActual) objetoIzquierdoActual.visible = false;
-            if (objetoDerechoActual) objetoDerechoActual.visible = false;
-            return;
-        }
+        if (!results.poseLandmarks) return;
 
-        // Puntos específicos del pie: 27 (Ankle Izquierdo), 28 (Ankle Derecho), 31/32 (Dedos del pie)
         const tobilloIzq = results.poseLandmarks[27];
         const tobilloDer = results.poseLandmarks[28];
         const dedoIzq = results.poseLandmarks[31];
         const dedoDer = results.poseLandmarks[32];
 
-        // RENDERIZADO PIE IZQUIERDO (Se activa sin importar que no vea el resto del cuerpo)
         if (objetoIzquierdoActual && tobilloIzq) {
             objetoIzquierdoActual.visible = true;
             const targetX = (tobilloIzq.x - 0.5) * -3.4;
@@ -92,7 +120,6 @@ function inicializarRastreadorAI() {
             }
         }
 
-        // RENDERIZADO PIE DERECHO
         if (objetoDerechoActual && tobilloDer) {
             objetoDerechoActual.visible = true;
             const targetX = (tobilloDer.x - 0.5) * -3.4;
@@ -125,7 +152,7 @@ function arrancarHardwareCamara() {
                 if (videoElement && !videoElement.paused && !videoElement.ended && trackerAI) {
                     try {
                         await trackerAI.send({ image: videoElement });
-                    } catch(e) { console.warn("Frame omitido secuencialmente."); }
+                    } catch(e) { console.warn("Frame omitido."); }
                 }
                 if (videoElement && videoElement.srcObject) {
                     videoElement.requestVideoFrameCallback ? videoElement.requestVideoFrameCallback(bucleIA) : setTimeout(bucleIA, 40);
@@ -210,10 +237,6 @@ function actualizarEscalaPorTalla(talla) {
     if (objetoDerechoActual) objetoDerechoActual.scale.set(factor, factor, factor);
 }
 
-function calibrarTallaManual() {
-    alert("Re-calibrando sensores de la pasarela virtual StepRA.");
-}
-
 function intercambiarEntreZ01yZ02() {
     window.modeloActual = window.modeloActual === 'za1' ? 'za2' : 'za1';
     const appBody = document.body;
@@ -247,4 +270,3 @@ window.intercambiarEntreZ01yZ02 = intercambiarEntreZ01yZ02;
 window.capturarFotoProbador = capturarFotoProbador;
 window.actualizarModeloFBXDynamico = cargarArchivoFBXReal;
 window.apagarCamara = apagarCamara;
-window.calibrarTallaManual = calibrarTallaManual;
