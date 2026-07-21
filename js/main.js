@@ -1,11 +1,12 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (GLB - TOTALMENTE RESPONSIVO)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (HÍBRIDO: FIJO EN PANTALLA -> ANCLAJE IA)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
 let objetoDerechoActual = null; 
 let trackerAI = null;
 let camaraStream = null;
+let modoFijo = true; // Controla si el calzado está en modo plantilla o amarrado a la IA
 
 window.tallaActual = 26.0;
 
@@ -40,47 +41,26 @@ function iniciarMotoresManuales() {
     function animarEcosistema() {
         if (!renderer) return;
         requestAnimationFrame(animarEcosistema);
+
+        // LÓGICA HÍBRIDA: Si la IA no detecta el pie, mantener los tenis flotando al frente en una posición fija de guía
+        if (modoFijo) {
+            if (objetoIzquierdoActual) {
+                objetoIzquierdoActual.visible = true;
+                objetoIzquierdoActual.position.set(-0.35, -0.65, 1.3);
+                objetoIzquierdoActual.rotation.set(0, Math.PI, 0);
+            }
+            if (objetoDerechoActual) {
+                objetoDerechoActual.visible = true;
+                objetoDerechoActual.position.set(0.35, -0.65, 1.3);
+                objetoDerechoActual.rotation.set(0, Math.PI, 0);
+            }
+        }
+
         renderer.render(scene, camera);
     }
     animarEcosistema();
 
     inicializarRastreadorAI();
-    configurarInteraccionManual();
-}
-
-function configurarInteraccionManual() {
-    const container = document.getElementById('camera-container');
-    if (!container) return;
-
-    const procesarPosicionamiento = (clientX, clientY) => {
-        const rect = container.getBoundingClientRect();
-        const xNormalizado = (clientX - rect.left) / rect.width;
-        const yNormalizado = (clientY - rect.top) / rect.height;
-
-        const mundoX = (xNormalizado - 0.5) * 3.2;
-        const mundoY = -(yNormalizado - 0.5) * 2.4 - 0.3;
-
-        if (objetoIzquierdoActual) {
-            objetoIzquierdoActual.visible = true;
-            objetoIzquierdoActual.position.set(mundoX - 0.18, mundoY, 1.5);
-        }
-        if (objetoDerechoActual) {
-            objetoDerechoActual.visible = true;
-            objetoDerechoActual.position.set(mundoX + 0.18, mundoY, 1.5);
-        }
-    };
-
-    container.addEventListener('touchstart', (e) => {
-        if(e.touches.length > 0) procesarPosicionamiento(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    container.addEventListener('touchmove', (e) => {
-        if(e.touches.length > 0) procesarPosicionamiento(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    container.addEventListener('mousedown', (e) => {
-        procesarPosicionamiento(e.clientX, e.clientY);
-    });
 }
 
 function inicializarRastreadorAI() {
@@ -93,46 +73,63 @@ function inicializarRastreadorAI() {
     trackerAI.setOptions({
         modelComplexity: 0,
         smoothLandmarks: true,
-        minDetectionConfidence: 0.30, 
-        minTrackingConfidence: 0.30
+        minDetectionConfidence: 0.35, 
+        minTrackingConfidence: 0.35
     });
 
     trackerAI.onResults((results) => {
-        if (!results.poseLandmarks) return;
+        // Si no hay landmarks válidos detectados en pantalla, regresamos al modo plantilla fija
+        if (!results.poseLandmarks) {
+            modoFijo = true;
+            return;
+        }
 
+        // Puntos específicos del pie de MediaPipe Pose
         const tobilloIzq = results.poseLandmarks[27];
         const tobilloDer = results.poseLandmarks[28];
         const dedoIzq = results.poseLandmarks[31];
         const dedoDer = results.poseLandmarks[32];
 
-        if (objetoIzquierdoActual && tobilloIzq) {
-            objetoIzquierdoActual.visible = true;
-            const targetX = (tobilloIzq.x - 0.5) * -3.4;
-            const targetY = (tobilloIzq.y - 0.5) * -2.6 - 0.3;
-            
-            objetoIzquierdoActual.position.x += (targetX - objetoIzquierdoActual.position.x) * 0.35;
-            objetoIzquierdoActual.position.y += (targetY - objetoIzquierdoActual.position.y) * 0.35;
-            objetoIzquierdoActual.position.z = 1.3;
+        // Validamos si al menos uno de los dos tobillos es visible en la cámara
+        const detectadoIzq = tobilloIzq && tobilloIzq.visibility > 0.35;
+        const detectadoDer = tobilloDer && tobilloDer.visibility > 0.35;
 
-            if (dedoIzq) {
-                const angulo = Math.atan2(dedoIzq.y - tobilloIzq.y, dedoIzq.x - tobilloIzq.x);
-                objetoIzquierdoActual.rotation.y = -angulo + Math.PI / 2;
+        if (detectadoIzq || detectadoDer) {
+            modoFijo = false; // La Inteligencia Artificial toma el control inmediato y ancla los modelos
+
+            // PROCESAR ENTRADA PIE IZQUIERDO
+            if (objetoIzquierdoActual && tobilloIzq) {
+                objetoIzquierdoActual.visible = tobilloIzq.visibility > 0.35;
+                const targetX = (tobilloIzq.x - 0.5) * -3.4;
+                const targetY = (tobilloIzq.y - 0.5) * -2.6 - 0.3;
+                
+                objetoIzquierdoActual.position.x += (targetX - objetoIzquierdoActual.position.x) * 0.35;
+                objetoIzquierdoActual.position.y += (targetY - objetoIzquierdoActual.position.y) * 0.35;
+                objetoIzquierdoActual.position.z = 1.3;
+
+                if (dedoIzq) {
+                    const angulo = Math.atan2(dedoIzq.y - tobilloIzq.y, dedoIzq.x - tobilloIzq.x);
+                    objetoIzquierdoActual.rotation.y = -angulo + Math.PI / 2;
+                }
             }
-        }
 
-        if (objetoDerechoActual && tobilloDer) {
-            objetoDerechoActual.visible = true;
-            const targetX = (tobilloDer.x - 0.5) * -3.4;
-            const targetY = (tobilloDer.y - 0.5) * -2.6 - 0.3;
-            
-            objetoDerechoActual.position.x += (targetX - objetoDerechoActual.position.x) * 0.35;
-            objetoDerechoActual.position.y += (targetY - objetoDerechoActual.position.y) * 0.35;
-            objetoDerechoActual.position.z = 1.3;
+            // PROCESAR ENTRADA PIE DERECHO
+            if (objetoDerechoActual && tobilloDer) {
+                objetoDerechoActual.visible = tobilloDer.visibility > 0.35;
+                const targetX = (tobilloDer.x - 0.5) * -3.4;
+                const targetY = (tobilloDer.y - 0.5) * -2.6 - 0.3;
+                
+                objetoDerechoActual.position.x += (targetX - objetoDerechoActual.position.x) * 0.35;
+                objetoDerechoActual.position.y += (targetY - objetoDerechoActual.position.y) * 0.35;
+                objetoDerechoActual.position.z = 1.3;
 
-            if (dedoDer) {
-                const angulo = Math.atan2(dedoDer.y - tobilloDer.y, dedoDer.x - tobilloDer.x);
-                objetoDerechoActual.rotation.y = -angulo + Math.PI / 2;
+                if (dedoDer) {
+                    const angulo = Math.atan2(dedoDer.y - tobilloDer.y, dedoDer.x - tobilloDer.x);
+                    objetoDerechoActual.rotation.y = -angulo + Math.PI / 2;
+                }
             }
+        } else {
+            modoFijo = true; // Si se pierde el pie, vuelve a flotar fijo para no dejar la pantalla vacía
         }
     });
 
@@ -152,7 +149,7 @@ function arrancarHardwareCamara() {
                 if (videoElement && !videoElement.paused && !videoElement.ended && trackerAI) {
                     try {
                         await trackerAI.send({ image: videoElement });
-                    } catch(e) { console.warn("Frame omitido."); }
+                    } catch(e) { console.warn("Frame omitido secuencialmente."); }
                 }
                 if (videoElement && videoElement.srcObject) {
                     videoElement.requestVideoFrameCallback ? videoElement.requestVideoFrameCallback(bucleIA) : setTimeout(bucleIA, 40);
@@ -211,10 +208,11 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
     const cargador = new THREE.GLTFLoader();
+    modoFijo = true; // Reinicia al modo plantilla fija mientras cargan los nuevos archivos
 
     cargador.load(`${rutaRaiz}models/${nombreArchivoIzquierdo}`, function (gltf) {
         objetoIzquierdoActual = gltf.scene;
-        objetoIzquierdoActual.visible = false; 
+        objetoIzquierdoActual.visible = true; 
         objetoIzquierdoActual.scale.set(0.012, 0.012, 0.012);
         objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
         actualizarEscalaPorTalla(window.tallaActual);
@@ -223,7 +221,7 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
 
     cargador.load(`${rutaRaiz}models/${nombreArchivoDerecho}`, function (gltf) {
         objetoDerechoActual = gltf.scene;
-        objetoDerechoActual.visible = false; 
+        objetoDerechoActual.visible = true; 
         objetoDerechoActual.scale.set(0.012, 0.012, 0.012);
         objetoDerechoActual.rotation.set(0, Math.PI, 0); 
         actualizarEscalaPorTalla(window.tallaActual);
