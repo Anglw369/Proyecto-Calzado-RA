@@ -1,8 +1,9 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (COMPLETA CON CONTROL MULTI-VARIANTE)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (SOPORTE GLB - PIE IZQ / DER)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
-let objetoCalzadoActual = null; 
+let objetoIzquierdoActual = null; 
+let objetoDerechoActual = null; 
 let poseTracker = null;
 
 window.tallaActual = 26.0;
@@ -56,28 +57,36 @@ function inicializarRastreadorAI() {
     });
 
     poseTracker.onResults((results) => {
-        if (!objetoCalzadoActual || !results.poseLandmarks) return;
+        if (!results.poseLandmarks) return;
 
-        // Detección de extremidades (tobillo 28, o muñeca de prueba 16)
-        const puntoDeteccion = results.poseLandmarks[28] || results.poseLandmarks[16]; 
-        const talon = results.poseLandmarks[30];
+        // Detección de puntos corporales de MediaPipe
+        const tobilloDerecho = results.poseLandmarks[28];
+        const tobilloIzquierdo = results.poseLandmarks[27];
 
-        if (puntoDeteccion && puntoDeteccion.visibility > 0.45) {
-            objetoCalzadoActual.visible = true;
+        // Actualizar Pie Izquierdo
+        if (objetoIzquierdoActual && tobilloIzquierdo && tobilloIzquierdo.visibility > 0.45) {
+            objetoIzquierdoActual.visible = true;
+            const targetX = (tobilloIzquierdo.x - 0.5) * -3.2 - 0.3;
+            const targetY = (tobilloIzquierdo.y - 0.5) * -2.4 - 0.3;
 
-            const targetX = (puntoDeteccion.x - 0.5) * -3.2;
-            const targetY = (puntoDeteccion.y - 0.5) * -2.4 - 0.3;
+            objetoIzquierdoActual.position.x += (targetX - objetoIzquierdoActual.position.x) * 0.30;
+            objetoIzquierdoActual.position.y += (targetY - objetoIzquierdoActual.position.y) * 0.30;
+            objetoIzquierdoActual.position.z = 1.2;
+        } else if (objetoIzquierdoActual) {
+            objetoIzquierdoActual.visible = false;
+        }
 
-            objetoCalzadoActual.position.x += (targetX - objetoCalzadoActual.position.x) * 0.30;
-            objetoCalzadoActual.position.y += (targetY - objetoCalzadoActual.position.y) * 0.30;
-            objetoCalzadoActual.position.z = 1.2;
+        // Actualizar Pie Derecho
+        if (objetoDerechoActual && tobilloDerecho && tobilloDerecho.visibility > 0.45) {
+            objetoDerechoActual.visible = true;
+            const targetX = (tobilloDerecho.x - 0.5) * -3.2 + 0.3;
+            const targetY = (tobilloDerecho.y - 0.5) * -2.4 - 0.3;
 
-            if (talon) {
-                const angulo = Math.atan2(puntoDeteccion.y - talon.y, puntoDeteccion.x - talon.x);
-                objetoCalzadoActual.rotation.y = -angulo;
-            }
-        } else {
-            objetoCalzadoActual.visible = false;
+            objetoDerechoActual.position.x += (targetX - objetoDerechoActual.position.x) * 0.30;
+            objetoDerechoActual.position.y += (targetY - objetoDerechoActual.position.y) * 0.30;
+            objetoDerechoActual.position.z = 1.2;
+        } else if (objetoDerechoActual) {
+            objetoDerechoActual.visible = false;
         }
     });
 
@@ -98,67 +107,80 @@ function inicializarRastreadorAI() {
 }
 
 // ==========================================================================
-// CARGADOR INTEGRAL MULTI-VARIANTE CON MAPEO DE STRINGS DE DISCO
+// CARGADOR INTEGRAL GLTF PARA ARCHIVOS .GLB (IZQUIERDO Y DERECHO)
 // ==========================================================================
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
-    let nombreArchivoFinal = `${modeloBase}${temporada}${variante}.fbx`;
-    
-    // Mapeo específico de nombres con espacio en blanco del Zapato 2
-    if (modeloBase === "za2" && (temporada === "pri" || temporada === "in") && variante === "1") {
-        nombreArchivoFinal = `${modeloBase}${temporada}${variante} 1.fbx`;
-    }
+    let nombreArchivoIzquierdo = `${modeloBase}${temporada}${variante}izquierdo.glb`;
+    let nombreArchivoDerecho = `${modeloBase}${temporada}${variante}derecho.glb`;
 
     const esGitHubPages = window.location.hostname.includes('github.io');
     const rutaRaiz = esGitHubPages ? `/${window.location.pathname.split('/')[1]}/` : '';
-    const rutaCompleta = `${rutaRaiz}models/${nombreArchivoFinal}`;
+    const rutaCompletaIzq = `${rutaRaiz}models/${nombreArchivoIzquierdo}`;
+    const rutaCompletaDer = `${rutaRaiz}models/${nombreArchivoDerecho}`;
     
     const banner = document.getElementById('view-archivo-fbx');
-    if (banner) banner.innerText = nombreArchivoFinal;
+    if (banner) banner.innerText = `${modeloBase}_${temporada}${variante}.glb`;
 
-    if (objetoCalzadoActual) {
-        scene.remove(objetoCalzadoActual);
-        objetoCalzadoActual = null;
+    // Limpieza de objetos previos en memoria de la escena
+    if (objetoIzquierdoActual) {
+        scene.remove(objetoIzquierdoActual);
+        objetoIzquierdoActual = null;
+    }
+    if (objetoDerechoActual) {
+        scene.remove(objetoDerechoActual);
+        objetoDerechoActual = null;
     }
 
-    console.log("Invocando archivo desde:", rutaCompleta);
+    console.log("Invocando modelos GLB:", rutaCompletaIzq, rutaCompletaDer);
 
-    const cargador = new THREE.FBXLoader();
+    const cargador = new THREE.GLTFLoader();
+
+    // 1. Cargar Pie Izquierdo
     cargador.load(
-        rutaCompleta,
-        function (fbx) {
-            objetoCalzadoActual = fbx;
-            objetoCalzadoActual.visible = false; 
-
-            // ESCALA CORREGIDA: Reducción de metros a escala humana centimétrica
-            objetoCalzadoActual.scale.set(0.0003, 0.0003, 0.0003);
-            objetoCalzadoActual.rotation.set(0, Math.PI, 0); 
-
+        rutaCompletaIzq,
+        function (gltf) {
+            objetoIzquierdoActual = gltf.scene;
+            objetoIzquierdoActual.visible = false; 
+            objetoIzquierdoActual.scale.set(0.0003, 0.0003, 0.0003);
+            objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
             actualizarEscalaPorTalla(window.tallaActual);
-            scene.add(objetoCalzadoActual);
-            console.log("¡Modelo real enlazado al pie correctamente!");
+            scene.add(objetoIzquierdoActual);
+            console.log("¡Pie izquierdo GLB cargado con éxito!");
         },
         null,
         function (err) {
-            console.error("Fallo de enrutamiento, activando wireframe:", err);
-            const geometry = new THREE.BoxGeometry(0.8, 0.4, 1.5);
-            const material = new THREE.MeshStandardMaterial({ color: 0x0a58ca, wireframe: true });
-            objetoCalzadoActual = new THREE.Mesh(geometry, material);
-            objetoCalzadoActual.visible = true;
-            scene.add(objetoCalzadoActual);
+            console.error("Error cargando izquierdo:", err);
+        }
+    );
+
+    // 2. Cargar Pie Derecho
+    cargador.load(
+        rutaCompletaDer,
+        function (gltf) {
+            objetoDerechoActual = gltf.scene;
+            objetoDerechoActual.visible = false; 
+            objetoDerechoActual.scale.set(0.0003, 0.0003, 0.0003);
+            objetoDerechoActual.rotation.set(0, Math.PI, 0); 
+            actualizarEscalaPorTalla(window.tallaActual);
+            scene.add(objetoDerechoActual);
+            console.log("¡Pie derecho GLB cargado con éxito!");
+        },
+        null,
+        function (err) {
+            console.error("Error cargando derecho:", err);
         }
     );
 }
 
 function actualizarEscalaPorTalla(talla) {
-    if (!objetoCalzadoActual) return;
     const factor = (talla / 26.0) * 0.0003;
-    objetoCalzadoActual.scale.set(factor, factor, factor);
+    if (objetoIzquierdoActual) objetoIzquierdoActual.scale.set(factor, factor, factor);
+    if (objetoDerechoActual) objetoDerechoActual.scale.set(factor, factor, factor);
 }
 
 function intercambiarEntreZ01yZ02() {
     window.modeloActual = window.modeloActual === 'za1' ? 'za2' : 'za1';
     
-    // Sincronizamos los cambios de vuelta hacia los selectores de Alpine
     const appBody = document.body;
     if(appBody.__x_data) {
         appBody.__x_data.currentZapato = window.modeloActual;
