@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (HÍBRIDO CON SANEADO DE RUTAS GLB)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (HÍBRIDO CON AUTO-CENTRADO Y PARCHE DE ESCALA)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
@@ -42,7 +42,7 @@ function iniciarMotoresManuales() {
         if (!renderer) return;
         requestAnimationFrame(animarEcosistema);
 
-        // MODO PASARELA FIJA CONCENTRADOR: Si la IA no detecta el pie, los tenis flotan al frente guiándote
+        // MODO PASARELA FIJA: Si la IA no detecta el pie, flotan al frente como plantilla
         if (modoFijo) {
             if (objetoIzquierdoActual) {
                 objetoIzquierdoActual.visible = true;
@@ -92,7 +92,7 @@ function inicializarRastreadorAI() {
         const detectadoDer = tobilloDer && tobilloDer.visibility > 0.35;
 
         if (detectadoIzq || detectadoDer) {
-            modoFijo = false; // La IA toma el control y los acopla sobre tus pies reales
+            modoFijo = false; 
 
             if (objetoIzquierdoActual && tobilloIzq) {
                 objetoIzquierdoActual.visible = tobilloIzq.visibility > 0.35;
@@ -176,10 +176,10 @@ function apagarCamara() {
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     if (!scene) return;
 
-    // PARCHE MAPEO DE CONTINGENCIA: Sanea las variantes anómalas detectadas en tus archivos físicos
+    // Saneado automático del nombre de archivo erróneo detectado en invierno
     let varianteSaneada = variante;
     if (modeloBase === "za1" && temporada === "in" && variante === "1") {
-        varianteSaneada = "1.1"; // Corrige el za1in1.1 de tu carpeta de forma automática
+        varianteSaneada = "1.1"; 
     }
 
     let nombreArchivoIzquierdo = `${modeloBase}${temporada}${varianteSaneada}izquierdo.glb`;
@@ -197,9 +197,22 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     const cargador = new THREE.GLTFLoader();
     modoFijo = true; 
 
-    // Carga de componentes con la ruta saneada de contingencia
+    // --- CARGA Y ARREGLO AUTOMÁTICO DEL MODELO IZQUIERDO ---
     cargador.load(`${rutaRaiz}models/${nombreArchivoIzquierdo}`, function (gltf) {
         objetoIzquierdoActual = gltf.scene;
+        
+        // 🛠️ HACK 1: Fuerza el origen al centro geométrico ignorando el desvío de Blender
+        const box = new THREE.Box3().setFromObject(objetoIzquierdoActual);
+        const center = box.getCenter(new THREE.Vector3());
+        objetoIzquierdoActual.position.sub(center); 
+
+        // 🛠️ HACK 2: Corrige la escala negativa forzando renderizado en ambos lados de los polígonos
+        objetoIzquierdoActual.traverse((child) => {
+            if (child.isMesh) {
+                child.material.side = THREE.DoubleSide;
+            }
+        });
+
         objetoIzquierdoActual.visible = true; 
         objetoIzquierdoActual.scale.set(0.012, 0.012, 0.012);
         objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
@@ -207,8 +220,22 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
         scene.add(objetoIzquierdoActual);
     }, null, (err) => console.error("Error cargando calzado izquierdo en ruta:", err));
 
+    // --- CARGA Y ARREGLO AUTOMÁTICO DEL MODELO DERECHO ---
     cargador.load(`${rutaRaiz}models/${nombreArchivoDerecho}`, function (gltf) {
         objetoDerechoActual = gltf.scene;
+        
+        // 🛠️ HACK 1: Fuerza el origen al centro geométrico
+        const box = new THREE.Box3().setFromObject(objetoDerechoActual);
+        const center = box.getCenter(new THREE.Vector3());
+        objetoDerechoActual.position.sub(center);
+
+        // 🛠️ HACK 2: Corrige la escala negativa
+        objetoDerechoActual.traverse((child) => {
+            if (child.isMesh) {
+                child.material.side = THREE.DoubleSide;
+            }
+        });
+
         objetoDerechoActual.visible = true; 
         objetoDerechoActual.scale.set(0.012, 0.012, 0.012);
         objetoDerechoActual.rotation.set(0, Math.PI, 0); 
