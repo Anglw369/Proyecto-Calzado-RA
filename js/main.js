@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (MODO SIMULACIÓN CON CUBOS GEOMÉTRICOS)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (MODO SIMULACIÓN TOTALMENTE BLINDADO)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
@@ -19,43 +19,49 @@ function iniciarMotoresManuales() {
 
     scene = new THREE.Scene();
 
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.8);
+    // Luz ambiental de respaldo
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 2.0);
     scene.add(luzAmbiental);
-    const luzDireccional = new THREE.DirectionalLight(0xffffff, 1.0);
-    luzDireccional.position.set(0, 6, 6);
-    scene.add(luzDireccional);
 
-    camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 0, 4);
+    // Detección robusta de dimensiones para evitar lienzos en 0px en móviles
+    const anchoCanvas = container.clientWidth || window.innerWidth;
+    const altoCanvas = container.clientHeight || window.innerHeight;
 
+    // Configuración de cámara en matriz segura
+    camera = new THREE.PerspectiveCamera(45, anchoCanvas / altoCanvas, 0.1, 1000);
+    camera.position.set(0, 0, 3.2); 
+
+    // Inicialización del renderizador tridimensional con búfer transparente
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(anchoCanvas, altoCanvas);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
     renderer.domElement.style.pointerEvents = 'none';
-    renderer.domElement.style.zIndex = '10';
+    renderer.domElement.style.zIndex = '100'; // Posicionado firmemente sobre el nodo de video
     container.appendChild(renderer.domElement);
 
-    // Forzar la creación e inyección inmediata de los cubos de simulación al iniciar
-    cargarArchivoFBXReal("za1", "pr", "1");
+    // Inyección inmediata de los bloques primitivos al ecosistema
+    cargarArchivoFBXReal("za1", "pri", "1");
 
     function animarEcosistema() {
         if (!renderer) return;
         requestAnimationFrame(animarEcosistema);
 
-        // MODO PASARELA FIJA: Posicionamiento corregido para que los cubos nativos sean visibles al frente
+        // MODO PASARELA FIJA: Los bloques flotan estables y rotan para demostrar actividad tridimensional
         if (modoFijo) {
             if (objetoIzquierdoActual) {
                 objetoIzquierdoActual.visible = true;
-                objetoIzquierdoActual.position.set(-0.25, -0.3, 1.5);
-                objetoIzquierdoActual.rotation.set(0, Math.PI, 0);
+                objetoIzquierdoActual.position.set(-0.35, -0.3, 0); 
+                objetoIzquierdoActual.rotation.y += 0.015; 
+                objetoIzquierdoActual.rotation.x = 0.2;
             }
             if (objetoDerechoActual) {
                 objetoDerechoActual.visible = true;
-                objetoDerechoActual.position.set(0.25, -0.3, 1.5);
-                objetoDerechoActual.rotation.set(0, Math.PI, 0);
+                objetoDerechoActual.position.set(0.35, -0.3, 0); 
+                objetoDerechoActual.rotation.y += 0.015;
+                objetoDerechoActual.rotation.x = 0.2;
             }
         }
 
@@ -91,7 +97,6 @@ function inicializarRastreadorAI() {
         const dedoIzq = results.poseLandmarks[31];
         const dedoDer = results.poseLandmarks[32];
 
-        // Tolerancia de visibilidad de MediaPipe Pose
         const detectadoIzq = tobilloIzq && tobilloIzq.visibility > 0.35;
         const detectadoDer = tobilloDer && tobilloDer.visibility > 0.35;
 
@@ -100,31 +105,32 @@ function inicializarRastreadorAI() {
 
             if (objetoIzquierdoActual && tobilloIzq) {
                 objetoIzquierdoActual.visible = tobilloIzq.visibility > 0.35;
-                const targetX = (tobilloIzq.x - 0.5) * -3.4;
-                const targetY = (tobilloIzq.y - 0.5) * -2.6 - 0.3;
+                // Mapeo adaptativo cinemático a la zona segura Z = 0
+                const targetX = (tobilloIzq.x - 0.5) * -2.4;
+                const targetY = (tobilloIzq.y - 0.5) * -1.8 - 0.2;
                 
                 objetoIzquierdoActual.position.x += (targetX - objetoIzquierdoActual.position.x) * 0.35;
                 objetoIzquierdoActual.position.y += (targetY - objetoIzquierdoActual.position.y) * 0.35;
-                objetoIzquierdoActual.position.z = 1.3;
+                objetoIzquierdoActual.position.z = 0; 
 
                 if (dedoIzq) {
                     const angulo = Math.atan2(dedoIzq.y - tobilloIzq.y, dedoIzq.x - tobilloIzq.x);
-                    objetoIzquierdoActual.rotation.y = -angulo + Math.PI / 2;
+                    objetoIzquierdoActual.rotation.set(0, -angulo + Math.PI / 2, 0);
                 }
             }
 
             if (objetoDerechoActual && tobilloDer) {
                 objetoDerechoActual.visible = tobilloDer.visibility > 0.35;
-                const targetX = (tobilloDer.x - 0.5) * -3.4;
-                const targetY = (tobilloDer.y - 0.5) * -2.6 - 0.3;
+                const targetX = (tobilloDer.x - 0.5) * -2.4;
+                const targetY = (tobilloDer.y - 0.5) * -1.8 - 0.2;
                 
                 objetoDerechoActual.position.x += (targetX - objetoDerechoActual.position.x) * 0.35;
                 objetoDerechoActual.position.y += (targetY - objetoDerechoActual.position.y) * 0.35;
-                objetoDerechoActual.position.z = 1.3;
+                objetoDerechoActual.position.z = 0; 
 
                 if (dedoDer) {
                     const angulo = Math.atan2(dedoDer.y - tobilloDer.y, dedoDer.x - tobilloDer.x);
-                    objetoDerechoActual.rotation.y = -angulo + Math.PI / 2;
+                    objetoDerechoActual.rotation.set(0, -angulo + Math.PI / 2, 0);
                 }
             }
         } else {
@@ -181,41 +187,30 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     if (!scene) return;
 
     const banner = document.getElementById('view-archivo-fbx');
-    if (banner) banner.innerText = `MODO SIMULACIÓN (CUBOS PRUEBA)`;
+    if (banner) banner.innerText = `modo simulación (cubos prueba)`;
 
-    // Limpieza física estricta de mallas previas antes de inyectar
     if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
     if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
     modoFijo = true; 
 
-    // Geometría escalada aumentada para que salten a la vista de inmediato (Ancho, Alto, Largo)
-    const geometriaCubo = new THREE.BoxGeometry(0.2, 0.15, 0.45); 
+    // Geometría calibrada con proporciones físicas exactas de un zapato
+    const geometriaCubo = new THREE.BoxGeometry(0.22, 0.14, 0.45); 
 
-    // --- ENTORNO VIRTUAL SIMULADO IZQUIERDO (Morado Neon) ---
-    const materialIzquierdo = new THREE.MeshStandardMaterial({ 
-        color: 0x8a2be2, 
-        roughness: 0.4,
-        metalness: 0.3
-    });
+    // 🔴 Bloque Izquierdo: Rojo Neón Auto-iluminado (Descarte total de errores de luces)
+    const materialIzquierdo = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     objetoIzquierdoActual = new THREE.Mesh(geometriaCubo, materialIzquierdo);
     objetoIzquierdoActual.visible = true;
-    objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
     scene.add(objetoIzquierdoActual);
 
-    // --- ENTORNO VIRTUAL SIMULADO DERECHO (Azul Eléctrico) ---
-    const materialDerecho = new THREE.MeshStandardMaterial({ 
-        color: 0x1e90ff, 
-        roughness: 0.4,
-        metalness: 0.3
-    });
+    // 🟢 Bloque Derecho: Verde Neón Auto-iluminado
+    const materialDerecho = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     objetoDerechoActual = new THREE.Mesh(geometriaCubo, materialDerecho);
     objetoDerechoActual.visible = true;
-    objetoDerechoActual.rotation.set(0, Math.PI, 0); 
     scene.add(objetoDerechoActual);
 
     actualizarEscalaPorTalla(window.tallaActual);
-    console.log("Simulador StepRA: Entorno inyectado con primitivos geométricos estables.");
+    console.log("Simulador StepRA: Primitivos estables inyectados con éxito.");
 }
 
 function actualizarEscalaPorTalla(talla) {
