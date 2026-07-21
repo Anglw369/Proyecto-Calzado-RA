@@ -6,7 +6,6 @@
     <title>StepRA - Panel de Aplicación</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- CORRECCIÓN: CDN Oficial de Google para Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="css/main.css?v=63">
 
@@ -42,7 +41,7 @@
             currentZapato = localStorage.getItem('user_modelo') || 'za1';
             Alpine.nextTick(() => { encenderProbadorDesdeCatalogo(currentZapato, selectedTalla); });
         }
-      }">
+      ">
 
   <!-- MODAL DE ALERTA STEPRA PERSONALIZADO INTEGRADO -->
   <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -203,13 +202,23 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <!-- CORRECCIÓN: Migración de motor global a MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
   <script src="js/controllers.js?v=63"></script>
   <script src="js/main.js?v=63"></script>
 
   <script>
+      document.addEventListener("DOMContentLoaded", () => {
+          const dataCuerpo = document.body.__x_data;
+          if (dataCuerpo && dataCuerpo.subPage === 'ar_view') {
+              setTimeout(() => {
+                  encenderProbadorDesdeCatalogo(dataCuerpo.currentZapato, dataCuerpo.selectedTalla);
+              }, 300);
+          }
+      });
+
       function encenderProbadorDesdeCatalogo(idModelo, tallaBase) {
           window.tallaActual = parseFloat(tallaBase);
           window.modeloActual = idModelo; 
@@ -220,12 +229,14 @@
           const btnLabel = document.getElementById('btn-label-silueta');
           if(btnLabel) btnLabel.innerText = idModelo.toUpperCase();
 
-          Alpine.nextTick(() => {
+          setTimeout(() => {
               if (typeof window.iniciarMotoresManuales === 'function') {
                   window.iniciarMotoresManuales();
                   window.actualizarModeloFBXDynamico(idModelo, 'pri', '1');
+              } else {
+                  console.error("Crítico: Los motores gráficos no están cargados en Window.");
               }
-          });
+          }, 150);
       }
 
       function actualizarModeloFBXDynamico(zap, temp, varNum) {
