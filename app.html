@@ -35,13 +35,7 @@
     </style>
 </head>
 <body class="bg-[#e6dfd3] text-dark-calzado antialiased min-h-screen" 
-      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', currentZapato: 'za1', currentTemporada: 'pri', currentVariante: '1', alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación', fotoTomada: false }"
-      x-init="
-        if (subPage === 'ar_view') {
-            currentZapato = localStorage.getItem('user_modelo') || 'za1';
-            Alpine.nextTick(() => { encenderProbadorDesdeCatalogo(currentZapato, selectedTalla); });
-        }
-      ">
+      x-data="{ subPage: localStorage.getItem('stepra_subpage') || 'catalog', isLoggedIn: localStorage.getItem('stepra_session') === 'active', openDropdown: false, selectedProduct: null, openProductModal: false, selectedTalla: '26.0', currentZapato: 'za1', currentTemporada: 'pri', currentVariante: '1', alertOpen: false, alertText: '', alertIcon: 'info', alertTitle: 'Notificación', fotoTomada: false }">
 
   <!-- MODAL DE ALERTA STEPRA PERSONALIZADO INTEGRADO -->
   <div x-show="alertOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -141,7 +135,6 @@
                         <i class="fa-solid fa-user-astronaut text-primary text-xs"></i> Mi Perfil Premium
                     </a>
                     
-                    <!-- CORRECCIÓN APLICADA: Detiene stream de hardware antes de limpiar el estado de Alpine en refresco -->
                     <button @click="if(typeof window.apagarCamara === 'function') window.apagarCamara(); localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
                             class="px-4 py-2.5 text-[11px] font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2 transition-colors">
                         <i class="fa-solid fa-store text-emerald-600 text-xs"></i> Ir al Catálogo
@@ -210,13 +203,16 @@
   <script src="js/main.js?v=63"></script>
 
   <script>
+      // ÚNICO PUNTO DE ENTRADA SEGURO Y ORDENADO PARA EL PROBADOR
       document.addEventListener("DOMContentLoaded", () => {
-          const dataCuerpo = document.body.__x_data;
-          if (dataCuerpo && dataCuerpo.subPage === 'ar_view') {
-              setTimeout(() => {
-                  encenderProbadorDesdeCatalogo(dataCuerpo.currentZapato, dataCuerpo.selectedTalla);
-              }, 400); // Pequeño delay extra para garantizar la sincronización tras F5
-          }
+          setTimeout(() => {
+              const appBody = document.body;
+              if (appBody && appBody.__x_data && appBody.__x_data.subPage === 'ar_view') {
+                  const mod = localStorage.getItem('user_modelo') || appBody.__x_data.currentZapato || 'za1';
+                  const talla = appBody.__x_data.selectedTalla || '26.0';
+                  encenderProbadorDesdeCatalogo(mod, talla);
+              }
+          }, 350);
       });
 
       function encenderProbadorDesdeCatalogo(idModelo, tallaBase) {
@@ -229,14 +225,10 @@
           const btnLabel = document.getElementById('btn-label-silueta');
           if(btnLabel) btnLabel.innerText = idModelo.toUpperCase();
 
-          setTimeout(() => {
-              if (typeof window.iniciarMotoresManuales === 'function') {
-                  window.iniciarMotoresManuales();
-                  window.actualizarModeloFBXDynamico(idModelo, 'pri', '1');
-              } else {
-                  console.error("Crítico: Los motores gráficos no están cargados en Window.");
-              }
-          }, 150);
+          if (typeof window.iniciarMotoresManuales === 'function') {
+              window.iniciarMotoresManuales();
+              window.actualizarModeloFBXDynamico(idModelo, 'pri', '1');
+          }
       }
 
       function actualizarModeloFBXDynamico(zap, temp, varNum) {
