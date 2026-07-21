@@ -141,7 +141,8 @@
                         <i class="fa-solid fa-user-astronaut text-primary text-xs"></i> Mi Perfil Premium
                     </a>
                     
-                    <button @click="localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
+                    <!-- CORRECCIÓN APLICADA: Detiene stream de hardware antes de limpiar el estado de Alpine en refresco -->
+                    <button @click="if(typeof window.apagarCamara === 'function') window.apagarCamara(); localStorage.removeItem('stepra_subpage'); subPage = 'catalog'; window.location.reload();" 
                             class="px-4 py-2.5 text-[11px] font-black uppercase text-left text-dark-calzado hover:bg-gray-100 flex items-center gap-2 transition-colors">
                         <i class="fa-solid fa-store text-emerald-600 text-xs"></i> Ir al Catálogo
                     </button>
@@ -202,7 +203,6 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <!-- CORRECCIÓN: Migración de motor global a MediaPipe Hands -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
   <script type="module" src="js/auth.js"></script>
@@ -215,7 +215,7 @@
           if (dataCuerpo && dataCuerpo.subPage === 'ar_view') {
               setTimeout(() => {
                   encenderProbadorDesdeCatalogo(dataCuerpo.currentZapato, dataCuerpo.selectedTalla);
-              }, 300);
+              }, 400); // Pequeño delay extra para garantizar la sincronización tras F5
           }
       });
 

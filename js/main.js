@@ -5,6 +5,7 @@ let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
 let objetoDerechoActual = null; 
 let trackerAI = null;
+let camaraStream = null; // Control estricto del hardware de la cámara
 
 window.tallaActual = 26.0;
 
@@ -22,9 +23,9 @@ function iniciarMotoresManuales() {
 
     scene = new THREE.Scene();
 
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.5);
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 1.6);
     scene.add(luzAmbiental);
-    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.8);
+    const luzDireccional = new THREE.DirectionalLight(0xffffff, 0.9);
     luzDireccional.position.set(0, 5, 5);
     scene.add(luzDireccional);
 
@@ -53,19 +54,23 @@ function iniciarMotoresManuales() {
 function inicializarRastreadorAI() {
     if (!videoElement) return;
 
+    // Si ya existía una instancia o stream activo al recargar, lo apagamos por seguridad
+    apagarCamara();
+
     trackerAI = new Hands({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
 
+    // CORRECCIÓN CONFIANZA: Subimos a 0.75 para evitar el parpadeo y comportamiento inestable
     trackerAI.setOptions({
         maxNumHands: 2,
         modelComplexity: 1,
-        minDetectionConfidence: 0.45,
-        minTrackingConfidence: 0.45
+        minDetectionConfidence: 0.75,
+        minTrackingConfidence: 0.75
     });
 
     trackerAI.onResults((results) => {
-        // REGLA ESTRICTA: Ocultar los zapatos por defecto. No se muestran si no hay detección.
+        // Ocultar si no hay detección clara
         if (objetoIzquierdoActual) objetoIzquierdoActual.visible = false;
         if (objetoDerechoActual) objetoDerechoActual.visible = false;
 
@@ -73,36 +78,34 @@ function inicializarRastreadorAI() {
 
         for (let i = 0; i < results.multiHandLandmarks.length; i++) {
             const puntosAnatomicos = results.multiHandLandmarks[i];
-            const tipoExtremidad = results.multiHandedness[i].label; // Left o Right
+            const tipoExtremidad = results.multiHandedness[i].label; 
 
-            const puntoBase = puntosAnatomicos[0];  // Tobillo / Talón
-            const puntoMedio = puntosAnatomicos[9]; // Centro del empeine
+            const puntoBase = puntosAnatomicos[0];  
+            const puntoMedio = puntosAnatomicos[9]; 
 
             if (!puntoBase) continue;
 
-            // Mapeo de coordenadas al espacio tridimensional de Three.js
-            const targetX = (puntoBase.x - 0.5) * -3.3;
-            const targetY = (puntoBase.y - 0.5) * -2.5 - 0.2;
-            const profundidadZ = 1.1 + (puntoBase.z * -1.2);
+            // Mapeo adaptado al plano cerrado de la cámara sobre el suelo
+            const targetX = (puntoBase.x - 0.5) * -3.5;
+            const targetY = (puntoBase.y - 0.5) * -2.7 - 0.2;
+            const profundidadZ = 1.0 + (puntoBase.z * -1.5);
 
             let anguloRotacion = 0;
             if (puntoMedio) {
                 anguloRotacion = Math.atan2(puntoMedio.y - puntoBase.y, puntoMedio.x - puntoBase.x) + (Math.PI / 2);
             }
 
-            // Si se detecta la extremidad izquierda, encendemos el modelo y lo movemos a su posición
             if (tipoExtremidad === "Left" && objetoIzquierdoActual) {
                 objetoIzquierdoActual.visible = true; 
-                objetoIzquierdoActual.position.x = targetX - 0.15;
+                objetoIzquierdoActual.position.x = targetX - 0.10;
                 objetoIzquierdoActual.position.y = targetY;
                 objetoIzquierdoActual.position.z = profundidadZ;
                 objetoIzquierdoActual.rotation.y = Math.PI - anguloRotacion;
             } 
             
-            // Si se detecta la extremidad derecha, encendemos el modelo y lo movemos a su posición
             if (tipoExtremidad === "Right" && objetoDerechoActual) {
                 objetoDerechoActual.visible = true; 
-                objetoDerechoActual.position.x = targetX + 0.15;
+                objetoDerechoActual.position.x = targetX + 0.10;
                 objetoDerechoActual.position.y = targetY;
                 objetoDerechoActual.position.z = profundidadZ;
                 objetoDerechoActual.rotation.y = Math.PI - anguloRotacion;
@@ -113,6 +116,7 @@ function inicializarRastreadorAI() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
         .then(function(stream) {
+            camaraStream = stream;
             videoElement.srcObject = stream;
             
             async function bucleIA() {
@@ -127,6 +131,17 @@ function inicializarRastreadorAI() {
             }
             bucleIA();
         }).catch(err => console.error("Error al iniciar cámara trasera:", err));
+    }
+}
+
+// Función de seguridad para liberar la cámara al recargar o cambiar de vista
+function apagarCamara() {
+    if (camaraStream) {
+        camaraStream.getTracks().forEach(track => track.stop());
+        camaraStream = null;
+    }
+    if (videoElement) {
+        videoElement.srcObject = null;
     }
 }
 
@@ -155,21 +170,20 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
 
     const cargador = new THREE.GLTFLoader();
 
-    // 1. Cargar Pie Izquierdo
+    // CORRECCIÓN DE ESCALA: Subimos de 0.0003 a 0.012 base para que tengan tamaño real en pantalla
     cargador.load(rutaCompletaIzq, function (gltf) {
         objetoIzquierdoActual = gltf.scene;
-        objetoIzquierdoActual.visible = false; // Mantener apagado hasta que la IA lo encuentre
-        objetoIzquierdoActual.scale.set(0.0003, 0.0003, 0.0003);
+        objetoIzquierdoActual.visible = false; 
+        objetoIzquierdoActual.scale.set(0.012, 0.012, 0.012);
         objetoIzquierdoActual.rotation.set(0, Math.PI, 0); 
         actualizarEscalaPorTalla(window.tallaActual);
         scene.add(objetoIzquierdoActual);
     }, null, err => console.error("Archivo izquierdo no encontrado:", err));
 
-    // 2. Cargar Pie Derecho
     cargador.load(rutaCompletaDer, function (gltf) {
         objetoDerechoActual = gltf.scene;
-        objetoDerechoActual.visible = false; // Mantener apagado hasta que la IA lo encuentre
-        objetoDerechoActual.scale.set(0.0003, 0.0003, 0.0003);
+        objetoDerechoActual.visible = false; 
+        objetoDerechoActual.scale.set(0.012, 0.012, 0.012);
         objetoDerechoActual.rotation.set(0, Math.PI, 0); 
         actualizarEscalaPorTalla(window.tallaActual);
         scene.add(objetoDerechoActual);
@@ -177,7 +191,8 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
 }
 
 function actualizarEscalaPorTalla(talla) {
-    const factor = (talla / 26.0) * 0.0003;
+    // Escala proporcional ajustada al tamaño real del pie en primer plano
+    const factor = (talla / 26.0) * 0.012;
     if (objetoIzquierdoActual) objetoIzquierdoActual.scale.set(factor, factor, factor);
     if (objetoDerechoActual) objetoDerechoActual.scale.set(factor, factor, factor);
 }
@@ -217,3 +232,4 @@ window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
 window.intercambiarEntreZ01yZ02 = intercambiarEntreZ01yZ02;
 window.capturarFotoProbador = capturarFotoProbador;
 window.actualizarModeloFBXDynamico = cargarArchivoFBXReal;
+window.apagarCamara = apagarCamara;
