@@ -1,4 +1,6 @@
-// Variables de estado globales sincronizadas con el entorno global de la ventana
+// ==========================================================================
+// CONTROLADORES Y LÓGICA DE INTERFAZ STEPRA
+// ==========================================================================
 window.modeloActual = window.modeloActual || "za1";
 window.colorHexActual = window.colorHexActual || "#0A58CA";
 window.tallaActual = window.tallaActual || 26.0; 
@@ -28,7 +30,6 @@ function simularMedicionIA() {
             viewTallaFinal.innerText = window.tallaActual.toFixed(1) + " MX";
         }
 
-        // Acceder a los datos de Alpine.js de forma segura para disparar el modal personalizado
         const appBody = document.body;
         if (appBody && appBody.__x_data) {
             appBody.__x_data.alertTitle = "Calibración";
@@ -42,18 +43,17 @@ function simularMedicionIA() {
 function guardarConfiguracionActual() {
     if (typeof window.guardarConfiguracionCalzado === "function") {
         window.guardarConfiguracionCalzado(window.modeloActual, window.colorHexActual, window.tallaActual);
-        
-        const appBody = document.body;
-        if (appBody && appBody.__x_data) {
-            appBody.__x_data.alertTitle = "Éxito";
-            appBody.__x_data.alertIcon = "check_circle";
-            appBody.__x_data.alertText = `¡Guardado con éxito!\n\n📦 Silueta: ${window.modeloActual.toUpperCase()}\n📏 Talla: ${window.tallaActual.toFixed(1)} MX\n\nDatos sincronizados en la nube de Supabase de León.`;
-            appBody.__x_data.alertOpen = true;
-        }
+    }
+    
+    const appBody = document.body;
+    if (appBody && appBody.__x_data) {
+        appBody.__x_data.alertTitle = "Éxito";
+        appBody.__x_data.alertIcon = "check_circle";
+        appBody.__x_data.alertText = `¡Guardado con éxito!\n\n📦 Silueta: ${window.modeloActual.toUpperCase()}\n📏 Talla: ${window.tallaActual.toFixed(1)} MX\n\nDatos sincronizados.`;
+        appBody.__x_data.alertOpen = true;
     }
 }
 
-// Exponer funciones globales de control de manera limpia
 window.ajustarTallaManual = ajustarTallaManual;
 window.simularMedicionIA = simularMedicionIA;
 window.guardarConfiguracionActual = guardarConfiguracionActual;

@@ -1,270 +1,285 @@
-// js/main.js
-// Inicializador mínimo de Three.js + FBXLoader para el probador AR.
-(() => {
-	let renderer, scene, camera, currentModel = null, container;
-	// Objetos sintéticos para pruebas (izquierdo / derecho)
-	let objetoIzquierdoActual = null;
-	let objetoDerechoActual = null;
-	let modoFijo = false;
-	let initialized = false;
+// ==========================================================================
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (MEDIAPIPE POSE + UNTITLE.FBX)
+// ==========================================================================
+let scene, camera, renderer, videoElement;
+let objetoIzquierdoActual = null; 
+let objetoDerechoActual = null; 
+let trackerAI = null;
+let camaraStream = null;
+let modoFijo = true; 
 
-	function initThree() {
-		if (initialized) return;
-		container = document.getElementById('camera-container');
-		if (!container) return console.warn('No existe #camera-container en el DOM');
+const fbxLoader = new THREE.FBXLoader();
+window.tallaActual = 26.0;
 
-		scene = new THREE.Scene();
+function iniciarMotoresManuales() {
+    videoElement = document.getElementById('webcam');
+    const container = document.getElementById('camera-container');
 
-		camera = new THREE.PerspectiveCamera(45, container.clientWidth / Math.max(1, container.clientHeight), 0.1, 1000);
-		camera.position.set(0, 1.5, 3);
+    if (!container || !videoElement) return;
+    if (renderer) return; 
 
-		const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent || '');
-		const pixelRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.5);
+    scene = new THREE.Scene();
 
-		renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: isMobile ? 'low-power' : 'high-performance' });
-		renderer.setPixelRatio(pixelRatio);
-		renderer.setSize(container.clientWidth, container.clientHeight);
-		renderer.domElement.style.zIndex = '5';
-		renderer.domElement.style.position = 'absolute';
-		renderer.domElement.style.top = '0';
-		renderer.domElement.style.left = '0';
-		renderer.domElement.style.pointerEvents = 'none';
-		container.appendChild(renderer.domElement);
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(luzAmbiental);
 
-		const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
-		scene.add(hemi);
+    const luzDireccional = new THREE.DirectionalLight(0xffffff, 1.2);
+    luzDireccional.position.set(0, 6, 6);
+    scene.add(luzDireccional);
 
-		const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-		dir.position.set(5, 10, 7.5);
-		scene.add(dir);
+    const anchoCanvas = container.clientWidth || window.innerWidth;
+    const altoCanvas = container.clientHeight || window.innerHeight;
 
-		window.addEventListener('resize', onWindowResize);
-		initialized = true;
-		animate();
-	}
+    camera = new THREE.PerspectiveCamera(45, anchoCanvas / altoCanvas, 0.1, 1000);
+    camera.position.set(0, 0, 3.2);
 
-	function onWindowResize() {
-		if (!camera || !renderer || !container) return;
-		camera.aspect = container.clientWidth / Math.max(1, container.clientHeight);
-		camera.updateProjectionMatrix();
-		renderer.setSize(container.clientWidth, container.clientHeight);
-	}
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(anchoCanvas, altoCanvas);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    renderer.domElement.style.position = 'absolute';
+    renderer.domElement.style.top = '0';
+    renderer.domElement.style.left = '0';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.pointerEvents = 'none';
+    renderer.domElement.style.zIndex = '10';
+    container.appendChild(renderer.domElement);
 
-	function animate() {
-		requestAnimationFrame(animate);
-		if (currentModel) currentModel.rotation.y += 0.003;
-		renderer && renderer.render(scene, camera);
-	}
+    // Cargar modelo Untitle.fbx al iniciar
+    cargarArchivoFBXReal("za1", "pri", "1");
 
-	function crearMallaCalzadoPrimitiva(colorPrincipalHex) {
-		const grupoCalzado = new THREE.Group();
+    function animarEcosistema() {
+        if (!renderer) return;
+        requestAnimationFrame(animarEcosistema);
 
-		// 1. Suela / Base del calzado (Cubo alargado)
-		const geomSuela = new THREE.BoxGeometry(0.20, 0.08, 0.40);
-		const matSuela = new THREE.MeshStandardMaterial({ color: colorPrincipalHex, metalness: 0.1, roughness: 0.6 });
-		const mallaSuela = new THREE.Mesh(geomSuela, matSuela);
-		mallaSuela.castShadow = true;
-		mallaSuela.receiveShadow = true;
-		mallaSuela.position.set(0, 0, 0);
-		grupoCalzado.add(mallaSuela);
+        // MODO PASARELA FIJA: Si la IA no detecta piernas/cuerpo completo, flotan al frente como plantilla
+        if (modoFijo) {
+            if (objetoIzquierdoActual) {
+                objetoIzquierdoActual.visible = true;
+                objetoIzquierdoActual.position.set(-0.35, -0.3, 0);
+                objetoIzquierdoActual.rotation.set(0.2, Math.PI + 0.2, 0);
+            }
+            if (objetoDerechoActual) {
+                objetoDerechoActual.visible = true;
+                objetoDerechoActual.position.set(0.35, -0.3, 0);
+                objetoDerechoActual.rotation.set(0.2, Math.PI - 0.2, 0);
+            }
+        }
 
-		// 2. Empeine / Tobillo (Cilindro integrado)
-		const geomTobillo = new THREE.CylinderGeometry(0.08, 0.10, 0.15, 16);
-		const matTobillo = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0, roughness: 0.7 });
-		const mallaTobillo = new THREE.Mesh(geomTobillo, matTobillo);
-		mallaTobillo.castShadow = true;
-		mallaTobillo.receiveShadow = true;
-		mallaTobillo.rotation.x = Math.PI / 2;
-		mallaTobillo.position.set(0, 0.09, -0.05);
-		grupoCalzado.add(mallaTobillo);
+        renderer.render(scene, camera);
+    }
+    animarEcosistema();
 
-		return grupoCalzado;
-	}
-
-	function cargarArchivoFBXReal(zap, temp = 'pri', varNum = '1') {
-		initThree();
-
-		const statusEl = document.getElementById('view-archivo-fbx');
-		if (statusEl) statusEl.innerText = 'Modo simulación (primitivos)';
-
-		// Limpiar objetos previos
-		if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
-		if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
-
-		modoFijo = true;
-
-		// Crear mallas primitivas para pruebas
-		objetoIzquierdoActual = crearMallaCalzadoPrimitiva(0xff5555);
-		objetoDerechoActual = crearMallaCalzadoPrimitiva(0x55ff55);
-
-		// Posicionar ligeramente separadas (izq/derecha)
-		objetoIzquierdoActual.position.set(-0.12, 0, 0);
-		objetoDerechoActual.position.set(0.12, 0, 0);
-
-		scene.add(objetoIzquierdoActual);
-		scene.add(objetoDerechoActual);
-
-		// Guardar escala base
-		try { window.__sr_baseScale = objetoIzquierdoActual.scale.x || 1; } catch (e) {}
-
-		// Aplicar escala según talla actual
-		if (typeof window.actualizarEscalaPorTalla === 'function') {
-			window.actualizarEscalaPorTalla(window.tallaActual || 26.0);
-		}
-	}
-
-	function disposeHierarchy(node) {
-		if (!node) return;
-		node.traverse((child) => {
-			if (child.geometry) child.geometry.dispose && child.geometry.dispose();
-			if (child.material) {
-				if (Array.isArray(child.material)) child.material.forEach(m => m.dispose && m.dispose());
-				else child.material.dispose && child.material.dispose();
-			}
-			if (child.texture) child.texture.dispose && child.texture.dispose();
-		});
-	}
-
-	function iniciarMotoresManuales() {
-		initThree();
-
-		const video = document.getElementById('webcam');
-		const cameraStatus = document.getElementById('camera-status');
-		const cameraStatusText = document.getElementById('camera-status-text');
-		const startBtn = document.getElementById('camera-start-btn');
-		if (!video) return;
-
-		if (startBtn) { startBtn.disabled = true; startBtn.innerText = 'Solicitando cámara...'; }
-
-		if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
-			console.warn('getUserMedia no es soportado en este navegador');
-			if (cameraStatusText) cameraStatusText.innerText = 'Tu navegador no soporta acceso a cámara (getUserMedia). Usa Chrome/Edge/Firefox en HTTPS o localhost.';
-			if (cameraStatus) cameraStatus.style.display = 'flex';
-			if (startBtn) startBtn.disabled = false;
-			return;
-		}
-
-		const constraints = { video: { facingMode: { ideal: 'environment' } } };
-
-		const attachStream = (stream) => {
-			video.muted = true;
-			video.setAttribute('playsinline', '');
-			video.autoplay = true;
-			video.srcObject = stream;
-			video.play().catch(()=>{});
-			if (cameraStatusText) cameraStatusText.innerText = 'Cámara iniciada';
-
-			// Poll para detectar frames
-			let checks = 0;
-			const poll = setInterval(() => {
-				checks++;
-				if (video.videoWidth && video.videoHeight) {
-					if (cameraStatus) cameraStatus.style.display = 'none';
-					if (startBtn) startBtn.disabled = true;
-					console.log('Frames recibidos, ocultando overlay');
-					clearInterval(poll);
-				} else if (checks > 60) {
-					console.warn('No se detectaron frames en el video después de 6s');
-					if (cameraStatusText) cameraStatusText.innerText = 'No se detectan frames de la cámara. Revisa permisos o prueba otro navegador.';
-					if (startBtn) startBtn.disabled = false;
-					clearInterval(poll);
-				}
-			}, 100);
-		};
-
-
-
-		navigator.mediaDevices.getUserMedia(constraints)
-			.then((stream) => {
-				console.log('getUserMedia ENV stream attached');
-				attachStream(stream);
-			})
-			.catch((err) => {
-				console.warn('Error getUserMedia (environment):', err);
-				if (cameraStatusText) cameraStatusText.innerText = 'Error al solicitar cámara: ' + (err && err.name ? err.name : err.message || err);
-				// enumerar dispositivos para diagnóstico
-				navigator.mediaDevices.enumerateDevices().then(devs => console.log('Dispositivos encontrados:', devs)).catch(e => console.warn('enumerateDevices falló', e));
-				if (cameraStatusText) cameraStatusText.innerText += ' - intentando frontal...';
-
-				// Intentar cámara frontal
-				navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-					.then((stream) => {
-						console.log('getUserMedia USER stream attached');
-						attachStream(stream);
-					})
-					.catch((err2) => {
-						console.warn('No se pudo acceder a ninguna cámara:', err2);
-						if (cameraStatusText) cameraStatusText.innerText = 'Permiso denegado o no hay cámara disponible.';
-						if (startBtn) startBtn.disabled = false;
-					});
-			});
-	}
-
-// Diagnostic helper: enumerate devices and test basic permission (global)
-async function runCameraDiagnostics() {
-	if (!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)) {
-		throw new Error('enumerateDevices no soportado');
-	}
-	const devs = await navigator.mediaDevices.enumerateDevices();
-	const cams = devs.filter(d => d.kind === 'videoinput');
-	return { devices: devs, cameras: cams };
+    inicializarRastreadorAI();
 }
 
-window.runCameraDiagnostics = runCameraDiagnostics;
+function inicializarRastreadorAI() {
+    if (!videoElement) return;
 
-	// Mejora en el cargador: auto-centrar y escalar el modelo según su bbox
-	function scaleAndCenterModel(obj, targetSize = 0.6) {
-		try {
-			const box = new THREE.Box3().setFromObject(obj);
-			const size = new THREE.Vector3();
-			box.getSize(size);
-			const maxDim = Math.max(size.x, size.y, size.z);
-			if (maxDim > 0) {
-				const scale = targetSize / maxDim;
-				obj.scale.setScalar((obj.scale.x || 1) * scale);
-			}
-			// centrar
-			const center = new THREE.Vector3();
-			box.getCenter(center);
-			obj.position.x -= center.x;
-			obj.position.y -= center.y;
-			obj.position.z -= center.z;
-			// poner ligeramente adelante
-			obj.position.z += 0.1;
-			// Guardar escala base para futuros ajustes por talla
-			try { window.__sr_baseScale = obj.scale.x || 1; } catch(e){}
-		} catch (e) {
-			console.warn('scaleAndCenterModel falló', e);
-		}
-	}
+    trackerAI = new Pose({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
 
-	window.scaleAndCenterModel = scaleAndCenterModel;
+    trackerAI.setOptions({
+        modelComplexity: 0,
+        smoothLandmarks: true,
+        minDetectionConfidence: 0.35, 
+        minTrackingConfidence: 0.35
+    });
 
-	// Ajustar escala del modelo según la talla (base 26.0)
-	function actualizarEscalaPorTalla(talla) {
-		const t = parseFloat(talla) || 26;
-		const factor = t / 26.0;
-		// Si usamos objetos sintéticos, escalarlos
-		if (objetoIzquierdoActual || objetoDerechoActual) {
-			const base = window.__sr_baseScale || 1;
-			if (objetoIzquierdoActual) objetoIzquierdoActual.scale.setScalar(base * factor);
-			if (objetoDerechoActual) objetoDerechoActual.scale.setScalar(base * factor);
-			return;
-		}
-		if (!currentModel) {
-			// almacenar para aplicar cuando se cargue
-			window.__sr_pendingTalla = t;
-			return;
-		}
-		const base = window.__sr_baseScale || (currentModel.scale.x || 1);
-		currentModel.scale.setScalar(base * factor);
-	}
+    trackerAI.onResults((results) => {
+        if (!results.poseLandmarks) {
+            modoFijo = true;
+            return;
+        }
 
-	window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
+        const tobilloIzq = results.poseLandmarks[27];
+        const tobilloDer = results.poseLandmarks[28];
+        const dedoIzq = results.poseLandmarks[31];
+        const dedoDer = results.poseLandmarks[32];
 
-	// Funciones expuestas globalmente para que otros módulos las llamen
-	window.iniciarMotoresManuales = iniciarMotoresManuales;
-	window.cargarArchivoFBXReal = cargarArchivoFBXReal;
-	window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
+        // MediaPipe Pose requiere ver parte del cuerpo/piernas para considerar visibilidad válida
+        const detectadoIzq = tobilloIzq && tobilloIzq.visibility > 0.35;
+        const detectadoDer = tobilloDer && tobilloDer.visibility > 0.35;
 
-})();
+        if (detectadoIzq || detectadoDer) {
+            modoFijo = false; 
+
+            if (objetoIzquierdoActual && tobilloIzq) {
+                objetoIzquierdoActual.visible = tobilloIzq.visibility > 0.35;
+                const targetX = (tobilloIzq.x - 0.5) * -2.4;
+                const targetY = (tobilloIzq.y - 0.5) * -1.8 - 0.2;
+                
+                objetoIzquierdoActual.position.x += (targetX - objetoIzquierdoActual.position.x) * 0.35;
+                objetoIzquierdoActual.position.y += (targetY - objetoIzquierdoActual.position.y) * 0.35;
+                objetoIzquierdoActual.position.z = 0; 
+
+                if (dedoIzq) {
+                    const angulo = Math.atan2(dedoIzq.y - tobilloIzq.y, dedoIzq.x - tobilloIzq.x);
+                    objetoIzquierdoActual.rotation.set(0, -angulo + Math.PI / 2, 0);
+                }
+            }
+
+            if (objetoDerechoActual && tobilloDer) {
+                objetoDerechoActual.visible = tobilloDer.visibility > 0.35;
+                const targetX = (tobilloDer.x - 0.5) * -2.4;
+                const targetY = (tobilloDer.y - 0.5) * -1.8 - 0.2;
+                
+                objetoDerechoActual.position.x += (targetX - objetoDerechoActual.position.x) * 0.35;
+                objetoDerechoActual.position.y += (targetY - objetoDerechoActual.position.y) * 0.35;
+                objetoDerechoActual.position.z = 0; 
+
+                if (dedoDer) {
+                    const angulo = Math.atan2(dedoDer.y - tobilloDer.y, dedoDer.x - tobilloDer.x);
+                    objetoDerechoActual.rotation.set(0, -angulo + Math.PI / 2, 0);
+                }
+            }
+        } else {
+            modoFijo = true; 
+        }
+    });
+
+    arrancarHardwareCamara();
+}
+
+function arrancarHardwareCamara() {
+    if (!videoElement) return;
+    
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
+        .then(function(stream) {
+            camaraStream = stream;
+            videoElement.srcObject = stream;
+            
+            async function bucleIA() {
+                if (videoElement && !videoElement.paused && !videoElement.ended && trackerAI) {
+                    try {
+                        await trackerAI.send({ image: videoElement });
+                    } catch(e) { console.warn("Frame omitido secuencialmente."); }
+                }
+                if (videoElement && videoElement.srcObject) {
+                    videoElement.requestVideoFrameCallback ? videoElement.requestVideoFrameCallback(bucleIA) : setTimeout(bucleIA, 40);
+                }
+            }
+            bucleIA();
+        }).catch(err => console.error("Error al arrancar stream de video:", err));
+    }
+}
+
+function apagarCamara() {
+    if (camaraStream) {
+        camaraStream.getTracks().forEach(track => track.stop());
+        camaraStream = null;
+    }
+    if (videoElement) videoElement.srcObject = null;
+    if (renderer) {
+        renderer.dispose();
+        if (renderer.domElement && renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+        }
+        renderer = null;
+    }
+    trackerAI = null;
+    scene = null;
+    camera = null;
+}
+
+function cargarArchivoFBXReal(modeloBase, temporada, variante) {
+    if (!scene) return;
+
+    const banner = document.getElementById('view-archivo-fbx');
+    if (banner) banner.innerText = "Cargando Untitle.fbx...";
+
+    if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
+    if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
+
+    modoFijo = true; 
+
+    // Carga directa del modelo único Untitle.fbx
+    const rutaFBX = 'models/fbx/Untitle.fbx';
+
+    fbxLoader.load(rutaFBX, (fbx) => {
+        // Pie Izquierdo
+        objetoIzquierdoActual = fbx;
+        objetoIzquierdoActual.traverse((child) => {
+            if (child.isMesh && child.material) {
+                child.material.side = THREE.DoubleSide;
+            }
+        });
+
+        // Auto-centrado de origen de geometría
+        const boxIzq = new THREE.Box3().setFromObject(objetoIzquierdoActual);
+        const centerIzq = boxIzq.getCenter(new THREE.Vector3());
+        objetoIzquierdoActual.position.sub(centerIzq);
+
+        scene.add(objetoIzquierdoActual);
+
+        // Pie Derecho (clon del modelo)
+        objetoDerechoActual = fbx.clone();
+        objetoDerechoActual.traverse((child) => {
+            if (child.isMesh && child.material) {
+                child.material.side = THREE.DoubleSide;
+            }
+        });
+
+        const boxDer = new THREE.Box3().setFromObject(objetoDerechoActual);
+        const centerDer = boxDer.getCenter(new THREE.Vector3());
+        objetoDerechoActual.position.sub(centerDer);
+
+        scene.add(objetoDerechoActual);
+
+        actualizarEscalaPorTalla(window.tallaActual);
+        if (banner) banner.innerText = "Untitle.fbx cargado con éxito";
+        console.log("StepRA: Modelo Untitle.fbx cargado correctamente.");
+
+    }, (progress) => {
+        if (progress.lengthComputable && banner) {
+            const pct = (progress.loaded / progress.total * 100).toFixed(0);
+            banner.innerText = `Cargando Untitle.fbx (${pct}%)`;
+        }
+    }, (error) => {
+        console.error("Error al cargar models/fbx/Untitle.fbx:", error);
+        if (banner) banner.innerText = "Error al cargar Untitle.fbx";
+    });
+}
+
+function actualizarEscalaPorTalla(talla) {
+    const factorBase = (talla / 26.0) * 0.01; // Escala adaptativa para unidades Blender FBX
+    if (objetoIzquierdoActual) objetoIzquierdoActual.scale.set(factorBase, factorBase, factorBase);
+    if (objetoDerechoActual) objetoDerechoActual.scale.set(factorBase, factorBase, factorBase);
+}
+
+function intercambiarEntreZ01yZ02() {
+    window.modeloActual = window.modeloActual === 'za1' ? 'za2' : 'za1';
+    const appBody = document.body;
+    if(appBody && appBody.__x_data) {
+        appBody.__x_data.currentZapato = window.modeloActual;
+        cargarArchivoFBXReal(window.modeloActual, appBody.__x_data.currentTemporada, appBody.__x_data.currentVariante);
+    }
+}
+
+function capturarFotoProbador() {
+    if (!renderer || !videoElement) return;
+    const canvasDestino = document.createElement('canvas');
+    canvasDestino.width = videoElement.videoWidth;
+    canvasDestino.height = videoElement.videoHeight;
+    const ctx = canvasDestino.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0);
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+        ctx.drawImage(renderer.domElement, 0, 0, canvasDestino.width, canvasDestino.height);
+    }
+    const link = document.createElement('a');
+    link.download = `StepRA capture.png`;
+    link.href = canvasDestino.toDataURL('image/png');
+    link.click();
+}
+
+window.iniciarMotoresManuales = iniciarMotoresManuales;
+window.cargarArchivoFBXReal = cargarArchivoFBXReal;
+window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
+window.intercambiarEntreZ01yZ02 = intercambiarEntreZ01yZ02;
+window.capturarFotoProbador = capturarFotoProbador;
+window.actualizarModeloFBXDynamico = cargarArchivoFBXReal;
+window.apagarCamara = apagarCamara;
