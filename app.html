@@ -128,6 +128,16 @@
                     return { devices: devs, cameras: cams };
                 };
             }
+            // Stubs seguros para evitar ReferenceError si otros scripts llaman antes de que main.js cargue
+            if (!window.actualizarEscalaPorTalla) {
+                window.actualizarEscalaPorTalla = function(t) { window.__sr_pendingTalla = parseFloat(t) || 26; };
+            }
+            if (!window.iniciarMotoresManuales) {
+                window.iniciarMotoresManuales = function() { console.warn('iniciarMotoresManuales: stub (main.js no cargado aún)'); };
+            }
+            if (!window.cargarArchivoFBXReal) {
+                window.cargarArchivoFBXReal = function() { console.warn('cargarArchivoFBXReal: stub (main.js no cargado aún)'); };
+            }
         </script>
 
         <!-- Capa de interfaz HUD superior (z-index: 50) -->

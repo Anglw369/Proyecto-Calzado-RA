@@ -2,6 +2,10 @@
 // Inicializador mínimo de Three.js + FBXLoader para el probador AR.
 (() => {
 	let renderer, scene, camera, currentModel = null, container;
+	// Objetos sintéticos para pruebas (izquierdo / derecho)
+	let objetoIzquierdoActual = null;
+	let objetoDerechoActual = null;
+	let modoFijo = false;
 	let initialized = false;
 
 	function initThree() {
@@ -52,54 +56,60 @@
 		renderer && renderer.render(scene, camera);
 	}
 
-	async function cargarArchivoFBXReal(zap, temp = 'pri', varNum = '1') {
+	function crearMallaCalzadoPrimitiva(colorPrincipalHex) {
+		const grupoCalzado = new THREE.Group();
+
+		// 1. Suela / Base del calzado (Cubo alargado)
+		const geomSuela = new THREE.BoxGeometry(0.20, 0.08, 0.40);
+		const matSuela = new THREE.MeshStandardMaterial({ color: colorPrincipalHex, metalness: 0.1, roughness: 0.6 });
+		const mallaSuela = new THREE.Mesh(geomSuela, matSuela);
+		mallaSuela.castShadow = true;
+		mallaSuela.receiveShadow = true;
+		mallaSuela.position.set(0, 0, 0);
+		grupoCalzado.add(mallaSuela);
+
+		// 2. Empeine / Tobillo (Cilindro integrado)
+		const geomTobillo = new THREE.CylinderGeometry(0.08, 0.10, 0.15, 16);
+		const matTobillo = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0, roughness: 0.7 });
+		const mallaTobillo = new THREE.Mesh(geomTobillo, matTobillo);
+		mallaTobillo.castShadow = true;
+		mallaTobillo.receiveShadow = true;
+		mallaTobillo.rotation.x = Math.PI / 2;
+		mallaTobillo.position.set(0, 0.09, -0.05);
+		grupoCalzado.add(mallaTobillo);
+
+		return grupoCalzado;
+	}
+
+	function cargarArchivoFBXReal(zap, temp = 'pri', varNum = '1') {
 		initThree();
 
 		const statusEl = document.getElementById('view-archivo-fbx');
-		if (statusEl) statusEl.innerText = 'cargando...';
+		if (statusEl) statusEl.innerText = 'Modo simulación (primitivos)';
 
-		// Construimos la ruta esperada, pero el sistema intentará cargar siempre `Prueba.fbx` como fallback
-		const requestedFilename = `${zap}_${temp}_v${varNum}.fbx`;
-		const requestedPath = `models/fbx/${requestedFilename}`;
-		const fallbackPath = `models/fbx/Prueba.fbx`;
+		// Limpiar objetos previos
+		if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
+		if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
-		try {
-			const loader = new THREE.FBXLoader();
+		modoFijo = true;
 
-			let triedFallback = false;
-			const tryLoad = (pathToLoad, label) => {
-				loader.load(pathToLoad, (obj) => {
-					if (currentModel) {
-						scene.remove(currentModel);
-						disposeHierarchy(currentModel);
-						currentModel = null;
-					}
+		// Crear mallas primitivas para pruebas
+		objetoIzquierdoActual = crearMallaCalzadoPrimitiva(0xff5555);
+		objetoDerechoActual = crearMallaCalzadoPrimitiva(0x55ff55);
 
-					currentModel = obj;
-					// Ajuste inicial: autoescalar y centrar según bbox
-					scaleAndCenterModel(currentModel, 0.6);
-					scene.add(currentModel);
+		// Posicionar ligeramente separadas (izq/derecha)
+		objetoIzquierdoActual.position.set(-0.12, 0, 0);
+		objetoDerechoActual.position.set(0.12, 0, 0);
 
-					if (statusEl) statusEl.innerText = label || pathToLoad.split('/').pop();
-				}, (xhr) => {
-					// progreso opcional
-				}, (err) => {
-					console.warn('Error cargando FBX', pathToLoad, err);
-					if (!triedFallback && pathToLoad !== fallbackPath) {
-						triedFallback = true;
-						// Intentar fallback Prueba.fbx
-						tryLoad(fallbackPath, 'Prueba.fbx');
-					} else {
-						if (statusEl) statusEl.innerText = 'no disponible';
-					}
-				});
-			};
+		scene.add(objetoIzquierdoActual);
+		scene.add(objetoDerechoActual);
 
-			// Para esta fase, forzamos siempre la carga de Prueba.fbx
-			tryLoad(fallbackPath, 'Prueba.fbx');
-		} catch (e) {
-			console.error('Carga FBX fallida', e);
-			if (statusEl) statusEl.innerText = 'error';
+		// Guardar escala base
+		try { window.__sr_baseScale = objetoIzquierdoActual.scale.x || 1; } catch (e) {}
+
+		// Aplicar escala según talla actual
+		if (typeof window.actualizarEscalaPorTalla === 'function') {
+			window.actualizarEscalaPorTalla(window.tallaActual || 26.0);
 		}
 	}
 
@@ -234,6 +244,13 @@ window.runCameraDiagnostics = runCameraDiagnostics;
 	function actualizarEscalaPorTalla(talla) {
 		const t = parseFloat(talla) || 26;
 		const factor = t / 26.0;
+		// Si usamos objetos sintéticos, escalarlos
+		if (objetoIzquierdoActual || objetoDerechoActual) {
+			const base = window.__sr_baseScale || 1;
+			if (objetoIzquierdoActual) objetoIzquierdoActual.scale.setScalar(base * factor);
+			if (objetoDerechoActual) objetoDerechoActual.scale.setScalar(base * factor);
+			return;
+		}
 		if (!currentModel) {
 			// almacenar para aplicar cuando se cargue
 			window.__sr_pendingTalla = t;
