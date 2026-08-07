@@ -105,6 +105,17 @@
         <!-- El elemento video queda fijado estrictamente en el fondo absoluto (z-index: 1) -->
         <video id="webcam" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" style="z-index: 1; pointer-events: none;"></video>
 
+        <!-- Estado / fallback visible para el usuario cuando la cámara no está activa -->
+        <div id="camera-status" class="absolute inset-0 z-40 flex items-center justify-center p-4 pointer-events-auto">
+            <div id="camera-status-card" class="bg-white/90 text-dark-calzado rounded-xl p-4 text-center max-w-sm border border-gray-200">
+                <p id="camera-status-text" class="text-sm font-bold mb-3">Cámara inactiva. Pulsa para iniciar.</p>
+                <div class="flex gap-2 justify-center">
+                    <button id="camera-start-btn" class="bg-primary text-white px-4 py-2 rounded-xl font-bold" onclick="window.iniciarMotoresManuales && window.iniciarMotoresManuales();">Iniciar Cámara</button>
+                    <button id="camera-help-btn" class="bg-gray-100 text-dark-calzado px-4 py-2 rounded-xl font-bold" onclick="alert('Asegúrate de servir el proyecto por HTTP(S) o localhost. Usa ngrok/localtunnel para móvil.');">Ayuda</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Capa de interfaz HUD superior (z-index: 50) -->
         <div class="absolute top-3 left-3 right-3 z-[50] bg-white/90 backdrop-blur pl-3 pr-2 py-1.5 rounded-xl shadow-xl flex items-center justify-between border border-white/25">
             <div class="flex-1 grid grid-cols-3 gap-1 items-center">

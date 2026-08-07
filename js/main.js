@@ -119,21 +119,42 @@
 		initThree();
 
 		const video = document.getElementById('webcam');
+		const cameraStatus = document.getElementById('camera-status');
+		const cameraStatusText = document.getElementById('camera-status-text');
 		if (!video) return;
 
 		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 			const constraints = { video: { facingMode: { ideal: 'environment' } } };
 			navigator.mediaDevices.getUserMedia(constraints)
-				.then((stream) => { video.muted = true; video.srcObject = stream; video.play().catch(()=>{}); })
+				.then((stream) => {
+					video.muted = true;
+					video.setAttribute('playsinline', '');
+					video.autoplay = true;
+					video.srcObject = stream;
+					video.play().catch(()=>{});
+					if (cameraStatus) cameraStatus.style.display = 'none';
+					console.log('Cámara iniciada con éxito');
+				})
 				.catch((err) => {
 					console.warn('No se pudo acceder a la cámara (environment), intentando frontal:', err);
+					if (cameraStatusText) cameraStatusText.innerText = 'No se pudo acceder a la cámara tras permisos. Intentando otra cámara...';
 					// Intentar con cámara frontal como fallback
 					navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-						.then((stream) => { video.muted = true; video.srcObject = stream; video.play().catch(()=>{}); })
-						.catch((err2) => { console.warn('No se pudo acceder a ninguna cámara:', err2); });
+						.then((stream) => {
+							video.muted = true;
+							video.setAttribute('playsinline', '');
+							video.autoplay = true;
+							video.srcObject = stream;
+							video.play().catch(()=>{});
+							if (cameraStatus) cameraStatus.style.display = 'none';
+							console.log('Cámara frontal iniciada como fallback');
+						})
+						.catch((err2) => { console.warn('No se pudo acceder a ninguna cámara:', err2); if (cameraStatusText) cameraStatusText.innerText = 'Permiso denegado o no hay cámara disponible.'; });
 				});
 		}
-	}
+			console.warn('getUserMedia no es soportado en este navegador');
+			if (cameraStatusText) cameraStatusText.innerText = 'Tu navegador no soporta acceso a cámara (getUserMedia). Usa Chrome/Edge/Firefox en HTTPS o localhost.';
+			if (cameraStatus) cameraStatus.style.display = 'flex';
 
 	function actualizarEscalaPorTalla(talla) {
 		if (!currentModel) return;
