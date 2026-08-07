@@ -6,17 +6,26 @@ async function registrarUsuario(nombre, apellidos, correo, password, telefono, g
         return alert("Por favor llena todos los campos obligatorios.");
     }
 
+    // Usar Supabase Auth para registrar al usuario (evitar almacenar contraseñas en texto plano)
+    const { data: signData, error: signError } = await supabase.auth.signUp({ email: correo, password });
+    if (signError) {
+        return alert('Error en registro: ' + signError.message);
+    }
+
+    const userId = signData?.user?.id || null;
+
+    // Crear perfil en la tabla usuarios sin guardar la contraseña
     const { data, error } = await supabase
         .from('usuarios')
         .insert([
             { 
+                id: userId,
                 nombre: nombre, 
                 apellidos: apellidos,
                 correo: correo, 
-                password: password,
                 telefono: telefono,
                 genero: genero,
-                talla_preferida: 0,        
+                talla_preferida: 0,
                 largo_pie: 0, 
                 ancho_pie: 0,
                 ultimo_modelo: 'Ninguno', 
@@ -25,9 +34,9 @@ async function registrarUsuario(nombre, apellidos, correo, password, telefono, g
         ]);
 
     if (error) {
-        alert("Error al registrar: " + error.message);
+        alert("Error al guardar perfil: " + error.message);
     } else {
-        alert("¡Cuenta creada con éxito!");
+        alert("¡Cuenta creada con éxito! Revisa tu correo para confirmar la cuenta si aplica.");
         window.location.reload(); 
     }
 }
@@ -35,41 +44,49 @@ async function registrarUsuario(nombre, apellidos, correo, password, telefono, g
 async function loginUsuario(correo, password) {
     if(!correo || !password) return alert("Por favor llena todos los campos");
 
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: correo, password });
+    if (signInError) {
+        return alert('Error al iniciar sesión: ' + signInError.message);
+    }
+
+    const user = signInData?.user;
+    if (!user) return alert('No se encontró usuario válido.');
+
+    // Recuperar perfil desde la tabla usuarios
     const { data, error } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('correo', correo)
-        .eq('password', password);
+        .eq('id', user.id)
+        .limit(1);
 
-    if (error || !data || data.length === 0) {
-        alert("Correo o contraseña incorrectos o el usuario no existe.");
-    } else {
-        const nombreCompleto = data[0].nombre + " " + (data[0].apellidos || "");
-        alert("¡Bienvenido, " + nombreCompleto + "!");
-        
-        // GUARDADO PERSISTENTE EN LOCALSTORAGE (Datos de sesión y de usuario)
-        localStorage.setItem('userId', data[0].id);
-        localStorage.setItem('stepra_session', 'active'); 
-        localStorage.setItem('user_display_name', nombreCompleto);
-        localStorage.setItem('user_display_email', data[0].correo);
+    const profile = (data && data[0]) ? data[0] : null;
 
-        // Recuperar configuraciones temporales si existen
-        const tempModelo = localStorage.getItem('temp_modelo');
-        const tempColor = localStorage.getItem('temp_color');
-        const tempTalla = localStorage.getItem('temp_talla');
+    const nombreCompleto = profile ? (profile.nombre + ' ' + (profile.apellidos || '')) : (user.email || 'Usuario');
 
-        if (tempModelo && tempColor && tempTalla) {
-            localStorage.setItem('user_modelo', tempModelo);
-            localStorage.setItem('user_color', tempColor);
-            localStorage.setItem('user_talla', tempTalla);
+    alert("¡Bienvenido, " + nombreCompleto + "!");
 
-            localStorage.removeItem('temp_modelo');
-            localStorage.removeItem('temp_color');
-            localStorage.removeItem('temp_talla');
-        }
-        
-        window.location.href = './app.html';
+    // GUARDADO PERSISTENTE EN LOCALSTORAGE (Datos de sesión y de usuario)
+    localStorage.setItem('userId', user.id);
+    localStorage.setItem('stepra_session', 'active'); 
+    localStorage.setItem('user_display_name', nombreCompleto);
+    localStorage.setItem('user_display_email', user.email || correo);
+
+    // Recuperar configuraciones temporales si existen
+    const tempModelo = localStorage.getItem('temp_modelo');
+    const tempColor = localStorage.getItem('temp_color');
+    const tempTalla = localStorage.getItem('temp_talla');
+
+    if (tempModelo && tempColor && tempTalla) {
+        localStorage.setItem('user_modelo', tempModelo);
+        localStorage.setItem('user_color', tempColor);
+        localStorage.setItem('user_talla', tempTalla);
+
+        localStorage.removeItem('temp_modelo');
+        localStorage.removeItem('temp_color');
+        localStorage.removeItem('temp_talla');
     }
+    
+    window.location.href = './app.html';
 }
 async function guardarConfiguracionCalzado(modelo, color, talla) {
     const userId = localStorage.getItem('userId') || 'usr_utl_demo';
