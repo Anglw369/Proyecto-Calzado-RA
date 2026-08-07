@@ -116,6 +116,19 @@
             </div>
             <pre id="camera-diagnostics-result" class="mt-3 text-xs text-left bg-white/80 p-2 rounded text-gray-700 max-h-40 overflow-auto"></pre>
         </div>
+        <script>
+            // Fallback rápido: si main.js aún no define runCameraDiagnostics, lo creamos mínimo aquí.
+            if (!window.runCameraDiagnostics) {
+                window.runCameraDiagnostics = async function() {
+                    if (!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)) {
+                        throw new Error('enumerateDevices no soportado');
+                    }
+                    const devs = await navigator.mediaDevices.enumerateDevices();
+                    const cams = devs.filter(d => d.kind === 'videoinput');
+                    return { devices: devs, cameras: cams };
+                };
+            }
+        </script>
 
         <!-- Capa de interfaz HUD superior (z-index: 50) -->
         <div class="absolute top-3 left-3 right-3 z-[50] bg-white/90 backdrop-blur pl-3 pr-2 py-1.5 rounded-xl shadow-xl flex items-center justify-between border border-white/25">

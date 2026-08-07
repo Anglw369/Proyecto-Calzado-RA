@@ -162,21 +162,7 @@
 			}, 100);
 		};
 
-		// Diagnostic helper: enumerate devices and test basic permission
-		function runCameraDiagnostics() {
-			if (!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)) {
-				return Promise.reject(new Error('enumerateDevices no soportado'));
-			}
 
-			return navigator.mediaDevices.enumerateDevices()
-				.then(devs => {
-					const cams = devs.filter(d => d.kind === 'videoinput');
-					return { devices: devs, cameras: cams };
-				});
-		}
-
-		// Exponer para depuración desde la consola/UI
-		window.runCameraDiagnostics = runCameraDiagnostics;
 
 		navigator.mediaDevices.getUserMedia(constraints)
 			.then((stream) => {
@@ -204,6 +190,18 @@
 			});
 	}
 
+// Diagnostic helper: enumerate devices and test basic permission (global)
+async function runCameraDiagnostics() {
+	if (!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)) {
+		throw new Error('enumerateDevices no soportado');
+	}
+	const devs = await navigator.mediaDevices.enumerateDevices();
+	const cams = devs.filter(d => d.kind === 'videoinput');
+	return { devices: devs, cameras: cams };
+}
+
+window.runCameraDiagnostics = runCameraDiagnostics;
+
 	// Mejora en el cargador: auto-centrar y escalar el modelo según su bbox
 	function scaleAndCenterModel(obj, targetSize = 0.6) {
 		try {
@@ -223,12 +221,29 @@
 			obj.position.z -= center.z;
 			// poner ligeramente adelante
 			obj.position.z += 0.1;
+			// Guardar escala base para futuros ajustes por talla
+			try { window.__sr_baseScale = obj.scale.x || 1; } catch(e){}
 		} catch (e) {
 			console.warn('scaleAndCenterModel falló', e);
 		}
 	}
 
 	window.scaleAndCenterModel = scaleAndCenterModel;
+
+	// Ajustar escala del modelo según la talla (base 26.0)
+	function actualizarEscalaPorTalla(talla) {
+		const t = parseFloat(talla) || 26;
+		const factor = t / 26.0;
+		if (!currentModel) {
+			// almacenar para aplicar cuando se cargue
+			window.__sr_pendingTalla = t;
+			return;
+		}
+		const base = window.__sr_baseScale || (currentModel.scale.x || 1);
+		currentModel.scale.setScalar(base * factor);
+	}
+
+	window.actualizarEscalaPorTalla = actualizarEscalaPorTalla;
 
 	// Funciones expuestas globalmente para que otros módulos las llamen
 	window.iniciarMotoresManuales = iniciarMotoresManuales;
