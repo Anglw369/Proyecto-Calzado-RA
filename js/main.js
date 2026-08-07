@@ -20,6 +20,7 @@
 		renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: isMobile ? 'low-power' : 'high-performance' });
 		renderer.setPixelRatio(pixelRatio);
 		renderer.setSize(container.clientWidth, container.clientHeight);
+		renderer.domElement.style.zIndex = '5';
 		renderer.domElement.style.position = 'absolute';
 		renderer.domElement.style.top = '0';
 		renderer.domElement.style.left = '0';
@@ -75,9 +76,8 @@
 					}
 
 					currentModel = obj;
-					// Ajuste inicial razonable
-					currentModel.scale.setScalar(0.01);
-					currentModel.position.set(0, 0, 0);
+					// Ajuste inicial: autoescalar y centrar según bbox
+					scaleAndCenterModel(currentModel, 0.6);
 					scene.add(currentModel);
 
 					if (statusEl) statusEl.innerText = label || pathToLoad.split('/').pop();
@@ -121,47 +121,114 @@
 		const video = document.getElementById('webcam');
 		const cameraStatus = document.getElementById('camera-status');
 		const cameraStatusText = document.getElementById('camera-status-text');
+		const startBtn = document.getElementById('camera-start-btn');
 		if (!video) return;
 
-		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-			const constraints = { video: { facingMode: { ideal: 'environment' } } };
-			navigator.mediaDevices.getUserMedia(constraints)
-				.then((stream) => {
-					video.muted = true;
-					video.setAttribute('playsinline', '');
-					video.autoplay = true;
-					video.srcObject = stream;
-					video.play().catch(()=>{});
-					if (cameraStatus) cameraStatus.style.display = 'none';
-					console.log('Cámara iniciada con éxito');
-				})
-				.catch((err) => {
-					console.warn('No se pudo acceder a la cámara (environment), intentando frontal:', err);
-					if (cameraStatusText) cameraStatusText.innerText = 'No se pudo acceder a la cámara tras permisos. Intentando otra cámara...';
-					// Intentar con cámara frontal como fallback
-					navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-						.then((stream) => {
-							video.muted = true;
-							video.setAttribute('playsinline', '');
-							video.autoplay = true;
-							video.srcObject = stream;
-							video.play().catch(()=>{});
-							if (cameraStatus) cameraStatus.style.display = 'none';
-							console.log('Cámara frontal iniciada como fallback');
-						})
-						.catch((err2) => { console.warn('No se pudo acceder a ninguna cámara:', err2); if (cameraStatusText) cameraStatusText.innerText = 'Permiso denegado o no hay cámara disponible.'; });
-				});
-		}
+		if (startBtn) { startBtn.disabled = true; startBtn.innerText = 'Solicitando cámara...'; }
+
+		if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
 			console.warn('getUserMedia no es soportado en este navegador');
 			if (cameraStatusText) cameraStatusText.innerText = 'Tu navegador no soporta acceso a cámara (getUserMedia). Usa Chrome/Edge/Firefox en HTTPS o localhost.';
 			if (cameraStatus) cameraStatus.style.display = 'flex';
+			if (startBtn) startBtn.disabled = false;
+			return;
+		}
 
-	function actualizarEscalaPorTalla(talla) {
-		if (!currentModel) return;
-		// escala relativa respecto a talla base 26.0
-		const factor = (parseFloat(talla) || 26) / 26.0;
-		currentModel.scale.setScalar(0.01 * factor);
+		const constraints = { video: { facingMode: { ideal: 'environment' } } };
+
+		const attachStream = (stream) => {
+			video.muted = true;
+			video.setAttribute('playsinline', '');
+			video.autoplay = true;
+			video.srcObject = stream;
+			video.play().catch(()=>{});
+			if (cameraStatusText) cameraStatusText.innerText = 'Cámara iniciada';
+
+			// Poll para detectar frames
+			let checks = 0;
+			const poll = setInterval(() => {
+				checks++;
+				if (video.videoWidth && video.videoHeight) {
+					if (cameraStatus) cameraStatus.style.display = 'none';
+					if (startBtn) startBtn.disabled = true;
+					console.log('Frames recibidos, ocultando overlay');
+					clearInterval(poll);
+				} else if (checks > 60) {
+					console.warn('No se detectaron frames en el video después de 6s');
+					if (cameraStatusText) cameraStatusText.innerText = 'No se detectan frames de la cámara. Revisa permisos o prueba otro navegador.';
+					if (startBtn) startBtn.disabled = false;
+					clearInterval(poll);
+				}
+			}, 100);
+		};
+
+		// Diagnostic helper: enumerate devices and test basic permission
+		function runCameraDiagnostics() {
+			if (!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)) {
+				return Promise.reject(new Error('enumerateDevices no soportado'));
+			}
+
+			return navigator.mediaDevices.enumerateDevices()
+				.then(devs => {
+					const cams = devs.filter(d => d.kind === 'videoinput');
+					return { devices: devs, cameras: cams };
+				});
+		}
+
+		// Exponer para depuración desde la consola/UI
+		window.runCameraDiagnostics = runCameraDiagnostics;
+
+		navigator.mediaDevices.getUserMedia(constraints)
+			.then((stream) => {
+				console.log('getUserMedia ENV stream attached');
+				attachStream(stream);
+			})
+			.catch((err) => {
+				console.warn('Error getUserMedia (environment):', err);
+				if (cameraStatusText) cameraStatusText.innerText = 'Error al solicitar cámara: ' + (err && err.name ? err.name : err.message || err);
+				// enumerar dispositivos para diagnóstico
+				navigator.mediaDevices.enumerateDevices().then(devs => console.log('Dispositivos encontrados:', devs)).catch(e => console.warn('enumerateDevices falló', e));
+				if (cameraStatusText) cameraStatusText.innerText += ' - intentando frontal...';
+
+				// Intentar cámara frontal
+				navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+					.then((stream) => {
+						console.log('getUserMedia USER stream attached');
+						attachStream(stream);
+					})
+					.catch((err2) => {
+						console.warn('No se pudo acceder a ninguna cámara:', err2);
+						if (cameraStatusText) cameraStatusText.innerText = 'Permiso denegado o no hay cámara disponible.';
+						if (startBtn) startBtn.disabled = false;
+					});
+			});
 	}
+
+	// Mejora en el cargador: auto-centrar y escalar el modelo según su bbox
+	function scaleAndCenterModel(obj, targetSize = 0.6) {
+		try {
+			const box = new THREE.Box3().setFromObject(obj);
+			const size = new THREE.Vector3();
+			box.getSize(size);
+			const maxDim = Math.max(size.x, size.y, size.z);
+			if (maxDim > 0) {
+				const scale = targetSize / maxDim;
+				obj.scale.setScalar((obj.scale.x || 1) * scale);
+			}
+			// centrar
+			const center = new THREE.Vector3();
+			box.getCenter(center);
+			obj.position.x -= center.x;
+			obj.position.y -= center.y;
+			obj.position.z -= center.z;
+			// poner ligeramente adelante
+			obj.position.z += 0.1;
+		} catch (e) {
+			console.warn('scaleAndCenterModel falló', e);
+		}
+	}
+
+	window.scaleAndCenterModel = scaleAndCenterModel;
 
 	// Funciones expuestas globalmente para que otros módulos las llamen
 	window.iniciarMotoresManuales = iniciarMotoresManuales;

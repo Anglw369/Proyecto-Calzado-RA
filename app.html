@@ -111,9 +111,10 @@
                 <p id="camera-status-text" class="text-sm font-bold mb-3">Cámara inactiva. Pulsa para iniciar.</p>
                 <div class="flex gap-2 justify-center">
                     <button id="camera-start-btn" class="bg-primary text-white px-4 py-2 rounded-xl font-bold" onclick="window.iniciarMotoresManuales && window.iniciarMotoresManuales();">Iniciar Cámara</button>
-                    <button id="camera-help-btn" class="bg-gray-100 text-dark-calzado px-4 py-2 rounded-xl font-bold" onclick="alert('Asegúrate de servir el proyecto por HTTP(S) o localhost. Usa ngrok/localtunnel para móvil.');">Ayuda</button>
+                    <button id="camera-diagnostics-btn" class="bg-gray-100 text-dark-calzado px-4 py-2 rounded-xl font-bold" onclick="(async ()=>{ const resEl=document.getElementById('camera-diagnostics-result'); try{ const r=await window.runCameraDiagnostics(); resEl.innerText = 'Cámaras detectadas: ' + (r.cameras.length) + '\n' + JSON.stringify(r.cameras.map(c=>({label:c.label,deviceId:c.deviceId})), null, 2); }catch(e){ resEl.innerText = 'Error diagnóstico: ' + e.message; } })();">Diagnóstico</button>
                 </div>
             </div>
+            <pre id="camera-diagnostics-result" class="mt-3 text-xs text-left bg-white/80 p-2 rounded text-gray-700 max-h-40 overflow-auto"></pre>
         </div>
 
         <!-- Capa de interfaz HUD superior (z-index: 50) -->
