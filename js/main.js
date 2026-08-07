@@ -14,8 +14,11 @@
 		camera = new THREE.PerspectiveCamera(45, container.clientWidth / Math.max(1, container.clientHeight), 0.1, 1000);
 		camera.position.set(0, 1.5, 3);
 
-		renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-		renderer.setPixelRatio(window.devicePixelRatio || 1);
+		const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent || '');
+		const pixelRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.5);
+
+		renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: isMobile ? 'low-power' : 'high-performance' });
+		renderer.setPixelRatio(pixelRatio);
 		renderer.setSize(container.clientWidth, container.clientHeight);
 		renderer.domElement.style.position = 'absolute';
 		renderer.domElement.style.top = '0';
@@ -50,38 +53,50 @@
 
 	async function cargarArchivoFBXReal(zap, temp = 'pri', varNum = '1') {
 		initThree();
-		const filename = `${zap}_${temp}_v${varNum}.fbx`;
-		const path = `models/fbx/${filename}`;
 
 		const statusEl = document.getElementById('view-archivo-fbx');
 		if (statusEl) statusEl.innerText = 'cargando...';
 
+		// Construimos la ruta esperada, pero el sistema intentará cargar siempre `Prueba.fbx` como fallback
+		const requestedFilename = `${zap}_${temp}_v${varNum}.fbx`;
+		const requestedPath = `models/fbx/${requestedFilename}`;
+		const fallbackPath = `models/fbx/Prueba.fbx`;
+
 		try {
-			if (typeof THREE.FBXLoader !== 'function' && typeof THREE.FBXLoader === 'undefined') {
-				// Some versions attach loader differently; try global FBXLoader
-			}
-
 			const loader = new THREE.FBXLoader();
-			loader.load(path, (obj) => {
-				if (currentModel) {
-					scene.remove(currentModel);
-					disposeHierarchy(currentModel);
-					currentModel = null;
-				}
 
-				currentModel = obj;
-				// Ajuste inicial
-				currentModel.scale.setScalar(0.01);
-				currentModel.position.set(0, 0, 0);
-				scene.add(currentModel);
+			let triedFallback = false;
+			const tryLoad = (pathToLoad, label) => {
+				loader.load(pathToLoad, (obj) => {
+					if (currentModel) {
+						scene.remove(currentModel);
+						disposeHierarchy(currentModel);
+						currentModel = null;
+					}
 
-				if (statusEl) statusEl.innerText = filename;
-			}, (xhr) => {
-				// progreso opcional
-			}, (err) => {
-				console.warn('Error cargando FBX', err);
-				if (statusEl) statusEl.innerText = 'no disponible';
-			});
+					currentModel = obj;
+					// Ajuste inicial razonable
+					currentModel.scale.setScalar(0.01);
+					currentModel.position.set(0, 0, 0);
+					scene.add(currentModel);
+
+					if (statusEl) statusEl.innerText = label || pathToLoad.split('/').pop();
+				}, (xhr) => {
+					// progreso opcional
+				}, (err) => {
+					console.warn('Error cargando FBX', pathToLoad, err);
+					if (!triedFallback && pathToLoad !== fallbackPath) {
+						triedFallback = true;
+						// Intentar fallback Prueba.fbx
+						tryLoad(fallbackPath, 'Prueba.fbx');
+					} else {
+						if (statusEl) statusEl.innerText = 'no disponible';
+					}
+				});
+			};
+
+			// Para esta fase, forzamos siempre la carga de Prueba.fbx
+			tryLoad(fallbackPath, 'Prueba.fbx');
 		} catch (e) {
 			console.error('Carga FBX fallida', e);
 			if (statusEl) statusEl.innerText = 'error';
@@ -107,9 +122,16 @@
 		if (!video) return;
 
 		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-			navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-				.then((stream) => { video.srcObject = stream; video.play(); })
-				.catch((err) => { console.warn('No se pudo acceder a la cámara:', err); });
+			const constraints = { video: { facingMode: { ideal: 'environment' } } };
+			navigator.mediaDevices.getUserMedia(constraints)
+				.then((stream) => { video.muted = true; video.srcObject = stream; video.play().catch(()=>{}); })
+				.catch((err) => {
+					console.warn('No se pudo acceder a la cámara (environment), intentando frontal:', err);
+					// Intentar con cámara frontal como fallback
+					navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+						.then((stream) => { video.muted = true; video.srcObject = stream; video.play().catch(()=>{}); })
+						.catch((err2) => { console.warn('No se pudo acceder a ninguna cámara:', err2); });
+				});
 		}
 	}
 
