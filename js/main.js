@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (MEDIAPIPE POSE + UNTITLE.FBX)
+// CONFIGURACIÓN GLOBAL DE MOTORES STEPRA (MODELADO1.FBX + AUTO-ESCALADO)
 // ==========================================================================
 let scene, camera, renderer, videoElement;
 let objetoIzquierdoActual = null; 
@@ -20,10 +20,10 @@ function iniciarMotoresManuales() {
 
     scene = new THREE.Scene();
 
-    const luzAmbiental = new THREE.AmbientLight(0xffffff, 2.0);
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 2.2);
     scene.add(luzAmbiental);
 
-    const luzDireccional = new THREE.DirectionalLight(0xffffff, 1.2);
+    const luzDireccional = new THREE.DirectionalLight(0xffffff, 1.5);
     luzDireccional.position.set(0, 6, 6);
     scene.add(luzDireccional);
 
@@ -46,14 +46,12 @@ function iniciarMotoresManuales() {
     renderer.domElement.style.zIndex = '10';
     container.appendChild(renderer.domElement);
 
-    // Cargar modelo Untitle.fbx al iniciar
     cargarArchivoFBXReal("za1", "pri", "1");
 
     function animarEcosistema() {
         if (!renderer) return;
         requestAnimationFrame(animarEcosistema);
 
-        // MODO PASARELA FIJA: Si la IA no detecta piernas/cuerpo completo, flotan al frente como plantilla
         if (modoFijo) {
             if (objetoIzquierdoActual) {
                 objetoIzquierdoActual.visible = true;
@@ -99,7 +97,6 @@ function inicializarRastreadorAI() {
         const dedoIzq = results.poseLandmarks[31];
         const dedoDer = results.poseLandmarks[32];
 
-        // MediaPipe Pose requiere ver parte del cuerpo/piernas para considerar visibilidad válida
         const detectadoIzq = tobilloIzq && tobilloIzq.visibility > 0.35;
         const detectadoDer = tobilloDer && tobilloDer.visibility > 0.35;
 
@@ -185,19 +182,37 @@ function apagarCamara() {
     camera = null;
 }
 
+// Auto-escalado seguro independiente de las unidades de Blender
+function normalizarTamanoModelo(objeto, tamanoObjetivo = 0.45) {
+    const box = new THREE.Box3().setFromObject(objeto);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maxDimension = Math.max(size.x, size.y, size.z);
+    
+    if (maxDimension > 0) {
+        const factorEscala = tamanoObjetivo / maxDimension;
+        objeto.scale.setScalar(factorEscala);
+    }
+
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    objeto.position.sub(center);
+    
+    window.__baseScaleCalculated = objeto.scale.x;
+}
+
 function cargarArchivoFBXReal(modeloBase, temporada, variante) {
     if (!scene) return;
 
     const banner = document.getElementById('view-archivo-fbx');
-    if (banner) banner.innerText = "Cargando Untitle.fbx...";
+    if (banner) banner.innerText = "Cargando modelado1.fbx...";
 
     if (objetoIzquierdoActual) { scene.remove(objetoIzquierdoActual); objetoIzquierdoActual = null; }
     if (objetoDerechoActual) { scene.remove(objetoDerechoActual); objetoDerechoActual = null; }
 
     modoFijo = true; 
 
-    // Carga directa del modelo único Untitle.fbx
-    const rutaFBX = 'models/fbx/Untitle.fbx';
+    const rutaFBX = 'models/fbx/modelado1.fbx';
 
     fbxLoader.load(rutaFBX, (fbx) => {
         // Pie Izquierdo
@@ -208,14 +223,10 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
             }
         });
 
-        // Auto-centrado de origen de geometría
-        const boxIzq = new THREE.Box3().setFromObject(objetoIzquierdoActual);
-        const centerIzq = boxIzq.getCenter(new THREE.Vector3());
-        objetoIzquierdoActual.position.sub(centerIzq);
-
+        normalizarTamanoModelo(objetoIzquierdoActual, 0.45);
         scene.add(objetoIzquierdoActual);
 
-        // Pie Derecho (clon del modelo)
+        // Pie Derecho
         objetoDerechoActual = fbx.clone();
         objetoDerechoActual.traverse((child) => {
             if (child.isMesh && child.material) {
@@ -223,31 +234,29 @@ function cargarArchivoFBXReal(modeloBase, temporada, variante) {
             }
         });
 
-        const boxDer = new THREE.Box3().setFromObject(objetoDerechoActual);
-        const centerDer = boxDer.getCenter(new THREE.Vector3());
-        objetoDerechoActual.position.sub(centerDer);
-
+        normalizarTamanoModelo(objetoDerechoActual, 0.45);
         scene.add(objetoDerechoActual);
 
         actualizarEscalaPorTalla(window.tallaActual);
-        if (banner) banner.innerText = "Untitle.fbx cargado con éxito";
-        console.log("StepRA: Modelo Untitle.fbx cargado correctamente.");
+        if (banner) banner.innerText = "modelado1.fbx cargado";
+        console.log("StepRA: modelado1.fbx cargado y auto-escalado con éxito.");
 
     }, (progress) => {
         if (progress.lengthComputable && banner) {
             const pct = (progress.loaded / progress.total * 100).toFixed(0);
-            banner.innerText = `Cargando Untitle.fbx (${pct}%)`;
+            banner.innerText = `Cargando modelado1.fbx (${pct}%)`;
         }
     }, (error) => {
-        console.error("Error al cargar models/fbx/Untitle.fbx:", error);
-        if (banner) banner.innerText = "Error al cargar Untitle.fbx";
+        console.error("Error al cargar models/fbx/modelado1.fbx:", error);
+        if (banner) banner.innerText = "error al cargar modelado";
     });
 }
 
 function actualizarEscalaPorTalla(talla) {
-    const factorBase = (talla / 26.0) * 0.01; // Escala adaptativa para unidades Blender FBX
-    if (objetoIzquierdoActual) objetoIzquierdoActual.scale.set(factorBase, factorBase, factorBase);
-    if (objetoDerechoActual) objetoDerechoActual.scale.set(factorBase, factorBase, factorBase);
+    const factorTalla = talla / 26.0;
+    const base = window.__baseScaleCalculated || 1.0;
+    if (objetoIzquierdoActual) objetoIzquierdoActual.scale.setScalar(base * factorTalla);
+    if (objetoDerechoActual) objetoDerechoActual.scale.setScalar(base * factorTalla);
 }
 
 function intercambiarEntreZ01yZ02() {
